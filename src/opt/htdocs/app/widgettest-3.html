@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,maximum-scale=10.0,initial-scale=1.0,user-scalable=1,minimum-scale=1.0" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/> 
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <script src="../websdk/jquery.3.3.1.min.js"></script>
+    <script src="../websdk/lodash.4.17.10.min.js"></script>
+    <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/svg.min.js"></script>
+    -->
+    <script src="../lib/svg.2.7.1.js"></script>
+    <script src="../lib/svg.select-iap.js"></script>
+    <link rel="stylesheet" type="text/css" href="../lib/svg.select.min.css" />
+    <script src="../lib/svg.resize-iap.js"></script>
+    <script src="../lib/svg.draggable-iap.js"></script>
+<style>
+.flip-card {
+    background-color: transparent;
+    width: 200px;
+    height:300px;
+    border: 1px solid #f1f1f1;
+    /* perspective: 600px;  Remove this if you don't want the 3D effect */
+  }
+  
+  /* This container is needed to position the front and back side */
+  .flip-card-inner {
+    position: relative;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+  }
+  
+  /* Do an horizontal flip when you move the mouse over the flip box container */
+  .flip-card-inner.go{
+    transform: rotateY(180deg);
+  }
+  .flip-card-inner.go .flip-card-back{
+  }
+
+  /* Position the front and back side */
+  .flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 200px;
+    height: 300px;
+    backface-visibility: hidden;
+  }
+  
+  /* Style the front side (fallback if image is missing) */
+  .flip-card-front {
+    background-color: #bbb;
+    color: black;
+	transform: rotateY(0deg);    
+  }
+  
+  /* Style the back side */
+  .flip-card-back {
+    background-color: dodgerblue;
+    color: white;
+    transform: translate(200px)  rotateY(180deg);
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas" style="width:1000px;height:1000px;background-color: #bbb"></div>
+<script>
+function enable_drag_and_resize(obj){
+    obj._focus = false
+    obj._moved = false
+    obj._dragging = false
+    obj.on('click', function(evt){
+        if (this._moved) {
+            evt.preventDefault()
+            return
+        }
+        this._focus = !this._focus
+        
+        var saveAspectRatio = obj.type == 'image' || obj.type == 'g'
+        var pointsExclude = saveAspectRatio ?  ['t', 'r','b','l','lb','rt'] : []
+        if (this._focus) this.selectize({pointsExclude:pointsExclude}).resize({saveAspectRatio:saveAspectRatio})
+        else this.selectize(false).resize(false)
+    })
+    obj.on('mouseover', function(evt){
+        this.draggable()
+    })
+    obj.on('beforedrag', function(evt){
+        this._moved = false
+        this._dragging = true
+    })         
+    obj.on('mousemove', function(evt){
+        if (this._dragging) this._moved = true
+    })
+    obj.on('mouseup, mouseout',function(evt){
+        this._dragging = false
+        this.draggable(false)
+    })        
+}    
+window.addEventListener('DOMContentLoaded',function(){
+    var draw = new SVG(document.getElementById('canvas')).size(1000,1000)
+    if (0){
+        var image1 = draw.image('flipcard-front.jpg')
+        enable_drag_and_resize(image1)
+
+        var g2 = draw.group()
+        var image2 = g2.image('flipcard-heart.png')
+        g2.rect(100,100).fill('#f00').move(200,100)    
+        g2.ellipse(50,50).fill('#0f0').move(100,200)
+        enable_drag_and_resize(g2)
+
+        //文字還不能處理的很好
+        var text = draw.text('')
+        enable_drag_and_resize(text)
+        text.font({
+            stretch:10,
+            'line-height':'40px',
+        })
+        text.build(true)
+        var lines = '嗨違法兼課的男大生在高雄一所幼兒園變\n身狼師性侵猥褻女童，受害\n人家長今挺身PO文，控園方試圖\n掩蓋事實，望公權力伸張'.split('\n')
+        lines.forEach(function(line){
+            tspan = text.tspan(line).font({size:26,}).newLine()
+        })
+        text.build(false)
+        tspan.animate('2s').fill('#fff')
+
+    }
+    else if (1){
+        /* 移動一個group
+        var g = draw.group()
+        var image1 = draw.image('flipcard-front.jpg')
+        var rect = draw.rect(100,100).fill('#f00').move(200,0)
+        g.add(image1).add(rect).move(200,0)
+        g.draggable()
+        */
+       
+        /*
+        //移動一個有mask的group (mask on image)
+        var g2= draw.group()
+        g2.draggable()
+        var image2 = g2.image('flipcard-back.jpg')
+        var mask = g2.mask()
+        g2.add(mask)
+        var ellipse = g2.ellipse(200,200).fill('#0f0')
+        mask.add(ellipse) 
+        image2.maskWith(mask)
+        g2.move(100,100)
+        */ 
+       
+        /*
+        //drag, resize 有轉角度的圖形
+        var image2 =  draw.ellipse(200,400).fill('#0f0')//draw.rect(100,300).fill('#ffff00')//draw.image('flipcard-back.jpg')
+        enable_drag_and_resize(image2)
+        */
+
+        
+        //drag, resize 有轉角度的 group 這個失敗
+        var g2= draw.group()
+        var image2 = draw.image('flipcard-back.jpg')
+        g2.add(image2)
+        var ellipse = draw.ellipse(200,100).fill('#0f0')
+        g2.add(ellipse)
+        g2.move(100,100)
+        enable_drag_and_resize(g2)
+
+        //drag 有轉角度的 masked image 這個成功
+        /*
+        var image2 = draw.image('flipcard-back.jpg')
+        var mask = draw.mask()
+        var ellipse = draw.ellipse(200,100).fill('#0f0')
+        mask.add(ellipse)
+        image2.maskWith(mask)
+        enable_drag_and_resize(image2)
+        */
+
+    }
+    else if (1){
+        var rect = draw.rect(400,400).fill('#ff0')
+        var ellipse = draw.ellipse(80, 40).move(10, 10).fill({ color: '#fff' })
+        var text = draw.text('SVG.JS').move(10, 10).font({ size: 36 }).fill({ color: '#fff' })
+        var mask = draw.mask().add(text).add(ellipse)
+        rect.maskWith(mask)
+    }
+})
+</script>
+</body>
+</html>

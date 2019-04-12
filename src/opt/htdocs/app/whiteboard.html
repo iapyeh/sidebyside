@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width,maximum-scale=10.0,initial-scale=1.0,user-scalable=1,minimum-scale=1.0" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!--
+    CDN 會有不穩定的時候  
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/solid.css" integrity="sha384-+0VIRx+yz1WBcCTXBkVQYIBVNEFH1eP6Zknm16roZCyeNg2maWEpk/l/KsyFKs7G" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/fontawesome.css" integrity="sha384-jLuaxTTBR42U2qJ/pm4JRouHkEDHkVqH0T1nyQXn1mZ7Snycpf6Rl25VBNthU4z0" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/all.min.css" integrity="sha384-+0VIRx+yz1WBcCTXBkVQYIBVNEFH1eP6Zknm16roZCyeNg2maWEpk/l/KsyFKs7G" crossorigin="anonymous">
+    -->
+    <link rel="stylesheet" type="text/css" href="../lib/fontawesome-all.css" />
+
+    <link rel="stylesheet" type="text/css" href="../websdk/w2ui-1.5.rc1.min.css" />
+    <script src="../websdk/jquery.3.3.1.min.js"></script>
+    <script src="../websdk/lodash.4.17.10.min.js"></script>
+    <script src="../websdk/w2ui-1.5.rc1.min.js"></script>
+    <script src="../websdk/sdk.js"></script>
+    <!--required by sbsuser.js-->
+
+    <script src="../lib/svg.2.7.1.js"></script>
+    <!--
+    <script src="../lib/svg.select.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../lib/svg.select.min.css" />
+    <script src="../lib/svg.resize-iap.js"></script>
+    <script src="../lib/svg.draggable-iap.js"></script>
+    -->
+    <script src="overlay_svg.js"></script><!-- render background -->
+
+    <!--widget system
+        <script src="https://unpkg.com/interactjs@1.3/dist/interact.min.js"></script>
+    -->
+
+    <script src="../lib/interact.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../lib/widget.css" />
+    <script src="../lib/widget.js"></script>
+
+    <script src="sbsuser.js"></script>
+
+    <!-- presentation.js and its dependences -->
+    <script src="../lib/detect-zoom.js"></script>
+    <!--required in mobile device to detect zoom after pinching-->
+    <script src="../lib/fullscreen.min.js"></script>
+    <script src="presentation.js"></script>
+    <!-- support dnd-->
+    <script src="../lib/dndsensor.js"></script>
+    <!-- support exif detection-->
+    <script src="../lib/exif.js" defer></script>
+
+    <script src="../lib/youtube.js"></script><!-- integrate youtube player-->
+
+    <link rel="stylesheet" type="text/css" href="whiteboard.css" />
+    <script src="whiteboard.js"></script>
+
+    <!-- animation of widgets https://github.com/daneden/animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+    <!--script src="whiteboard-testing.js"></script-->
+</head>
+
+<body>
+    <script language="javascript">
+        //For cookies , browser takes localhost and 127.0.0.1 as two different domain,
+        //so we normalize localhost to 127.0.0.1
+        //console.log('window.location=',window.location)
+        if (window.location.hostname == '127.0.0.1') {
+            var url = window.location.href.replace('//127.0.0.1', '//localhost')
+            window.location.href = url
+        }
+        else {
+            //inject config
+            window.request_global_config = function (target_host) {
+                var current = document.head.querySelector('script#config-script')
+                if (current) {
+                    delete global_config
+                    document.head.removeChild(current)
+                }
+
+                var script = document.createElement('script')
+                script.setAttribute('id', 'config-script')
+                document.head.appendChild(script)
+                //remove "#" from hash
+                var src = (target_host ? (target_host == '/' ? '' : target_host) : '..') + '/@/sidebyside/config' + (window.location.hash ? '/' + window.location.hash.substring(1) : '')
+                script.src = src
+            }
+            window.request_global_config()
+        }
+
+    </script>
+    <div id="message"></div>
+    <div id="toggle-page-head-div" style="direction: rtl;">
+        <a href="#" id="toggle-page-head"><span class="fa fa-expand-arrows-alt icon-12"></span></a>
+        <a href="#" id="toggle-syncing" style="margin-left:2px"><span class="fa fa-teeth icon-12"></span></a>
+    </div>
+    <div id="layout"></div>
+    <!--
+    <div id="top">
+        <div id="top-content"></div>
+    </div>
+    -->
+    <div id="page">
+        <div id="page-head"><!--工具列區--></div>
+        <div id="widget-drawer" class="close"><!--抽屜區--></div>
+        <div id="page-content">
+            <div id="screen-frame">
+                <div id="screen">
+                    <div class="slide-content"></div>
+                </div>
+            </div>
+        </div>
+        <div id="widget-dashboard" class="origin-hide-me">
+            <div id="widget-dashboard-header"></div>
+            <div id="widget-dashboard-toolbar"></div>
+            <div id="widget-dashboard-content">
+                <div id="widget-dashboard-form"></div>
+                <div id="widget-dashboard-resizer"><span>◲</span></div>
+            </div>
+        </div>
+        <div id="prev-btn" class="nav-btn-bar mobile">
+            <p><span>⟪⟪</span></p>
+        </div>        
+        <div id="next-btn" class="nav-btn-bar mobile">
+            <p><span>⟫⟫</span></p>
+        </div>
+    </div>
+
+    <div id="gs-toolbar-tmpl" style="display:none">
+        <div class="gs-btn first disabled">
+            <div class="gs-label">⟪⟪</div>
+        </div>
+        <div class="gs-btn prev disabled">
+            <div class="gs-label">⟪</div>
+        </div>
+        <div class="gs-btn play">
+            <div class="gs-label page_no">1</div>
+        </div>
+        <div class="gs-btn next">
+            <div class="gs-label">⟫</div>
+        </div>
+    </div>
+    <!--
+<div id="to_bind_div" class="binding" style="display: none; width: 300px; height: 350px; overflow: auto">
+    <div rel="title">
+        Request Binding
+    </div>
+    <div rel="body" style="padding:0px;text-align: center">
+        <div class="to_bind" style="padding:5px 10px 15px 10px; font-size: 14px;line-height:150%">
+            <p>To generate a binder code for requesting binding</p>
+            <div><button class="to_bind w2ui-btn w2ui-btn-green">Generate binder code</button></div>
+        </div>                
+    </div>
+</div>
+<div id="to_be_bind_div" class="binding" style="display: none; width: 300px; height: 350px; overflow: auto">
+    <div rel="title">
+        Grant Binding Requests
+    </div>
+    <div rel="body" style="padding:0px;">
+        <div class="to_be_bind" style="border-top:solid 1px #c0c0c0;padding:10px 10px 10px 10px; font-size: 14px; line-height:150%">
+            <h3>Grant Binding Requests</h3>
+            <p>
+                <input tabindex="-1" placeholder="binder code" style="margin-top:20px;font-size:1.5em;font-weight:bold;font-family:monospace;width:100%;height:50px;line-height:50px">
+            </p>
+            <div style="text-align: center"><button tabindex="0" class="to_be_bind w2ui-btn w2ui-btn-blue">Approve to be binded</button></div>
+            <p>A binder code is generated by "Request binding" on the device which is about to bind to this board.</p>
+        </div>
+    </div>
+</div>
+-->
+    <div id="quickshortcut_div" class="quickshortcut"
+        style="display: none; width: 300px; height: 350px; overflow: auto">
+        <div rel="title">
+            Quick Shortcut
+        </div>
+        <div rel="body" style="padding:0px;">
+            <div class="quickshortcut"
+                style="border-top:solid 1px #c0c0c0;padding:10px 10px 10px 10px; font-size: 14px; line-height:150%">
+                <h3>Shortcut Code (<span class="code-type"></span>)</h3>
+                <p>Everybody can open this board by:</p>
+                <p style="text-align:center;font-weight:bold;font-family:monospace;width:100%">
+                    <span class="quickshortcut-code"
+                        style="color:red;display:block;font-size:2.5em;height:50px;line-height:50px"></span>
+                    <span class="countdown" style="color:#c0c0c0;display:block">60</span>
+                    <button class="w2ui-btn quickshortcut-change">Change</button>
+                </p>
+            </div>
+        </div>
+        <div rel="buttons">
+            <button class="w2ui-btn quickshortcut" onclick="w2popup.close()">Cancel</button>
+        </div>
+    </div>
+    <div id="go_quickshortcut_div" class="quickshortcut"
+        style="display: none; width: 300px; height: 350px; overflow: auto">
+        <div rel="title">
+            Go Shortcut
+        </div>
+        <div rel="body" style="padding:0px;">
+            <div class="quickshortcut"
+                style="border-top:solid 1px #c0c0c0;padding:10px 10px 10px 10px; font-size: 14px; line-height:150%">
+                <h3>Code:</h3>
+                <div style="text-align:center">
+                    <input class="quickshortcut-code"
+                        style="text-align:center;width:90%;color:red;display:block;font-size:2.5em;height:50px;line-height:50px" />
+                </div>
+            </div>
+        </div>
+        <div rel="buttons" class="buttons">
+            <button class="w2ui-btn quickshortcut" onclick="w2popup.close()">Cancel</button>
+            <button class="w2ui-btn w2ui-btn-blue quickshortcut-go" disabled>Go</button>
+        </div>
+    </div>
+    <div id="who_are_join_page_header" style="display:none">
+        <div style="height:30px;padding:10px;">
+            List of device which is connecting to this board.
+        </div>
+    </div>
+    <input type="file" multiple accept="image/*" id="upload_ele" style="display:none" />
+
+    <!-- widget releated starts-->
+    <div id="widget-gallery" style="display:none" class="widget-gallery">
+
+    </div>
+    <!-- end of widget related-->
+</body>
+
+</html>

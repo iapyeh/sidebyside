@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!--
+
+  <meta name="description" content="WebRTC code samples">
+  <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1.0, user-scalable=no">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta id="extViewportMeta" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  -->
+
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  
+  <meta itemprop="image" content="/src/images/webrtc-icon-192x192.png"/>
+  <meta itemprop="name" content="WebRTC code samples"/>
+  <meta id="theme-color" name="theme-color" content="#ffffff"/>
+  
+  <base target="_blank">
+
+  <title>getUserMedia + CSS filters</title>
+
+  <link rel="icon" sizes="192x192" href="/src/images/webrtc-icon-192x192.png">
+  <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="/src/css/main.css">  
+
+  <style>
+    .none {
+      -webkit-filter: none;
+      filter: none;
+    }
+    .blur {
+      -webkit-filter: blur(3px);
+      filter: blur(3px);
+    }
+    .grayscale {
+      -webkit-filter: grayscale(1);
+      filter: grayscale(1);
+    }
+    .invert {
+      -webkit-filter: invert(1);
+      filter: invert(1);
+    }
+    .sepia {
+      -webkit-filter: sepia(1);
+      filter: sepia(1);
+    }
+
+    button#snapshot {
+      margin: 0 10px 25px 0;
+      width: 110px;
+    }
+
+    video {
+      object-fit: cover;
+    }
+
+    #overlay_canvas {
+        background-color:rgba(255,10,10,0.5);
+        position:absolute;
+        top:0;
+        left:0;
+        -webkit-overflow-scrolling: touch;
+    }
+    body{
+      -webkit-overflow-scrolling: touch;
+    }
+    
+  </style>
+
+</head>
+
+<body onload="setTimeout(function() { window.scrollTo(0, 1) }, 100);">
+  <div id="message" style="position:absolute;left:0;top:0"></div>
+  <div id="container">
+    <video  autoplay></video>        
+  </div>
+    
+
+    <label for="select">Filter: </label>
+    <select id="filter">
+      <option value="none">None</option>
+      <option value="blur">Blur</option>
+      <option value="grayscale">Grayscale</option>
+      <option value="invert">Invert</option>
+      <option value="sepia">Sepia</option>
+    </select>
+
+    <button id="snapshot">Take snapshot</button>
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script src="/lib/adapter.js"></script>
+  <script src="/src/js/common.js"></script>
+
+  <script src="/lib/concrete-2.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script> 
+  <script src="/lib/overlay.js"></script>
+  <script src="overlay.js"></script>
+  <!--
+<script src="../../../js/lib/ga.js"></script>
+-->
+<script>
+
+
+/*
+    window.onresize = function() {
+      $(document.body).width(window.innerWidth).height(window.innerHeight);
+    }
+
+    $(function() {
+      window.onresize();
+    });
+    */
+  </script>  
+</body>
+</html>
+

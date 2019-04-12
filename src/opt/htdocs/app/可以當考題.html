@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,maximum-scale=10.0,initial-scale=1.0,user-scalable=1,minimum-scale=1.0" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/> 
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <script src="../websdk/jquery.3.3.1.min.js"></script>
+    <script src="../websdk/lodash.4.17.10.min.js"></script>
+    <script src="https://unpkg.com/interactjs@1.3/dist/interact.min.js"></script>
+    <script src="../lib/lightgl.min.js"></script>
+    
+<style>
+body{
+    padding:0;
+    margin:0;
+    height: 100vh;
+    width:100vwh;
+    background-color: antiquewhite;
+}
+.widget{
+    display: inline-block;
+    top: 0;
+    left: 0;
+    margin: 0.5em 0.5em 0 0;
+    /* transition: opacity 0.3s, -webkit-transform 0.5s; */
+    -ms-touch-action: none;
+    touch-action: none;
+    position: absolute;
+    transform-origin:center center;
+    -webkit-transform-origin: center center;
+}
+.widget.selected{
+    outline: #c0c0c0 dotted thin;
+}
+.widget.image_background{
+    background-repeat: no-repeat;
+    background-size:100%;
+}
+.widget.draggable{
+
+}
+.widget.circle{
+    border-radius:100%;
+    border:solid 1px #c0c0c0;
+}
+.widget .resizer{
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    bottom: 0px;
+    position: absolute;
+    right: 0px;
+    cursor: nwse-resize;
+    display: none;
+}
+.widget.selected .resizer{
+    display: inline-block;
+}
+.widget .rotator, .widget .origin_sticker{
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    bottom: 0px;
+    position: absolute;
+    left:50%;
+    top: 20px;
+    right: 0px;
+    cursor: nwse-resize;
+    display: none;
+    border-radius:100%;
+    filter:invert(1);
+}
+.widget .rotator{
+    
+}
+.widget .origin_sticker{
+    cursor: pointer;
+}
+.widget.selected .rotator, .widget.selected .origin_sticker{
+    display: inline-block;
+}
+</style>
+</head>
+<body>
+    <div>
+        <button onclick="Widget.selected[0].layer_top()">Layer Top</button>
+        <button onclick="Widget.selected[0].layer_up()">Layer Up</button>
+        <button onclick="Widget.selected[0].layer_down()">Layer Down</button>
+        <button onclick="Widget.selected[0].layer_bottom()">Layer Bottom</button>
+    </div>
+<div id="box-1" class="widget draggable">  
+    <p> I am the first Box </p>
+</div>  
+<div id="box-2" class="widget draggable circle" style="width:100px;height:100px;">  
+    <p> I am the second Box </p>
+</div>
+<div id="box-3" class="widget draggable" style="width:100px;height:100px;"></div>
+<div id="box-4" class="widget draggable" style="background-color:green;width:150px;height:150px;"></div>
+<script>
+function Widget(ele){
+    Widget.counter += 1
+    this.id = ele.getAttribute('id') || ('widget#' + Widget.counter)
+    Widget.all[this.id] = this
+    this.ele = ele
+    this.ele.classList.add('widget')
+    this.ele.style.zIndex = Widget.zindex_start + Widget.counter
+    this.intractable = interact(ele)
+    this.selected = false
+    this.x = ele.style.left ? parseInt(ele.style.left) : 0
+    this.y = ele.style.top ? parseInt(ele.style.top) : 0
+    this.degree = 0 //rotation
+    this.origin = [50,50] //transform orgin in %
+    this.selectable()
+        .draggable()
+        .resizable()
+        .rotatable()
+    //internal flag to be work-around of not knowing how to cancel event in interact.js
+    this._changing_degree = false //aka rotating
+    this._changing_origin = false
+    this._changing_size = false
+}
+Widget.zindex_start = 100
+Widget.counter = 0 //generate widget id
+Widget.all = {} //get wiget by id
+Widget.selected = [] //current focus items
+Widget.utils = {
+    radians: function(d) {
+      return d % 360 * Math.PI / 180
+    }
+}
+Widget.prototype = {
+    selectable:function(){
+        var self = this
+        this.ele.addEventListener('click',function(evt){
+            if (self._changing_degree || self._changing_origin || self._changing_size) return
+            var yes = !self.selected
+            if (yes){ //unselect others
+                Widget.selected.forEach(function(widget){
+                    widget.select(false)
+                })
+            }
+            self.select(yes)
+        })
+        return this
+    },
+    select:function(yes){
+        var self = this
+        self.selected = yes
+        self.selected ? self.ele.classList.add('selected') : self.ele.classList.remove('selected')
+        if (yes) Widget.selected.push(this)
+        else {
+            var idx = Widget.selected.indexOf(this)
+            if (idx >=0) Widget.selected.splice(idx,1)
+        }
+        console.log('sel',yes)
+    },
+    _dragMoveListener : function (event) {
+        if (this._changing_degree || this._changing_origin || this._changing_size) return
+        var target = event.target,
+            // keep the dragged position in the data-x/data-y attributes
+            x = this.x + event.dx,
+            y = this.y + event.dy;
+        this.move(x,y)
+    },
+    draggable:function(){
+        var self = this
+        this.intractable.draggable({
+            // enable inertial throwing
+            inertia: true,
+            // keep the element within the area of it's parent
+            restrict: {
+                restriction: "parent",
+                endOnly: true,
+                elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+            },
+            // enable autoScroll
+            autoScroll: true,
+            // call this function on every dragmove event
+            onmove: function(evt){self._dragMoveListener(evt)},
+        })
+        return this
+    },
+    rotatable:function(){
+        var self = this
+        var rotator = document.createElement('div')
+        rotator.className = 'rotator'
+        this.ele.appendChild(rotator)
+        var origin_sticker = document.createElement('div')
+        origin_sticker.className = 'origin_sticker'
+        this.ele.appendChild(origin_sticker)
+        self.update_sticker = function(){
+            origin_sticker.style.display = 'inline-block' //for taking getBoundingClientRect()
+            var origin_sticker_rect = origin_sticker.getBoundingClientRect()
+            origin_sticker.style.display = ''
+            var rect = this.ele.getBoundingClientRect()
+            rotator.style.left = Math.round((rect.width - origin_sticker_rect.width)/2)+'px' //center
+            origin_sticker.style.left = Math.round((rect.width - origin_sticker_rect.width)/2)+'px'
+            origin_sticker.style.top =  Math.round((rect.height - origin_sticker_rect.height)/2)+'px'
+        }
+        self.update_sticker()
+        var origin = null
+        
+        var starting_degree = 0
+        rotator.addEventListener('mousedown',function(evt){
+            evt.preventDefault()
+            evt.stopPropagation()
+            self._rotating = true
+            self._changing_degree = true
+            origin = {x:evt.pageX, y:evt.pageY}
+            rect = self.ele.getBoundingClientRect()
+            starting_degree = self.degree
+        })
+        this.ele.addEventListener('mouseup',function(evt){
+            setTimeout(function(){self._changing_degree = false},10)
+            origin = null
+            rect = null
+            starting_degree = 0
+        })
+        this.ele.addEventListener('mousemove',function(evt){
+            if (!self._changing_degree) return
+            evt.preventDefault()
+            evt.stopPropagation()
+            //console.log('rotation',evt.clientX, evt.clientY)
+            // start minus middle
+            var current = {x:evt.pageX, y:evt.pageY}
+            var sDegree = Math.atan2((origin.y - rect.top - rect.height / 2), (origin.x - rect.left - rect.width / 2));
+            // end minus middle
+            var pDegree = Math.atan2((current.y - rect.top - rect.height / 2), (current.x - rect.left - rect.width / 2));
+            var degree = starting_degree + (pDegree - sDegree) * 180 / Math.PI;
+            self.rotate(degree)
+        })
+        // move transform origin
+        interact(origin_sticker).draggable({
+            onstart:function(evt){
+                rect = self.ele.getBoundingClientRect()
+                self._changing_origin = true
+                evt.stopPropagation()
+                evt.preventDefault()
+                evt.stopImmediatePropagation()
+                self._rotating = true
+                return false
+            },
+            onmove: function(evt){
+               evt.target.style.left = parseInt(evt.target.style.left) + evt.dx + 'px'
+               evt.target.style.top =  parseInt(evt.target.style.top)  + evt.dy + 'px'
+               self.origin[0] = Math.round((parseInt(evt.target.style.left) + origin_sticker_rect.width/2 + evt.dx )/rect.width * 100)
+               self.origin[1] = Math.round((parseInt(evt.target.style.top)  + origin_sticker_rect.height/2 + evt.dy)/rect.height * 100)
+            },
+            onend:function(evt){
+                self.ele.style.transforOrigin = self.ele.style.webkitTransformOrigin = self.origin[0]+'% '+self.origin[1]+'%'
+                setTimeout(function(){self._changing_origin = false},10)
+                return false
+            }
+        })
+        
+        
+
+        return this
+    }
+    ,resizable:function(){
+        var self = this
+        var resizer = document.createElement('div')
+        resizer.className = 'resizer'
+        this.ele.appendChild(resizer)
+        
+        this.intractable.resizable({
+            edges: {
+                top   : true,       // Use pointer coords to check for resize.
+                left  : false,      // Disable resizing from left edge.
+                bottom: false,      // Resize if pointer target matches selector
+                right : '.widget.selected .resizer'    // Resize if pointer target is the given Element
+            },
+
+            // Width and height can be adjusted independently. When `true`, width and
+            // height are adjusted at a 1:1 ratio.
+            square: false,
+
+            // Width and height can be adjusted independently. When `true`, width and
+            // height maintain the aspect ratio they had when resizing started.
+            preserveAspectRatio: false,        
+            onstart: function (event) {
+                this._rect = event.target.getBoundingClientRect()
+                self._changing_size = true
+            },
+            onmove : function (event) {
+                var dx = event.dx
+                var dy = event.dy
+                /* failure implementation
+                if (self.degree){
+                    var r = Widget.utils.radians(-self.degree)
+                    var m = new GL.Matrix(Math.cos(r),  -Math.sin(r),0,0, Math.sin(r), Math.cos(r), 0, 0, 0,0,0,0,0,0,0,0)
+                    var v = new GL.Matrix(dx,dy,0,0).transpose()
+                    var nv = m.multiply(v)
+                    dx = nv.m[0]
+                    dy = nv.m[4]
+                }                
+                */
+                this._rect.width += dx
+                this._rect.height += dy
+                event.target.style.width = this._rect.width+'px'
+                event.target.style.height = this._rect.height+'px'
+            },
+            onend  : function (event) {
+                setTimeout(function(){
+                    self._changing_size = false
+                    self.update_sticker()
+                },10)
+            },    
+        })
+        return this
+    },
+    set_background:function(url){
+        //flipcard-heart.png
+        var self = this
+        var image = new Image()
+        image.onload = function(){
+            self.ele.classList.add('image_background')
+            self.ele.style.width = image.naturalWidth+'px'
+            self.ele.style.height = image.naturalHeight+'px'
+            self.ele.style.backgroundImage = 'url("'+url+'")'
+        }
+        image.src = url
+        return this
+    },
+    layer_up:function(){
+        var target = null
+        var min = Infinity
+        for(var id in Widget.all){
+            if ((Widget.all[id].ele.style.zIndex > this.ele.style.zIndex) && (Widget.all[id].ele.style.zIndex < min)){
+                target = Widget.all[id].ele
+                min = Widget.all[id].ele.style.zIndex
+            }
+        }
+        if (target === null) return
+        target.style.zIndex = this.ele.style.zIndex
+        this.ele.style.zIndex = min
+    },
+    layer_down:function(){
+        var target = null
+        var max = -Infinity
+        for(var id in Widget.all){
+            if ((Widget.all[id].ele.style.zIndex < this.ele.style.zIndex) && (Widget.all[id].ele.style.zIndex > max)){
+                target = Widget.all[id].ele
+                max = Widget.all[id].ele.style.zIndex
+            }
+        }
+        if (target === null) return
+        target.style.zIndex = this.ele.style.zIndex
+        this.ele.style.zIndex = max
+    },
+    layer_bottom:function(){
+        var target = null
+        var min = Infinity
+        for(var id in Widget.all){
+            if ((Widget.all[id].ele.style.zIndex < this.ele.style.zIndex) && (Widget.all[id].ele.style.zIndex < min)){
+                target = Widget.all[id].ele
+                min = Widget.all[id].ele.style.zIndex
+            }
+        }
+        if (target === null) return
+        target.style.zIndex = this.ele.style.zIndex
+        this.ele.style.zIndex = min
+    },
+    layer_top:function(){
+        var target = null
+        var max = -Infinity
+        for(var id in Widget.all){
+            if ((Widget.all[id].ele.style.zIndex > this.ele.style.zIndex) && (Widget.all[id].ele.style.zIndex > max)){
+                target = Widget.all[id].ele
+                max = Widget.all[id].ele.style.zIndex
+            }
+        }
+        if (target === null) return
+        target.style.zIndex = this.ele.style.zIndex
+        this.ele.style.zIndex = max
+    },
+    move:function(x,y){
+        // update the posiion attributes
+        this.x = x
+        this.y = y
+        this.ele.style.webkitTransform =
+            this.ele.style.transform = 'translate(' + this.x + 'px, ' + this.y + 'px) rotate('+this.degree+'deg)';
+    },
+    rotate:function(degree){
+        
+        this.degree = degree
+        this.ele.style.webkitTransform =
+            this.ele.style.transform = 'translate(' + this.x + 'px, ' + this.y + 'px) rotate('+this.degree+'deg)';
+    },
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('.draggable').forEach(function(ele){
+        new Widget(ele)
+    })
+    Widget.all['box-3'].set_background('flipcard-heart.png')
+    Widget.all['box-4'].move(200,500)
+    Widget.all['box-3'].rotate(45)
+})
+</script>
+</body>
+</html>

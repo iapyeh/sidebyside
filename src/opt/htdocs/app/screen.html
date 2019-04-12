@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,maximum-scale=2.5,initial-scale=1.0,user-scalable=1,minimum-scale=1.0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>    
+    <meta name="mobile-web-app-capable" content="yes"/>
+
+    <link rel="stylesheet" type="text/css" href="../websdk/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../websdk/w2ui-1.5.rc1.min.css" />
+    <script src="../lib/jquery.3.3.1.min.js"></script>
+    <script src="../lib/lodash.4.17.10.min.js"></script>
+    <script src="../websdk/w2ui-1.5.rc1.min.js"></script>
+          
+    <script src="../lib/concrete-2.0.min.js"></script>
+    <script src="overlay.js"></script>
+    <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
+    -->
+
+    <script src="../websdk/sdk.js"></script><!--required by sbsuser.js-->
+    <!--script src="../lib/cookie.js"></script> required by sbsuser.js-->
+    <!--script src="../lib/guid.js"></script>--required by sbsuser.js-->
+
+    <script src="../@/sidebyside/config"></script>
+    <script src="sbsuser.js"></script>
+    
+    <!-- presentation.js and its dependences -->
+    <script src="../lib/detect-zoom.js"></script><!--required in mobile device to detect zoom after pinching-->
+    <script src="../lib/fullscreen.min.js"></script>
+    <script src="presentation.js"></script>
+    
+    <link rel="stylesheet" type="text/css" href="screen.css" />
+    <script src="screen.js"></script>
+</head>
+<body 
+    onload="setTimeout(function() { window.scrollTo(0, 0) }, 1000);"
+>
+<div id="message"></div>
+<!--
+<div style="position:absolute;top:85px;left:10px;z-index:200;"><button id="testbtn">TEST</button></div>
+-->
+<div id="page" style="z-index:1">
+    <div id="prev-btn" class="nav-btn-bar mobile"><p><span>⟪⟪</span></p></div>
+    <div id="screen"></div>
+    <div id="next-btn" class="nav-btn-bar mobile"><p><span>⟫⟫</span></p></div>
+</div>
+<!--div id="qrcode-btn"><img src="qrcode.jpg"/></div-->
+
+<div id="gs-toolbar-tmpl" style="display:none">
+    <div class="gs-btn first disabled">
+        <div class="gs-label">⟪⟪</div>
+    </div>
+    <div class="gs-btn prev disabled">
+        <div class="gs-label">⟪</div>
+    </div>
+    <div class="gs-btn play">
+        <div class="gs-label page_no">1</div>
+    </div>
+    <div class="gs-btn next">
+        <div class="gs-label">⟫</div>
+    </div>
+</div>
+
+<script>
+    /*
+    // The application will create a renderer using WebGL, if possible,
+    // with a fallback to a canvas render. It will also setup the ticker
+    // and the root stage PIXI.Container
+    const app = new PIXI.Application({width:500,height:500,transparent:true});
+    
+    // The application will create a canvas element for you that you
+    // can then insert into the DOM
+    document.body.appendChild(app.view);
+    app.view.style.zIndex = 250
+    app.view.style.position = 'absolute'
+
+    // load the texture we need
+    PIXI.loader.add('bunny', '/examples/images/cat.png').load((loader, resources) => {
+        // This creates a texture from a 'bunny.png' image
+        const bunny = new PIXI.Sprite(resources.bunny.texture);
+    
+        // Setup the position of the bunny
+        bunny.x = app.renderer.width / 2;
+        bunny.y = app.renderer.height / 2;
+    
+        // Rotate around the center
+        bunny.anchor.x = 0.5;
+        bunny.anchor.y = 0.5;
+    
+        // Add the bunny to the scene we are building
+        app.stage.addChild(bunny);
+    
+        
+        let style = new PIXI.TextStyle({
+            fontFamily: "Arial",
+            fontSize: 36,
+            fill: "white",
+            stroke: '#ff3300',
+            strokeThickness: 4,
+            dropShadow: true,
+            dropShadowColor: "#000000",
+            dropShadowBlur: 4,
+            dropShadowAngle: Math.PI / 6,
+            dropShadowDistance: 6,
+            });
+        let message = new PIXI.Text("Hello 台灣 Pixi!", style);        
+        
+        app.stage.addChild(message)
+        // Listen for frame updates
+        app.ticker.add(() => {
+             // each frame we spin the bunny around a bit
+            bunny.rotation += 0.01;
+        });
+    });    
+
+   */
+    </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,maximum-scale=10.0,initial-scale=1.0,user-scalable=1,minimum-scale=1.0" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/> 
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <script src="https://unpkg.com/interactjs@1.3/dist/interact.min.js"></script>
+    
+    <link rel="stylesheet" type="text/css" href="../lib/widget.css" />
+    <script src="../websdk/lodash.4.17.10.min.js"></script>
+    <script src="../lib/widget.js"></script>
+
+    <!-- draw grid -->
+    <script src="../lib/svg.min.js"></script>    
+<style>
+body{
+    padding:0;
+    margin:0;
+    height: 100vh;
+    width:100vwh;
+    background-color: antiquewhite;
+}
+</style>
+</head>
+<body>
+    <div id="grid-box" style=""></div>
+    <div id="action-bar" style="position:absolute;background-color:rgba(0,0,0,0.3)">
+        <button onclick="Widget.selected[0].layer_top()">Layer Top</button>
+        <button onclick="Widget.selected[0].layer_up()">Layer Up</button>
+        <button onclick="Widget.selected[0].layer_down()">Layer Down</button>
+        <button onclick="Widget.selected[0].layer_bottom()">Layer Bottom</button>
+        <button onclick="Widget.selected[0].reset()">Reset</button>
+        <button onclick="Widget.selected[0].clone()">Clone</button>
+        <button onclick="Widget.selected[0].remove()">Delete</button>
+
+        <div id="action-menu" style="display:inline-block"></div>
+    </div>    
+    <div class="widget" kind="CardWidget" id="card1">
+        <p class="widget"> I am the first Box </p>
+    </div>
+<script>
+var gallery
+function do_action(action_id){
+    Widget.selected[0].action(action_id)
+}
+function update_action_menu(widget){
+    if (widget){
+        var buttons = []
+        if (widget.get_classname()=='Widget'){
+            //generic widget
+        }
+        else{
+            var a_class = gallery.get_class(widget.get_classname())
+            a_class.metadata.actions.forEach(function(item){
+                buttons.push('<button action="'+item.id+'" onclick="do_action(this.getAttribute(\'action\'))">'+item.caption+'</button>')
+            })
+        }
+        document.getElementById('action-menu').innerHTML = buttons.join('')
+        document.getElementById('action-bar').style.display = ''
+    }
+    else{
+        document.getElementById('action-bar').style.display = 'none'
+    }
+}
+function init(){
+    gallery = WidgetGallery.singleton
+    gallery.on('selected',function(widget){update_action_menu(widget)})
+    gallery.on('unselected',function(widget){update_action_menu()})
+
+    Widget.all['card1'].set_background('https://www.w3schools.com/images/colorpicker.gif')
+    Widget.all['card1'].move(500,500)
+}
+window.addEventListener('DOMContentLoaded',function(){
+    /*
+    //draw a grid
+    var gridbox = document.getElementById('grid-box')
+    gridbox.style.width = '100vw'
+    gridbox.style.height = '100vh'
+    gridbox.style.backgroundColor = '#f0f0f0'
+    gridbox.style.position = 'absolute'
+    gridbox.style.top = 0
+    gridbox.style.left = 0
+    gridbox.style.overflow = 'hidden'
+    var rect = gridbox.getBoundingClientRect()    
+    var draw = SVG(gridbox).size(rect.width,rect.height)
+    var grid_size = 50
+    var toggle_line = function(){
+        if (this.remember('hilight')){
+            this.stroke({width:2,color:'rgba(0,0,0,0.15)'})
+            this.forget('hilight')
+        }else{
+            this.remember('hilight',1)
+            this.stroke({width:2, color:'red'})
+        }
+    }
+    for (var i=0;i<rect.width;i+=grid_size){
+        var line = draw.line(i,0,i,rect.height).stroke({ width:2, color:'rgba(0,0,0,0.15)'})
+        line.on('click',toggle_line)
+    }
+    for (var i=0;i<rect.height;i+=grid_size){
+        var line = draw.line(0,i,rect.width,i).stroke({ width:2, color:'rgba(0,0,0,0.15)'})
+        line.on('click',toggle_line)
+    }
+    */
+    init()
+})
+</script>
+</body>
+</html>
