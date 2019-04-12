@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0,user-scalable=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>    
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <script src="../websdk/jquery.3.3.1.min.js"></script>
+    <script src="../lib/qrcode.js"></script>
+    <style>
+        body{
+            margin:0;
+            padding:0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width:100vw;
+            height:100vh;
+        }
+        #qrcode-box{
+            text-align:center;            
+            margin:auto;
+        }
+        #qrcode{
+            text-align:center;
+            cursor:pointer;
+        }
+        #qrcode img{
+            display:inline-block;
+        }        
+        #caption{
+            font-size:20px;
+            font-weight:bold;
+            padding-top:10px;
+            cursor:pointer;
+        }
+        #bigger-btn{
+            width: 100px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <button id="bigger-btn" onclick="bigger()">Bigger</button>
+    <div id="qrcode-box">
+            <table>
+                <tr><td><div id="qrcode"></div></td>
+                <tr><td><div id="caption"></div></td></tr>
+                <tr><td><div id="url"></div></td></tr>
+            </table>
+    </div>
+<script>
+    function init(){
+        var hash = window.location.hash
+        if (!hash) return
+        var url_caption = decodeURIComponent(hash.substr(1)).split('\t')
+        var url = url_caption[0]
+        var caption = url_caption[1]
+        //REF:https://davidshimjs.github.io/qrcodejs/
+        if (caption){
+            document.getElementById('caption').innerHTML = caption
+        }
+        else{
+            document.getElementById('caption').style.display = 'none'
+        }
+        
+        //document.getElementById('url').innerHTML = url
+        document.getElementById('qrcode').privateData = {url:url,size:320}
+        gen_qrcode()
+    }
+    function gen_qrcode(){
+        var data = document.getElementById('qrcode').privateData
+        var options = {
+            text: data.url,
+            width: data.size,
+            height:data.size,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        }
+        if (window.qrcode_obj){
+            //window.qrcode_obj.clear()
+            document.querySelector('#qrcode').innerHTML = ''
+            delete window.qrcode_obj
+            setTimeout(function(){
+                gen_qrcode()
+            },10)
+        }
+        else{
+            window.qrcode_obj = new QRCode(document.getElementById("qrcode"), options);
+        }
+        
+        document.getElementById('caption').style.fontSize = Math.round(data.size / 128 * 14) +'px'
+        document.getElementById('caption').onclick = function(){open(data.url)}
+        document.querySelector('#qrcode').onclick = function(){open(data.url)}
+        setTimeout(function(){document.querySelector('#qrcode > img').style.display = 'inline-block'},0)
+    }
+    function bigger(){
+        var data = document.getElementById('qrcode').privateData
+        document.getElementById('qrcode').privateData = {url:data.url, size:data.size+25}
+        gen_qrcode()
+    }
+    document.addEventListener('DOMContentLoaded',function(){
+        // hide bigger button if this page is in iframe (of screen.html)
+        if (top != window) document.getElementById('bigger-btn').style.display = 'none'
+        
+        init()
+    })
+</script>
+</script>
+</body>
+</html>

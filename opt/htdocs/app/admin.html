@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0,user-scalable=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>    
+    <meta name="mobile-web-app-capable" content="yes"/>
+    
+    <link rel="stylesheet" type="text/css" href="../websdk/w2ui-1.5.rc1.min.css" />
+    <script src="../websdk/jquery.3.3.1.min.js"></script>
+    <script src="../websdk/lodash.4.17.10.min.js"></script>
+    <script src="../websdk/w2ui-1.5.rc1.min.js"></script>
+    <script src="../websdk/sdk.js"></script>
+    
+    <script src="admin.js"></script>
+<style>
+body{
+    padding:0;
+    margin:0;
+}
+.host-dashboard{
+    padding:0px 10px;
+}
+.host-dashboard > div{
+    border-top:solid 1px #c0c0c0;
+    padding-bottom:25px;
+}
+.host-dashboard p{
+    text-align:left;
+}
+</style>
+</head>
+<body>
+
+<div id="page"  style="width:100vw;height:100vh"></div>
+
+<div id="host-record-tmpl" style="display:none">
+    <div style="text-align:center" class="host-dashboard">
+        <h3>
+            <%= host_id %> (<%= access_path %>)
+        </h3>
+        <div>
+            <h3>
+            本機資料庫健康狀態
+            </h3>
+            <p>
+                逐一檢視本機上的簡報目錄（靜態檔案），是否存在於簡報資料庫中，如果不存在則刪除該目錄。     
+            </p>
+            <p>
+                逐一檢視本機上的使用者目錄，是否存在於使用者資料庫中，如果不存在則刪除該目錄。     
+            </p>
+            <button class="w2ui-btn do-health-check-database-dryrun">測試(Dry run)</button>
+            <button class="w2ui-btn w2ui-btn-red do-health-check-database">執行</button>
+        </div>              
+        <div>
+            <h3>
+            刪除本機多餘的簡報目錄。
+            </h3>
+            <p>
+                逐一檢視本機上的簡報目錄（靜態檔案），是否存在於簡報資料庫中，如果不存在則刪除該目錄。     
+            </p>
+            <p>
+                逐一檢視本機上的使用者目錄，是否存在於使用者資料庫中，如果不存在則刪除該目錄。     
+            </p>
+            <button class="w2ui-btn do-cleanup-local-fs-dryrun">測試(Dry run)</button>
+            <button class="w2ui-btn w2ui-btn-red do-cleanup-local-fs">執行</button>
+        </div>
+        <div>
+            <h3>
+            資料庫記錄統計
+            </h3>
+            <button class="w2ui-btn do-database-statistics">執行</button>
+        </div>
+        <div>
+            <h3>
+                系統完全清空，危險！
+            </h3>            
+            <p>
+            清空所有的使用者資料庫記錄，會導致完全清除簡報資料、檔案。
+            </p>
+            <button class="w2ui-btn w2ui-btn-red do-purge-username">Purge</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+</script>
+</body>
+</html>

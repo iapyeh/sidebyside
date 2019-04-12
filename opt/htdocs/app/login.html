@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,maximum-scale=10.0,initial-scale=1.0,user-scalable=1,minimum-scale=1.0" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/> 
+   
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes"/>
+    
+    <link rel="stylesheet" type="text/css" href="../lib/fontawesome-all.css" />
+    <!--
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    -->
+    <link rel="stylesheet" type="text/css" href="../websdk/w2ui-1.5.rc1.min.css" />
+    <script src="../websdk/jquery.3.3.1.min.js"></script>
+    <script src="../websdk/lodash.4.17.10.min.js"></script>
+    <script src="../websdk/w2ui-1.5.rc1.min.js"></script>
+    <script src="../websdk/sdk.js"></script><!--required by sbsuser.js-->
+    <style>
+#layout{
+    padding:0;
+    margin:0;
+    position:absolute;
+    overflow: hidden;/* keep static under scaling */
+    width:100vw;
+    height:100vh;
+    display:flex;
+    align-items: center;
+    justify-content: center;    
+    flex-flow:column;
+}
+#layout > div{
+    width:320px;
+    text-align: center;
+    padding:5px 0px;
+}
+#layout > div  div{
+    display:block;
+}
+input{
+    height:35px;
+    width:50%;
+}
+    </style>
+</head>
+<body>
+    <div id="layout">
+        <div>
+            <input id="username" value="admin">
+        </div>
+        <div>
+            <input type="password" id="password" value="1234">
+        </div>
+        <div>
+            <button id="login-btn" class="w2ui-btn">Login</button>
+        </div>
+    </div>
+    <script>
+        $(function(){
+            var next
+            if (window.location.search){
+                var params = window.location.search.split('&')[0].split('=')
+                if (params.length==2) next = params[1]
+            }
+            var sdk = new ObjshSDK()            
+            $('#login-btn').click(function(){
+                var username = $('#username').val()
+                sdk.login(username,$('#password').val()).then(function(response){
+                    location.href = sdk.access_path + (next ? next : (username=='admin' ? 'app/admin.html' : 'index.html'))
+                },function(){
+                    w2alert('failure login')
+                })
+            })
+            //console.warn('auto login enabled')
+            //$('#login-btn').click()
+        })
+    </script>
+</body>
+</html>

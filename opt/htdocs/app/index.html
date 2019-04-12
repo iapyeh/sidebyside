@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0,user-scalable=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>    
+    <meta name="mobile-web-app-capable" content="yes"/>
+    
+    <link rel="stylesheet" type="text/css" href="../websdk/w2ui-1.5.rc1.min.css" />
+<style>
+body{
+    padding:0;
+    margin:0;
+}
+#layout{
+    padding:0;
+    margin:0;
+    position:absolute;
+    overflow: hidden;/* keep static under scaling */
+    width:100vw;
+    height:100vh;
+    display:flex;
+    align-items: center;
+    justify-content: center;    
+    flex-flow:column;
+}
+#layout > div{
+    width:320px;
+    text-align: center;
+    padding:20px 0px;
+}
+#layout > div  div{
+    display:block;
+}
+#shortcut_code{
+    width:100%;
+    height:50px;
+    text-align:center;
+    line-height:50px;
+    font-size:2em;
+    color:red;
+    margin-bottom:20px;
+}
+#shortcut_code::placeholder { 
+    color: rgba(0,0,0,0.25);
+    font-size: 1.2em; 
+}
+.myboard {
+    
+}
+</style>
+</head>
+<body>
+<div id="layout" style="width:100vw;height:100vh">
+    <div style="">
+        <button class="w2ui-btn w2ui-btn-blue myboard" onclick="location.href='whiteboard.html'">Go My Whiteboard</button>
+    </div>
+    <div style="text-align:center">
+        <p id="message">&nbsp;</p>
+        <div><input id="shortcut_code" style="border-top:solid 1px rgba(0,0,0,0.25)" placeholder="shortcut code"></div>
+        <button class="w2ui-btn" onclick="go_shortcut_code()">Go Shortcut Code</button>
+    </div>
+</div>
+<script>
+    function go_shortcut_code(){
+        var code = document.getElementById('shortcut_code').value.trim()
+        if (/^\d{6}$/.test(code)){
+            location.href='whiteboard.html#0'+code
+        }
+        else{
+            document.getElementById('message').innerHTML = 'shortcut code is 6 digits'
+            setTimeout(function(){
+                document.getElementById('message').innerHTML=''
+            },5000)
+        }
+    }
+</script>
+</body>
+</html>
