@@ -1,4 +1,6 @@
-OS junk files
+.vscode/
+config.py.*
+#OS junk files
 [Tt]humbs.db
 *.DS_Store
 
