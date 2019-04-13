@@ -27,6 +27,15 @@ function copyTextToClipboard(text, callback) {
     });
 }
 /*end of utility to copy to clipboard*/
+function dataURLtoFile(dataurl,filename) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    var blob = new Blob([u8arr]);
+    return new File([blob], filename,{type:mime})
+}
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -131,6 +140,15 @@ function ResourceFactory() {
 }
 ResourceFactory.prototype = {
     from_string: function (text) {
+        /*
+         Returns:
+            * {} for not suported resource
+            * {
+                type: enum of ['TEXT','URL','FILE','VIDEO','OP']
+                kind: usually is content-type or defined by "type"
+                <other>: defined by "type" (ex. 'YT' for 'VIDEO')
+              }
+        */
         var self = this
         //ask helper functions who can handle this text
         var filters = [this.imgdata, this.yt, this.op, this.url]
@@ -173,14 +191,18 @@ ResourceFactory.prototype = {
     },
     imgdata: function (text) {
         //data:image/gif;
-        var m = text.match(/^data\:(image\/.+?);/)
+        var m = text.match(/^data\:image\/(.+?);/)
         if (m) {
-            //var urlCreator = window.URL || window.webkitURL;
-            //var url = urlCreator.createObjectURL(text);
+            var ext = m[1]
+
+            // only some types are supported
+            var allowed_exts = ['gif','jpeg','png','svg']
+            if (allowed_exts.indexOf(ext) == -1) return {}
+
             var slide_resource = {
-                type: 'URL',
-                kind: m[1],
-                url: text,
+                type: 'FILE',
+                kind: 'image/'+ext,
+                file:dataURLtoFile(text,'image.'+ext)
             }
             return slide_resource
         }
@@ -326,7 +348,8 @@ DisplayArea.prototype = {
         this.slide = slide
         var promise = new $.Deferred()
         this.refresh(transition).done(function () {
-            var ele = $('#layout_layout_panel_main > div.w2ui-panel-content')[0]
+            //2019-03-12T06:43:32+00:00 基本上已經不打算使用w2layout，暫時維持共存的方式
+            var ele = w2ui['layout'] ? $('#layout_layout_panel_main > div.w2ui-panel-content')[0] : $('#page')[0]
             var ele_to_load = ele.querySelectorAll('img')
             if (ele_to_load.length == 0) {
                 // since there is no image, lets do content_fitting immediately
@@ -1588,12 +1611,15 @@ PresentationScreen.prototype = {
 
         //setup thread's layout
         //hard coded, not really implemented
+        /*
+        2019-03-12T06:36:18+00:00
+        只有main，似乎已經沒有意義再使用layout
         $('#layout').w2layout({
             name: 'layout',
             style: 'width:100%;height:100%',
             panels: [
                 //overflow:hidden is important for zooming
-                /*
+                / *
                 {
                     'type': 'top', size: 200, content: $('#top'), hidden: true, onShow: function () {
                         self.presentation.fire('widget', {
@@ -1604,11 +1630,12 @@ PresentationScreen.prototype = {
                         document.getElementById('top-content').innerHTML = ''
                     }
                 }
-                */
+                * /
                 //{ 'type': 'main', 'size': '100%', 'content': ''}
                 {type:'main',size:'100%','content': $('#page'), style: 'overflow:hidden'}
             ]
         })
+        */
 
         var toggle_page_head_div = document.getElementById('toggle-page-head-div')
         toggle_page_head_div.querySelector('a#toggle-page-head').onmouseover = function (evt) {
@@ -1700,12 +1727,13 @@ PresentationScreen.prototype = {
         toolbar_div.setAttribute('id', 'toolbar')
         document.getElementById('page-head').appendChild(toolbar_div)
 
-
+        /*
+        * 此處設定整個畫面的各種重要比例與尺寸
+        */
         self.set_size = function () {
-            /*
-             * 此處設定整個畫面的各種重要比例與尺寸
-             */
             var page_ele = self.page_ele
+            // 預設是center-align,有widget dashboard存在時為 left-algin
+            var left_align = page_ele.classList.contains('left')
             var tabsbar_div = document.getElementById('tabsbar')
             page_ele.style.top = '0px'
             page_ele.style.left = '0px'
@@ -1726,13 +1754,13 @@ PresentationScreen.prototype = {
             
             // 在resize的情況下，保持reference
             if (!self.content_rect) { //內容可用區（不含工具列）
-                self.content_rect = {}
+                self.content_rect = {
+                    left_offset : 0 // center-align時 左邊寬度
+                }
             }
             var content_rect = self.content_rect
             // 使用page全寬時按比例所需的高度為 h 
             var h = Math.round(page_rect.width / ratio[0] * ratio[1])
-            // self.page_head_height ＝ 被toolbar等佔用的高度
-            //var top_offset = self.page_head_height //height of toolbar and tabsbar
             if (h + self.page_head_height <= page_rect.height) {
                 //使用全寬（高度有餘）
                 content_rect.height = h;
@@ -1748,7 +1776,8 @@ PresentationScreen.prototype = {
                 content_rect.height = page_rect.height - self.page_head_height;
                 content_rect.width = Math.round(content_rect.height / ratio[1] * ratio[0])
                 content_rect.top = self.page_head_height
-                content_rect.left = Math.round((page_rect.width - content_rect.width) / 2)
+                content_rect.left_offset = Math.round((page_rect.width - content_rect.width) / 2)
+                content_rect.left = left_align ? 0 : content_rect.left_offset
             }
 
             //apply
@@ -1783,8 +1812,6 @@ PresentationScreen.prototype = {
                     left: content_rect.left
                 })
                 //been added to screen-frame,so left and top are zero
-                //self.widget_layer.style.left = '0px'
-                //self.widget_layer.style.top = '0px'
                 self.widget_layer.style.width = content_rect.width + 'px'
                 self.widget_layer.style.height = content_rect.height + 'px'
             })
@@ -1793,16 +1820,16 @@ PresentationScreen.prototype = {
             if (!self.display_areas[panel_name]) {
                 self.display_areas[panel_name] = new DisplayArea(self, panel_name)
             }
-            //toolbar; will be rendered in set_owner()
-            
             var toolbar_div = document.getElementById('toolbar')
             toolbar_div.setAttribute('style', 'width:' + content_rect.width + 'px;left:' + content_rect.left + 'px')
             tabsbar_div.style.width = (content_rect.width - 60) + 'px' //60 is space for #toggle-page-head-div
             tabsbar_div.style.left = content_rect.left + 'px'
 
+            //2019-03-12T06:43:32+00:00 基本上已經不打算使用w2layout，暫時維持共存的方式
             //this is especially required when enter fullscreen mode
-            w2ui['layout'].resize()
-
+            if (w2ui['layout']) w2ui['layout'].resize()
+            
+            self.presentation.fire('RESIZE',self.content_rect)
             return true
         }
 
@@ -2556,6 +2583,16 @@ PresentationScreen.prototype = {
                 case 'show-boards':
                     self.show_boards()
                     break
+                case 'page-align':
+                    console.log('====',data)
+                    if (data.side == 'left'){
+                        self.page_ele.classList.add('left')
+                    }
+                    else{
+                        self.page_ele.classList.remove('left')
+                    }
+                    self.set_size()
+                    break
             }
         })
     },
@@ -2666,6 +2703,7 @@ PresentationScreen.prototype = {
                     WidgetGallery.singleton.set_context({
                         presentation: self.presentation,
                         layer: self.widget_layer,
+                        content_rect:self.content_rect,
                         dashboard: document.querySelector('#widget-dashboard'),
                         drawer:document.querySelector('#widget-drawer')
                     })
@@ -2865,7 +2903,7 @@ PresentationScreen.prototype = {
                 { text: '-' },
                 { id: 'copy-url', text: 'Copy URL', tooltip: 'copy the URL of this board', icon: 'fa fa-globe' },
                 { id: 'show-qrcode', text: 'Show QRCode', tooltip: 'show the QRcode URL of this board', icon: 'fa fa-qrcode' },
-                { id: 'show-quickshortcut', text: 'Quick Access Code', tooltip: 'Show the code for quick access', icon: 'fa fa-directions' },
+                { id: 'show-quickshortcut', text: 'Shortcut Code', tooltip: 'Show the code for quick access', icon: 'fa fa-directions' },
             ]
             group2_items.push({ type: 'menu', id: 'audience', text: 'Audience', items: audience_menu_items, icon: 'fa fa-globe', tooltip: 'read only access' })
 
@@ -2874,7 +2912,7 @@ PresentationScreen.prototype = {
                 { text: '-' },
                 { id: 'copy-url', text: 'Copy URL', tooltip: 'copy the URL of this board', icon: 'fa fa-globe' },
                 { id: 'show-qrcode', text: 'Show QRCode', tooltip: 'show the QRcode URL of this board', icon: 'fa fa-qrcode' },
-                { id: 'show-quickshortcut', text: 'Quick Access Code', tooltip: 'Show the code for quick access', icon: 'fa fa-directions' },
+                { id: 'show-quickshortcut', text: 'Shortcut Code', tooltip: 'Show the code for quick access', icon: 'fa fa-directions' },
             ]
             group2_items.push({ type: 'menu', id: 'speaker', text: 'Co-Author', items: speaker_menu_items, icon: 'fa fa-user-edit', tooltip: 'be able to change content', overlay: { width: 200 } })
             var next_ratio = self.presentation.settings.ratio[0] == 4 ? '16:9' : '4:3'
@@ -2979,11 +3017,13 @@ PresentationScreen.prototype = {
                                 //show #widget-dashboard
                                 WidgetGallery.singleton.render_dashboard(Widget.selected[0])
                             }
+                            self.presentation.fire('ACTION',{name:'page-align',side:'left'})
                         }
                         else {
                             //hide #widget-dashboard
                             WidgetGallery.singleton.dashboard_box.classList.remove('active')
                             w2ui['toolbar'].get(evt.target).icon = w2ui['toolbar'].get(evt.target).icon.replace(' active', '')
+                            self.presentation.fire('ACTION',{name:'page-align',side:'center'})
                         }
                         w2ui['toolbar'].refresh(evt.target)
                         break
@@ -3526,6 +3566,7 @@ PresentationScreen.prototype = {
         var slot_on_click = function(evt){
             var slot_ele = evt.currentTarget
             if (slot_ele.dataset.id){
+                //2019-03-12T10:11:51+00:00 這段程式碼好像不會叫到
                 var widget = Widget.all[slot_ele.dataset.id]
                 WidgetGallery.singleton.slot_pop(widget)
                 widget.sync({id:0,on:'slot'})
@@ -4892,11 +4933,13 @@ PresentationScreen.prototype = {
         }
         else{
             //貼在最底層，暫時不同步
+            //2019-03-13T03:06:24+00:00 目前這一段程式碼是多餘的
             var self = this
             window.slide_resource_factory.from_string(text).done(function (slide_resource) {
-                if (slide_resource.type == 'IMG' || (slide_resource.type == 'URL' && slide_resource.kind && slide_resource.kind.indexOf('image') == 0)) {
+                if (slide_resource.kind && slide_resource.kind.indexOf('image') == 0){
+                    var url = slide_resource.type == 'FILE' ? 'url('+text+')' : slide_resource.url
+                    self.page_ele.style.backgroundImage = url
                     self.page_ele.classList.add('image_background')
-                    self.page_ele.style.backgroundImage = 'url('+text+')'
                 }
             })
         }
@@ -5043,6 +5086,7 @@ PresentationScreen.prototype = {
         }
         if (_.isString(data)) {
             window.slide_resource_factory.from_string(data).done(function (slide_resource) {
+                // 2019-03-13T03:07:18+00:00 還沒處理 type == FILE的情況
                 if (slide_resource && slide_resource.type) {
                     //把metadata壓成json，以檔案的方式傳回server
                     var blob = new Blob([JSON.stringify(slide_resource)], { type: "octet/stream" })
@@ -5609,7 +5653,7 @@ PresentationScreen.prototype = {
                     the_grid.buttons.add.tooltip = 'Add new board (max is 10)'
                     the_grid.records = records
                     if (_.size(presentations_dict) < max_presentation_number)  the_grid.toolbar.add(the_grid.buttons.add)
-                    the_grid.toolbar.add({
+                    the_grid.toolbar.add([{
                         id:'open',
                         type:'button',
                         text:'Open',
@@ -5624,7 +5668,45 @@ PresentationScreen.prototype = {
                                 open(url)
                             })
                         }
-                    })
+                    }
+                    ,{type:'spacer'}
+                    ,{
+                        id:'go',
+                        type:'button',
+                        text:'Open Shortcut code',
+                        tooltip:'Goto another board by shortcutcode',
+                        icon:'fa fa-directions',
+                        onClick:function(){
+                            w2popup.message({
+                                width:300,
+                                height:200,
+                                html:'<div style="padding: 60px; text-align: center"><input style="font-size:20px;text-align:center" placeholder="shortcut code" class="shortcut-code"></div>'+
+                                    '<div style="text-align: center"><button class="w2ui-btn yes">Yes</button><button onclick="w2popup.message()" class="w2ui-btn">Cancel</button></div>',
+                            })
+                            _.delay(function(){
+                                $popup.find('input.shortcut-code').focus()
+                                $popup.find('input.shortcut-code').on('change',function(){
+                                    $popup.find('button.yes').click()
+                                })
+                                $popup.find('button.yes').click(function(){
+                                    var code = $popup.find('input.shortcut-code').val()
+                                    //go_shortcut_code()
+                                    if (/^\d{6}$/.test(code)){
+                                        w2popup.message()
+                                        open(location.pathname + '#0'+code)
+                                    }
+                                    else{
+                                        $popup.find('input.shortcut-code').val('')
+                                        $popup.find('input.shortcut-code').prop('placeholder','6 digits')
+                                        setTimeout(function(){
+                                            $popup.find('input.shortcut-code').prop('placeholder','shortcut code')
+                                        },3000)
+                                    }
+                                })
+                            },1000)//wait a second to put focus on <input>
+                        }
+                    }
+                    ])
                     the_grid.refresh()
                 })
             }) 

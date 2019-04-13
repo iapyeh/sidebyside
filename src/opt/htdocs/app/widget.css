@@ -1,0 +1,670 @@
+#widget-layer{
+    position: absolute;
+    z-index:190;
+    background-color:transparent;
+    width:100%;
+    height:100%;
+}
+#widget-layer .attention-shape{
+    z-index: 1022;
+    pointer-events:none;
+    background-color:transparent;
+    position: absolute;
+    display:none;
+    border:dashed 2px rgb(250, 95, 5); 
+    box-sizing: border-box;   
+}
+.widget{
+    display: inline-block;
+    top: 0;
+    left: 0;
+    -ms-touch-action: none;
+    touch-action: none;
+    position: absolute;
+    transform-origin:center center;
+    -webkit-transform-origin: center center;
+    width: 200px;
+    height: 200px;
+    min-width: 30px;
+    min-height:30px;
+    background-color:transparent;
+   /* overflow: hidden; 預設可以用border-radius讓widget變成橢圓形*/
+}
+.widget.empty{
+    background-color:rgba(0,0,0,0.5);
+}
+.widget .widget-box{
+    /* 
+    widget 的內容都在 .widget-box 裡面，不是放在 .widget,
+    這是為了可以容許四邊的handle
+    */
+    width:100%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;/* required for overflow:hidden to work*/
+}
+/* 跟widget在各種狀態下之存在性顯示有關的設定*/
+/* 
+用pesudo的方式才不會跟widget.ele本身的css衝突
+缺點是，overflow=hidden的widget看不到(ex, flippable widget)),
+所以另外有 .widget.flippable:hover 跟 .widget.flippable.selected
+可是會跟 fixed-handle-top 搶 :: after,
+所以為了保留可以有兩個handle的情況下，不能用 after。
+.widget:hover::after{
+}
+.widget.selected::after{
+}
+*/
+
+.widget:hover{
+    outline:rgb(177, 239, 255) dashed 2px ;
+}
+.widget.selected:hover{
+    outline:none;
+}
+.widget.selected .widget-box{
+    /*此時讓所屬的unit在resize, drag時可以超出邊界*/
+    overflow: visible !important; 
+    pointer-events: none;
+}
+.widget.flippable:hover{
+    outline:rgb(177, 239, 255) dashed 2px ;
+}
+.widget.flippable.selected{
+
+}
+.widget.collapsed:hover::after{
+    content:"";
+    background-color:rgb(177, 239, 255);
+    outline:rgb(250, 95, 5) solid 1px;
+}
+.widget.collapsed.selected::after{
+    content:"";
+    background-color:rgb(250, 95, 5);
+}
+.widget.collapsed.selected:hover::after{
+    content:"";
+    background-color:rgb(250, 95, 5);
+}
+.widget.collapsing, .widget.expanding{
+    /* expanding, collapsing 共用動畫 */
+    transition: 0.3s;
+}
+.widget.collapsed{
+    overflow: visible !important;
+}
+.widget.collapsed > *{
+    /* 隱態時不要選到下層物件 */
+    display: none;
+}
+.widget.collapsed{
+
+}
+.widget.collapsed::after{
+    /* 縮起來之後蓋一塊布在道具上 */
+    content:"";
+    width:100%;
+    height:100%;
+    background-color:rgba(134, 134, 134, 0.25);
+    position: absolute;
+    top:0;
+    left:0;
+}
+.widget.collapsed.corner::after{
+    /* corner collapse 是scale的，要粗一點 */
+    border: solid 5px #7e7e7e;
+}
+
+.widget.center-items{
+    /* 把子物件放在中間的widget */
+    display: flex;
+    justify-content: center;
+    align-items:center;
+}
+
+/*
+.be_visible{
+    border: 2px dotted silver;
+}
+*/
+.image_background{
+    background-repeat: no-repeat;
+    background-size:100% 100%;
+}
+.widget.draggable{
+
+}
+.widget.circle{
+    border-radius:100%;
+    border:solid 1px #c0c0c0;
+}
+.widget-resizer{
+    position: absolute;
+    cursor: nwse-resize;
+    width: 30px;
+    height: 30px;
+    margin-left:-15px;
+    margin-top:-15px;
+    text-align: center;
+    padding:4px;
+    background-color:rgba(255,255,255,0.75);
+    border: solid 1px #808080;
+    color:#5a5a5a;
+
+}
+.widget-rotator, .widget-origin_handle, .widget-expand_handle{
+    position: absolute;
+    left:0px;
+    top: 0px;
+    border-radius:50%;
+}
+.widget-rotator{
+    width: 30px;
+    height: 30px;
+    margin-left:-15px;
+    margin-top:-15px;
+    cursor: grab;    
+    background-color:rgba(255,255,255,0.75);
+    border: solid 1px #808080;
+    color:#5a5a5a;
+    padding:3px;
+    text-align: center;
+}
+.widget-origin_handle{
+    width: 30px;
+    height: 30px;
+    margin-left:-15px;
+    margin-top:-15px;
+    cursor: pointer;
+    text-align: center;
+    padding:4px;
+    background-color:rgba(255,255,255,0.75);
+    border: solid 1px #808080;
+    color:#5a5a5a;
+}
+.widget-expand_handle{
+    width: 30px;
+    height: 30px;
+    margin-left:-15px;
+    margin-top:-15px;
+    cursor: pointer;
+    text-align: center;
+    padding:4px;
+    background-color:rgba(255,255,255,0.75);
+    border: solid 1px #808080;
+    color:#5a5a5a;
+}
+
+/* 固定式把手 */
+.widget.fixed-handle-right .widget-box, 
+.widget.fixed-handle-left .widget-box, 
+.widget.fixed-handle-top  .widget-box, 
+.widget.fixed-handle-bottom .widget-box{
+    overflow:hidden;
+}
+/*
+.widget.fixed-handle-right *, 
+.widget.fixed-handle-left *,
+.widget.fixed-handle-top *,
+.widget.fixed-handle-bottom * {
+    overflow: hidden;
+}
+.widget.selected.fixed-handle-right  *, 
+.widget.selected.fixed-handle-left  *,
+.widget.selected.fixed-handle-top  *,
+.widget.selected.fixed-handle-bottom  * {
+    overflow: inherit;
+}
+*/
+
+.widget.fixed-handle-left::before{
+    content:"";
+    width: 30px;
+    height: 50%;
+    background-color:transparent;
+    position: absolute;
+    display: inline-block;
+    /* position related starts */
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    left:-30px;
+    top: 25%;
+    border:solid 1px white;
+}
+.widget.fixed-handle-left:hover::before{
+    background-color: rgba(0,0,0,0.5);
+}
+.widget.fixed-handle-right::before{
+    content:"";
+    width: 30px;
+    height: 50%;
+    background-color: transparent;
+    position: absolute;
+    display: inline-block;
+    /* position related starts */
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    left: 100%;
+    top: 25%;
+    border:solid 1px white;
+}
+.widget.fixed-handle-right:hover::before{
+    background-color: rgba(0,0,0,0.5);
+}
+.widget.fixed-handle-bottom::after{
+    content:"";
+    height: 30px;
+    width: 50%;
+    background-color: transparent;
+    position: absolute;
+    display: inline-block;
+    /* position related starts */
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    top: 100%;
+    left:25%;
+    border:solid 1px white;
+}
+.widget.fixed-handle-bottom:hover::after{
+    background-color: rgba(0,0,0,0.5);
+}
+.widget.fixed-handle-top::after{
+    content:"";
+    height: 30px;
+    width: 50%;
+    background-color: transparent;
+    position: absolute;
+    display: inline-block;
+    /* position related starts */
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    top: -30px;
+    left:25%;
+    border:solid 1px white;
+}
+.widget.fixed-handle-top:hover::after{
+    background-color: rgba(0,0,0,0.5);
+}
+/* end of css for generic Widget class */
+
+/* start of WidgetGallery related */
+.widget-sample{
+    background: #fff;
+    display: flex;
+    height:100%;
+    width:99%;
+    flex-direction: row;
+}
+.widget-sample .column1{
+    min-width:220px;
+    height: 100%;
+    padding: 10px;
+    flex:2;
+}
+.widget-sample .column2{
+    height: 100%;
+    padding: 10px;
+    border-left: 1px solid silver ;   
+    flex:8;
+}
+.widget-sample .widget-description p{
+    line-height: 20px;
+}
+
+#widget-dashboard{
+    position: absolute;
+    z-index:1022;/* whiteboard.css 分配來的 */
+    width:300px;
+    height:500px;
+    top:60px;
+    left:0px;
+    display:none;
+    pointer-events: none;
+    background-color:#f2f2f2;
+}
+#widget-dashboard.active{
+    pointer-events: auto;
+    display: block;
+}
+#widget-dashboard #widget-dashboard-content{
+    width:100%;
+    height:100%;
+}
+#widget-dashboard #widget-dashboard-resizer{
+    position: absolute;
+    bottom:0px;
+    right:-2px;
+    width:25px;
+    height:25px;
+    cursor:nwse-resize;
+}
+#widget-dashboard #widget-dashboard-resizer span{
+    transform: rotate(0deg);
+    font-size:25px;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 25px;
+}
+#widget-dashboard-form{
+    border:none; /* override w2ui-form */
+
+    /*
+    width:100% !important;
+    height:100% !important;
+    */
+}
+#widget-dashboard-form .w2ui-form-box{
+    /*
+    width:100% !important;
+    height:100% !important;
+    overflow:auto;
+    */
+}
+#widget-dashboard-form .dashboard-page{
+    /*
+    display:flex;
+    align-items:center;
+    flex-direction: column;
+    */
+    overflow:auto;
+    padding:0;
+}
+#widget-dashboard-form .dashboard-column{
+    /*
+    flex-grow: 1;
+    */
+    display: block;
+    padding: 10px 5px;
+}
+#widget-dashboard-form .dashboard-column:nth-child(even){
+    border-top:solid 1px rgb(207, 207, 207);
+    border-bottom:solid 1px rgb(207, 207, 207);
+}
+#widget-dashboard-form .inline-button{
+    width: 20px;
+    height:20px;
+    display: inline-block;
+}
+#widget-dashboard-form .inline-button button{
+    min-width:20px; /*overwrite w2ui's css */
+}
+#widget-dashboard-form .dashboard-item{
+    /*width:170px;*/
+}
+#widget-dashboard-form .dashboard-item.w2ui-field > label{
+    width:100px;
+}
+#widget-dashboard-form .dashboard-item.w2ui-field > div{
+    margin-left:105px;
+    padding:0px;
+}
+#widget-dashboard-form .dashboard-item.w2ui-field > div .range-value{
+    padding-top: 6px;
+    vertical-align: top;
+    float: right;
+    position: absolute;
+}
+#widget-dashboard-form .dashboard-item button{
+    margin:0px 3px 3px 0px; /* override w2ui settings*/
+}
+#widget-dashboard-form .dashboard-item .button-row{
+    margin-bottom: 5px;
+    display: block;
+}
+#widget-dashboard-form .dashboard-item .button-row button{
+    margin-bottom: 0;
+}
+#widget-dashboard-form .dashboard-item .legend{
+    line-height: 1.2em;
+    white-space: normal;
+    padding: 3px 0px;    
+}
+/* flip */
+.flippable{
+    perspective: 600px;
+}
+.flippable .flipper.flipped {
+    transform: rotateY(180deg);
+}
+.flippable .flipper.flipped.vertical{
+    transform: rotateX(-180deg);
+}
+.flippable.book .flipper.flipped.right-open { 
+    /*open to right*/
+    transform: translateX(100%) rotateY(180deg);
+}
+.flippable.book .flipper.flipped.left-open {
+    /* open to left */
+    transform: translateX(-100%) rotateY(-180deg);
+}
+.flippable.book .flipper.flipped.down-open { 
+    /* open to bottom */
+    transform: translateY(100%) rotateX(-180deg);
+}
+.flippable.book .flipper.flipped.down-open .back > img{ 
+    /*搭配 open to bottom 時的轉圖css*/
+    transform: rotateX(180deg) rotateY(180deg);
+    top:unset;/* 抵銷上層的 top:0 */
+    left:unset;
+    bottom:0;
+    right:0;
+    position: absolute;
+}
+.flippable.book .flipper.flipped.up-open { 
+    /* open to top */
+    transform: translateY(-100%) rotateX(180deg);
+}
+.flippable.book .flipper.flipped.up-open .back > img{ 
+    /*搭配 open to top 時的轉圖css*/
+    transform: rotateX(180deg) rotateY(180deg);
+    top:unset;
+    left:unset;
+    bottom:0;
+    right:0;
+    position: absolute;
+}
+.flippable .flipper {
+	transition: 0.4s;
+    transform-style: preserve-3d;
+    /* Safari has problem with this,暫時不解決，以後一併解決*/
+    height: 100%;
+    width:100%;
+
+}
+.flippable .flipper.vertical {
+    transform-origin: 50% 100px; /* half of height */
+}
+.flippable .flipper .front, .flippable .flipper .back{
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+	position: absolute;
+    top: 0;
+    width:100%;
+    height:100%;
+    text-align:center;
+}
+.flippable.book .flipper.page {
+    position: absolute;
+    left:0;
+    top:0;
+}
+.flippable.book .flipper .front, .flippable.book .flipper .back{
+    overflow: hidden;
+}
+.flippable .flipper .front {
+	transform: rotateY(0deg);
+}
+.flippable .flipper .front::before{
+    content:"Frontface"
+    color:#f0f0f0;
+}
+.flippable .flipper.front_has_image .front::before{
+	content:""
+}
+.flippable .flipper .back {
+	transform: rotateY(180deg);
+}
+.flippable .flipper .back::before{
+    content:"Backface"
+    color:#f0f0f0;
+}
+.flippable .flipper.back_has_image .back::before{
+	content:""
+}
+.flippable .flipper.vertical .back {
+    transform: rotateX(180deg);
+}
+.flippable .flipper.front_has_image.back_has_image {
+    border: none;
+    background-color: unset;
+}
+
+/* start of .unit */
+.widget .unit.empty-card {
+    background-color:#dadada82;
+    width: 100%;
+    height: 100%;
+}
+.widget .unit{
+    /* 讓iframe只有在焦點時有作用*/
+    pointer-events: none;   
+    position: absolute;
+    top:0;
+    left:0;
+    overflow: hidden;/* scale時resizer跟內容才會對得起來*/
+}
+.widget.collapsed .unit{
+    display:none
+}
+.widget.selected .widget-box .unit{
+    /* 讓iframe在焦點時有作用*/
+    pointer-events: auto;
+    /*.iframe-unit 本身必須也是 position:absolute 其::after的三角形才會跟著跑 */
+    position: absolute;
+    outline: rgb(250, 95, 5) dotted 1px;
+    overflow: hidden;
+}
+
+.widget.freeze .unit, .widget .unit.freeze, .widget.selected .widget-box .unit .freeze{
+    /* widget or unit 在轉動或改變大小，unit不要有互動*/
+    pointer-events: none;
+}
+
+.widget .unit .resizer{
+    display:none;
+}
+.widget.selected .widget-box .unit .resizer{
+    display:inline-block;
+    position: absolute;
+    right:1px;
+    bottom:1px;
+    width:30px;
+    height:30px;
+    cursor:nwse-resize;
+    font-size: 20px;
+    text-align: right;
+    background-color:rgb(250, 95, 5);
+    color:white;
+}
+.widget.selected .widget-box .unit .resizer span{
+    transform: rotate(0deg);
+    font-size:25px;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 25px;
+}
+.widget.selected .widget-box .unit .resizer span::before{
+    margin-left:4px;
+    font-size:30px;
+}
+.widget .unit .dragger{
+    display: none;
+}
+.widget.selected .widget-box .unit .dragger{
+    display: inline-block;
+    position: absolute;
+    top:1px;
+    left:1px;
+    width:30px;
+    height:30px;
+    text-align: center;
+    line-height: 30px;
+    background-color:rgb(250, 95, 5);
+    color:white;
+}
+.widget.center-items .unit{
+    /* 這樣才會跑到中間 */
+    top:unset;
+    left:unset;
+}
+
+/* end of .unit */
+
+/* start of productive unit and widget */
+
+.widget[kind="CardWidget"] {
+    /*border:solid 1px black;*/
+}
+.widget[kind="BookWidget"]{
+    /*border:solid 1px black;*/
+}
+
+
+/* start of 開發時期實驗性質的設定 */
+.widget .box-unit{
+    width:100%;
+    height:100%;
+}
+
+.imagebox, .bookimagebox{
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}
+.imagebox{
+    /* .bookimagebox 不能設定為overflow hidden*/
+    overflow: hidden;
+}
+.imagebox > img, .bookimagebox .front > img, .bookimagebox .back > img{
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:auto;/* 必須是auto才能顯示全圖 */
+}
+.widget[kind="FlipCardWidget"] {
+
+}
+
+/* BoxUnit */
+.widget.selected .widget-box .BoxUnit.unit{
+    overflow: visible !important;
+}
+
+.widget[kind="YoutubeWidget"] {
+    background-color: #c0c0c0;
+}
+.widget[kind="IFrameWidget"] {
+    /* 開發性質的widget */
+    width: 400px;
+    border-radius: 5px;
+}
+.widget[kind="TextBubbleWidget"]{
+    /* 開發性質的widget */
+    /*border:solid 1px black;*/
+}
+.widget[kind="WebcamWidget"]{
+    /* 開發性質的widget */
+    /*border:solid 1px black;*/
+}
+

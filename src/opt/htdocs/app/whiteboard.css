@@ -173,9 +173,12 @@ body{
     /* 在被cue的時候不會干擾widget的選定*/
     pointer-events: none;
 }
-#screen-frame.selected{
-    outline: rgb(250, 95, 5) dashed 2px;
-    outline-offset: 4px;
+#screen-frame.selected::after{
+    width: 100%;
+    height: 100%;
+    content: "";
+    background-color:rgba(255,0,0, 0.5);
+    position: absolute;
 }
 #screen{
     padding:0;
