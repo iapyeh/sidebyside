@@ -26,8 +26,7 @@ body{
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
-    -webkit-tap-highlight-color: transparent;    
+    -webkit-tap-highlight-color: transparent;   
 }
 #layout{
     padding:0;
@@ -38,7 +37,7 @@ body{
     position: absolute;
     left:0;
     top:0;
-    z-index:1;
+    z-index:1;    
 }
 /*
 #top{
@@ -54,7 +53,8 @@ body{
 }
 */
 #page{
-    background-color:darkslategrey;
+    /*background-color:darkslategrey;*/
+    background-color:rgb(51, 51, 51);
     padding:0;
     margin:0;
     position:absolute;
@@ -70,7 +70,7 @@ body{
     height:100px;
     width:100%;
     z-index:1021;
-    rgba(255, 255, 255, 0.28);
+    background-color:rgba(255, 255, 255, 0.28);
     transition: top 0.1s ease 0s;
     top:-40px;/* 60 - 100 */
     
@@ -169,17 +169,31 @@ body{
 #screen-frame.cued{
     transition: none;
 }
+#screen-frame.cue-enabled{
+    /* svg size is 32x32, max allowed size of customized cursor */
+    cursor: url("cue.svg") 16 16, auto;
+}
+#screen-frame.cue-enabled .widget{
+    /*讓 cue 時若滑鼠點在widget上不會變成select*/
+    pointer-events: none;
+}
+#screen-frame.cue-enabled.zoomed-in{
+    cursor: pointer;
+}
 #screen-frame.cuing #overlay_surface {
     /* 在被cue的時候不會干擾widget的選定*/
     pointer-events: none;
 }
+
 #screen-frame.selected::after{
-    width: 100%;
+    width: 102%;
+    left:-1%;
     height: 100%;
     content: "";
-    background-color:rgba(255,0,0, 0.5);
+    background-color: rgba(148, 148, 148, 0.4);
     position: absolute;
 }
+
 #screen{
     padding:0;
     margin:0;
@@ -319,12 +333,14 @@ body{
     background-color:transparent;
     position:absolute;
     left:0px;
-    text-align:center;
+    top: 2px;
+    text-align:left;
     z-index:1022;
     width:100%;
-    height:50px;
-    line-height: 50px;
-    font-size:1.5em;
+    height:14px;
+    line-height: 14px;
+    font-size:14px;
+    padding-left:2px;
     display:none;
 }
 
@@ -418,10 +434,14 @@ body{
 
 /*dnd*/
 #page.dragover #overlay_surface{
+
+    /*
+    2019-03-13T09:35:31+00:00 好像無關警要
     background-color: rgba(148, 148, 148, 0.404);
+    */
 }
 #page.dragover{
-    background-color: rgba(148, 148, 148, 0.404);
+    background-color: rgba(255, 255, 148, 0.404);
 }
 
 /*toolbar items*/
@@ -541,9 +561,6 @@ video {
     color:#5d5d5d;
 }
 /* workaround for allsome-font*/
-.fa {
-    text-shadow:0px 1px 2px #929292;
-}
 .fa-dot-circle:before{
     content:"\f192"
 }
@@ -622,6 +639,7 @@ fa-chess-board:before{
     counter-increment: li;
     display:block;
     width:40px;
+    box-sizing: border-box;
 }
 .text-resource .line-number ol li::before {
     height:20px;
@@ -636,11 +654,10 @@ fa-chess-board:before{
     direction: rtl;
 }
 .text-resource .line-number li.hilight::before{
-    font-weight:bold;
     color:rgba(0,0,0,1);
 }
 .text-resource .line-number li.hilight{
-    border-bottom:dashed 1px rgb(0, 189, 79);
+    border-bottom:solid 1px rgb(0, 189, 79);
 }
 .text-resource .text-resource-content{
     display:block;

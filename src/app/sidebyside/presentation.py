@@ -194,6 +194,10 @@ def normalize_image(s_fd, s_path,s_thumbnail_path,max_size=2048.0):
         width = 300
         height = int(round(float(width) / image.size[0] * image.size[1]))
         dst_img = image.resize((width,height),PILImage.BILINEAR)
+        if dst_img.mode == 'RGBA':
+            # 不太理解為了上面已經轉過一次，resize之後還會有"OSError: cannot write mode P as JPEG"的錯誤
+            # 再轉一次試看看。
+            dst_img = dst_img.convert('RGB')
         dst_img.save(s_thumbnail_path)
         dst_img.close()
 
@@ -1370,7 +1374,7 @@ class ResourceItem(object):
             self.bg = re_state['bg']
         else:
             self.color = 'FFFFFF' # this is background color
-            self.bg = '' # this is background image's url
+            self.bg = '' # this is background image's url (local path, not other site's URL)
         
         self._state = re_state
         if re_state:

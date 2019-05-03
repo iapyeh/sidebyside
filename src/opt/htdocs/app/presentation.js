@@ -46,7 +46,6 @@ function KeyboardShortcut(delegate) {
     document.addEventListener('keydown', function (evt) {
 
         if (self.suspend) return
-
         var key = evt.key.toUpperCase()
         // convert key to upper case
         // prefix keyname with special keys
@@ -210,6 +209,7 @@ Slide.prototype = {
         var video_sync = function () {
             //sync video of youtube
             var player_state, player_time, player_now
+            console.log('self.resource.extra=',self.resource.extra)
             if (data) {
                 player_state = data[0]
                 player_time = data[1]
@@ -233,7 +233,6 @@ Slide.prototype = {
                     player._no_sync = false
                 }, 3000)
 
-
                 var ts = player.getCurrentTime()
                 // if state is playing, add transimisson time difference to player_time
                 var time_diff = (new Date().getTime() / 1000 - player_now)
@@ -245,14 +244,13 @@ Slide.prototype = {
                 if (do_seek) {
                     player.seekTo(seek_time)
                 }
-                var change_stage = state !== player_state
-                //console.log('======= ',do_seek, player_time, seek_time,change_stage, player_state)                    
-                if (change_stage) {
+                console.log('======= current state',state,'target state',player_state)                    
+                if (state !== player_state) {
                     _.delay(function () {
                         //console.log('video state change:',player.getPlayerState(),'to', player_state,'seek to ',player_time)
                         //adjuest playertime with transvesal time                            
                         switch (player_state) {
-                            case 0://dended
+                            case 0://ended
                                 player.stopVideo()
                                 break
                             case 1://playing
@@ -408,7 +406,7 @@ function Presentation(p_id, delegate, options) {
      *   toggle_toolbar()
      * 
      * options:
-     *  keyboard_shortcut:false. boolean, (true to enable)
+     *  keyboard_shortcut:false. boolean, (true to enable) *
      *  isolated:false, if true, keyboard_shortcut enforced to be false
     */
 
@@ -421,6 +419,7 @@ function Presentation(p_id, delegate, options) {
     // isolated screen does not sync current slide to or from others
     // so, its current_thread and current_slide is not of the same meaning as a sync-ed screen.
     this.isolated = typeof (options.isolated) == 'undefined' ? false : options.isolated
+    
     // enable keyboard_shortcut only not isolated
     if (options.keyboard_shortcut && (!this.isolated)) {
         var self = this
@@ -446,10 +445,17 @@ function Presentation(p_id, delegate, options) {
         ks.handler['ESCAPE'] = function () {
             self.fire('ESCAPE')
         }
+        ks.handler['DELETE'] = function () {
+            self.fire('DELETE')
+        }        
+        ks.handler['BACKSPACE'] = function () {
+            self.fire('DELETE')
+        }        
     }
     else {
         this.keyboard_shortcut = null;
     }
+
     this.name = ''
     this.sdk = null
     this.threads = {}
@@ -516,8 +522,11 @@ Presentation.prototype = {
     },
     off: function (name, callback) {
         if (typeof (callback) == 'string') {
-            delete this.listener[name][callback]
-            if (this.listener[name].length == 0) delete this.listener[name]
+            if (this.listener[name][callback]){
+                delete this.listener[name][callback]
+                if (this.listener[name].length == 0) delete this.listener[name]    
+            }
+            else  console.warn('not found listener: '+name)
         }
         else if (typeof (callback) == 'function') {
             var target_func_name;
@@ -531,8 +540,10 @@ Presentation.prototype = {
                 delete this.listener[name][target_func_name]
                 if (this.listener[name].length == 0) delete this.listener[name]
             }
+            else  console.warn('not found listener: ',callback)
         }
         else {
+            //remove all listeners of given target
             delete this.listener[name]
         }       
     },
@@ -901,13 +912,59 @@ Presentation.prototype = {
                 }
                 break
             case 'cue-sync':
-                var t_id = payload.data[0]
-                var s_idx = payload.data[1]
-                var point = payload.data[2]
-                point.x = point.x/1000 * self.delegate.page_rect.width
-                point.y =  point.y/1000 * self.delegate.page_rect.height
-                self.delegate.cue(point)
+            
+                var topic = payload.data[0]
+                if (topic == 'enable'){
+                    var yes = payload.data[1]
+                    if (!self.readonly){
+                        //update toolbar's "cue" item
+                        if (yes && w2ui['toolbar'].get('cue').icon.indexOf('active')==-1){
+                            w2ui['toolbar'].get('cue').icon += ' active'
+                            w2ui['toolbar'].check('cue')
+                        }
+                        else if (!yes && w2ui['toolbar'].get('cue').icon.indexOf('active')>0){
+                            w2ui['toolbar'].get('cue').icon = w2ui['toolbar'].get('cue').icon.replace(/ active/,'')
+                            w2ui['toolbar'].uncheck('cue')
+                        }
+                    }
+                    self.fire('ACTION',{name:'cue-enable',yes:yes})
+                }
+                else{
+                    var point = payload.data[1]
+                    //先判斷是否已經進入cue狀態
+                    if (self.delegate.cue_center_square) {
+                        self.delegate.cue(point)
+                    }
+                    else{
+                        self.fire('ACTION',{name:'cue-enable',yes:true})
+                        _.defer(function(){self.delegate.cue(point)})
+                    }
+                }
+
+                //2019-03-25T05:38:23+00:00 以下是當cue-sync產生時，讓本瀏覽器自動進入cue的狀態
+                //這段放在這裡不對；但先這樣，目前沒時間作處理
+                //如果cue是因為同步而被呼叫，必要時設定toolbar
+                /*
+                if (self.readonly){
+                    if (!self.delegate.cue_center_square){}
+                    self.delegate.cue(point)
+                }
+                else{
+                    if (w2ui['toolbar'].get('cue').icon.indexOf('active')==-1){
+                        console.log('---auto cue--')
+                        w2ui['toolbar'].click('cue')
+                        _.delay(function(){
+                            self.delegate.cue(point)
+                        },500)
+                    }
+                    else{
+                        self.delegate.cue(point)
+                    }
+                }
+
+                */
                 break
+            
             // managemental sync starts
             case 'shutdown':
                 if (self.isolated) {
@@ -1717,6 +1774,20 @@ Presentation.prototype = {
         })
         return promise
     },
+    reset_slide_background: function (t_id, s_idxes) {
+        var self = this
+        var p_id = self.p_id
+        var flag = self.flag
+        var cmd = ObjshSDK.metadata.runner_name + '.root.sidebyside.reset_slide_background'
+        var promise = new $.Deferred()
+        window.sdk.send_command(new Command(cmd, [p_id, flag, t_id, s_idxes])).done(function (response) {
+            if (response.retcode != 0) return promise.reject(response.retcode, response.stderr)
+            promise.resolve(response.stdout)
+        }).fail(function (err) {
+            promise.reject(-1, err)
+        })
+        return promise
+    },    
     reset_all_slides: function (t_id) {
         var self = this
         var p_id = self.p_id

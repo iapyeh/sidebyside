@@ -66,20 +66,6 @@ Overlay.prototype = {
             //this._set_filter(this.y)
         } 
     },
-    _set_filter:function(n){
-        return //obsoleted
-        
-        //internally called to set blur 
-        //auto set blur effect
-        
-        if (n > 2){
-            var b = Math.ceil(n/6)
-            this.ctx.filter = 'blur('+b+'px)'     
-        }
-        else{
-            this.ctx.filter = ''
-        }
-    },
     init:function(options){
         //options comes from preferences
         //注意：chrome有個隱藏的bug，有時按下滑鼠左鍵滑動時，不會有move事件。重開chrome可以解決。
@@ -151,11 +137,15 @@ Overlay.prototype = {
         //this.overlay_surface.style.left = rect.left+'px'
         this.overlay_surface.style.width = (this.width  - window.scrollbarWidth) +'px'
         this.overlay_surface.style.height = (this.height  - window.scrollbarWidth) +'px'
+        //曾經有一段時間overlay物件要跟著捲動（text-content很長時），當時
         //this.draw物件必須重建，不能只呼叫 this.draw.size()，
         //否則scrooTop會失效，無法跟著捲動。可能是因為某webkit的bug的緣故。
-        this.draw = SVG('overlay_surface')
-            .size(this.width  - window.scrollbarWidth, this.height  - window.scrollbarWidth)
-        this.on_draw_changed(this.draw)//assign to widget_gallery
+        //後來決定取消overlay物件跟著捲動的功能，所以現在改為直接呼叫this.draw.size()
+        if (!this.draw){
+            this.draw = SVG('overlay_surface')
+            this.on_draw_changed(this.draw)//assign to widget_gallery
+        }
+        this.draw.size(this.width  - window.scrollbarWidth, this.height  - window.scrollbarWidth)
         this.overlay_surface_rect = this.overlay_surface.getBoundingClientRect()
         // get to top-left offset
         //var rect = this.canvas.getBoundingClientRect();
@@ -249,7 +239,7 @@ Overlay.prototype = {
         
         // restore
         this.set_eraser_mode(yes) //restore eraser mode
-        this._set_filter(y) //restore blur filter
+        //this._set_filter(y) //restore blur filter
     },
     eraser_sync:function(data){
         //data =  color, width, height, length, x0,y0, last_x, last_y (on_draw_erase())
@@ -283,7 +273,7 @@ Overlay.prototype = {
        
         //storts
         this.set_eraser_mode(yes) //restore eraser mode
-        this._set_filter(y) //restore blur filter
+        //this._set_filter(y) //restore blur filter
     }, 
     pause:function(yes){
         this.paused = yes

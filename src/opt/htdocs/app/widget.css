@@ -18,20 +18,20 @@
     display: inline-block;
     top: 0;
     left: 0;
+    /*
     -ms-touch-action: none;
     touch-action: none;
+    */
     position: absolute;
     transform-origin:center center;
     -webkit-transform-origin: center center;
-    width: 200px;
-    height: 200px;
     min-width: 30px;
     min-height:30px;
     background-color:transparent;
    /* overflow: hidden; 預設可以用border-radius讓widget變成橢圓形*/
 }
 .widget.empty{
-    background-color:rgba(0,0,0,0.5);
+    background-color:rgba(148, 148, 148, 0.4);
 }
 .widget .widget-box{
     /* 
@@ -143,20 +143,20 @@
     cursor: nwse-resize;
     width: 30px;
     height: 30px;
-    margin-left:-15px;
-    margin-top:-15px;
     text-align: center;
     padding:4px;
     background-color:rgba(255,255,255,0.75);
     border: solid 1px #808080;
     color:#5a5a5a;
-
+    box-sizing: border-box;
+    /*touch-action: none; suggested by interact.js */
 }
 .widget-rotator, .widget-origin_handle, .widget-expand_handle{
     position: absolute;
     left:0px;
     top: 0px;
     border-radius:50%;
+    /*touch-action: none; suggested by interact.js */
 }
 .widget-rotator{
     width: 30px;
@@ -169,6 +169,7 @@
     color:#5a5a5a;
     padding:3px;
     text-align: center;
+    box-sizing: border-box;
 }
 .widget-origin_handle{
     width: 30px;
@@ -181,6 +182,7 @@
     background-color:rgba(255,255,255,0.75);
     border: solid 1px #808080;
     color:#5a5a5a;
+    box-sizing: border-box;
 }
 .widget-expand_handle{
     width: 30px;
@@ -202,20 +204,6 @@
 .widget.fixed-handle-bottom .widget-box{
     overflow:hidden;
 }
-/*
-.widget.fixed-handle-right *, 
-.widget.fixed-handle-left *,
-.widget.fixed-handle-top *,
-.widget.fixed-handle-bottom * {
-    overflow: hidden;
-}
-.widget.selected.fixed-handle-right  *, 
-.widget.selected.fixed-handle-left  *,
-.widget.selected.fixed-handle-top  *,
-.widget.selected.fixed-handle-bottom  * {
-    overflow: inherit;
-}
-*/
 
 .widget.fixed-handle-left::before{
     content:"";
@@ -229,7 +217,6 @@
     border-bottom-left-radius: 5px;
     left:-30px;
     top: 25%;
-    border:solid 1px white;
 }
 .widget.fixed-handle-left:hover::before{
     background-color: rgba(0,0,0,0.5);
@@ -246,7 +233,6 @@
     border-bottom-right-radius: 5px;
     left: 100%;
     top: 25%;
-    border:solid 1px white;
 }
 .widget.fixed-handle-right:hover::before{
     background-color: rgba(0,0,0,0.5);
@@ -263,7 +249,6 @@
     border-bottom-right-radius: 5px;
     top: 100%;
     left:25%;
-    border:solid 1px white;
 }
 .widget.fixed-handle-bottom:hover::after{
     background-color: rgba(0,0,0,0.5);
@@ -280,7 +265,6 @@
     border-top-right-radius: 5px;
     top: -30px;
     left:25%;
-    border:solid 1px white;
 }
 .widget.fixed-handle-top:hover::after{
     background-color: rgba(0,0,0,0.5);
@@ -321,14 +305,15 @@
     display:none;
     pointer-events: none;
     background-color:#f2f2f2;
+    overflow:hidden;
 }
 #widget-dashboard.active{
     pointer-events: auto;
     display: block;
 }
 #widget-dashboard #widget-dashboard-content{
-    width:100%;
-    height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
 }
 #widget-dashboard #widget-dashboard-resizer{
     position: absolute;
@@ -349,34 +334,19 @@
     text-align: center;
     line-height: 25px;
 }
+#widget-dashboard-header{
+    /*touch-action: none; suggested by interact.js */
+}
 #widget-dashboard-form{
     border:none; /* override w2ui-form */
-
-    /*
-    width:100% !important;
-    height:100% !important;
-    */
 }
 #widget-dashboard-form .w2ui-form-box{
-    /*
-    width:100% !important;
-    height:100% !important;
-    overflow:auto;
-    */
 }
 #widget-dashboard-form .dashboard-page{
-    /*
-    display:flex;
-    align-items:center;
-    flex-direction: column;
-    */
-    overflow:auto;
+    overflow:hidden;
     padding:0;
 }
 #widget-dashboard-form .dashboard-column{
-    /*
-    flex-grow: 1;
-    */
     display: block;
     padding: 10px 5px;
 }
@@ -545,8 +515,10 @@
     pointer-events: auto;
     /*.iframe-unit 本身必須也是 position:absolute 其::after的三角形才會跟著跑 */
     position: absolute;
+    overflow: overlay;/* 用overlay而非auto可以抑制scrollbar改變width與 height */
+    /* 2019-03-16T07:43:54+00:00 取消，應無作用
     outline: rgb(250, 95, 5) dotted 1px;
-    overflow: hidden;
+    */
 }
 
 .widget.freeze .unit, .widget .unit.freeze, .widget.selected .widget-box .unit .freeze{
@@ -554,21 +526,23 @@
     pointer-events: none;
 }
 
-.widget .unit .resizer{
+.widget .unit .resizer, .widget .unit .scalar{
     display:none;
 }
-.widget.selected .widget-box .unit .resizer{
+.widget.selected .widget-box .unit .resizer, .widget.selected .widget-box .unit .scalar{
     display:inline-block;
     position: absolute;
-    right:1px;
-    bottom:1px;
     width:30px;
     height:30px;
-    cursor:nwse-resize;
     font-size: 20px;
-    text-align: right;
     background-color:rgb(250, 95, 5);
     color:white;
+}
+.widget.selected .widget-box .unit .resizer{
+    right:1px;
+    bottom:1px;
+    cursor:nwse-resize;
+    text-align: right;    
 }
 .widget.selected .widget-box .unit .resizer span{
     transform: rotate(0deg);
@@ -584,6 +558,13 @@
 .widget.selected .widget-box .unit .resizer span::before{
     margin-left:4px;
     font-size:30px;
+}
+.widget.selected .widget-box .unit .scalar{
+    top:1px;
+    left:1px;
+    cursor:nwse-resize;
+    text-align:center;
+    position: fixed;/* 2019-03-16T07:46:58+00:00 搭配 overflow:auto 使得在scroll後還可操作 */
 }
 .widget .unit .dragger{
     display: none;
@@ -668,3 +649,65 @@
     /*border:solid 1px black;*/
 }
 
+.widget[kind="BoxWidget"] .widget-box.playing{
+    /* 讓position to right,left等unit在play時可以被看見*/
+    overflow:visible;
+}
+.widget[kind="BoxWidget"] .widget-box.playing .unit{
+    /* 讓position to right,left等unit在play時可以被看見時，不要有scrollbar*/
+    overflow:hidden;
+}
+.widget[kind="BoxWidget"] .widget-box .BoxUnit .boxunit-slice{
+    width:100%;
+    height:100%;
+}
+
+.knee_state{
+    /*
+    background-color:green;
+    box-shadow: 1px 1px 10px green;
+    */
+    border-radius: 50%;
+    width:50px;
+    height:50px;
+    position: absolute;
+    top:50%;
+}
+.knee_state.left{
+    left:50px;
+}
+.knee_state.right{
+    right:60px;
+}
+.knee_state.middle{
+    left:40%;
+}
+.knee_state.red{
+    background-color:red;
+    box-shadow: 1px 1px 10px red;    
+}
+.knee_state.yellow{
+    background-color:yellow;
+    box-shadow: 1px 1px 10px yellow;    
+}
+.meter-box{
+    height:100px;
+    width:100%;
+    background-color:transparent;
+    margin-top:-5px;
+}
+.meter-box td{
+    width:30px;
+    background-size:contain;
+    background-image:url(hackson/meter.png);
+    background-repeat:no-repeat;
+    background-position-x: center;
+}
+.meter-box td img{
+    /* pointer */
+    width:20px;
+    height:20px;
+    position: relative;;
+    padding-left:53px;
+    top:0;
+}

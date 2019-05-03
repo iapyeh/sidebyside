@@ -4,7 +4,7 @@ Dependence of Widget class
 
 Dependence of WidgetGallery class
  * lodash.js - create object-oriented class
- *  
+ *
 */
 Array.prototype.indexOfObject = function (obj) {
     return this.findIndex(function (value) {
@@ -17,6 +17,7 @@ Array.prototype.removeObject = function (obj) {
     if (idx >= 0) this.splice(idx, 1)
     return idx
 }
+
 function isElement(o) {
     return (
         typeof HTMLElement === "object" ? o instanceof HTMLElement : //DOM2
@@ -34,19 +35,35 @@ function uuidv4() { // Public Domain/MIT
         return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
     });
 }
-function getActuralRect(ele){
-    //找出一element真正的尺寸（下找一層）
+function getActuralRect(ele) {
+    //找出一element在degree=0,scale=1時的尺寸（offset可能為0，目前只下找一層）
     var rect = ele.getBoundingClientRect()
+    var w = parseFloat(ele.offsetWidth || 0)
+    var h = parseFloat(ele.offsetHeight || 0)
+    var cx = rect.left + rect.width / 2
+    var cy = rect.top + rect.height / 2
     var outer_rect = {
-        top:rect.top,
-        left:rect.left,
-        width:rect.width,
-        height:rect.height,
-        right:rect.right,
-        bottom:rect.bottom
+        width: w,
+        height: h,
+        top: cy - h / 2,
+        left: cx - w / 2,
+        right: cx + w / 2,
+        bottom: cy + h / 2
     }
-    for (var i=0;i<ele.children.length;i++){
-        var r = ele.children[i].getBoundingClientRect()
+    for (var i = 0; i < ele.children.length; i++) {
+        var c = ele.children[i].getBoundingClientRect()
+        var w = parseFloat(ele.children[i].offsetWidth || 0)
+        var h = parseFloat(ele.children[i].offsetHeight || 0)
+        var cx = c.left + c.width / 2
+        var cy = c.top + c.height / 2
+        var r = {
+            width: w,
+            height: h,
+            top: cy - h / 2,
+            left: cx - w / 2,
+            right: cx + w / 2,
+            bottom: cy + h / 2
+        }
         if (r.top < outer_rect.top) outer_rect.top = r.top
         if (r.left < outer_rect.left) outer_rect.left = r.left
         if (r.right > outer_rect.right) outer_rect.right = r.right
@@ -57,39 +74,40 @@ function getActuralRect(ele){
     return outer_rect
 }
 var Constant = {
+    scale: function (n) { return Math.round(n * (window.screen.availWidth / 1440)) },
     in_styles: [
-        {id:'0',text:'Just in'},
-        {id:'bt',text:'Bounce from top',name:'bounceInDown'},
-        {id:'br',text:'Bounce from right',name:'bounceInRight'},
-        {id:'bb',text:'Bounce from bottom',name:'bounceInUp'},
-        {id:'bl',text:'Bounce from left',name:'bounceInLeft'},
-        {id:'fi',text:'Fade in',name:'fadeIn'},
-        {id:'ri',text:'Roll in',name:'rollIn'},
-        {id:'roi',text:'Rotate in',name:'rotateIn'},
-        {id:'zi',text:'Zoom in',name:'zoomIn'},
+        { id: '0', text: 'Just in' },
+        { id: 'bt', text: 'Bounce from top', name: 'bounceInDown' },
+        { id: 'br', text: 'Bounce from right', name: 'bounceInRight' },
+        { id: 'bb', text: 'Bounce from bottom', name: 'bounceInUp' },
+        { id: 'bl', text: 'Bounce from left', name: 'bounceInLeft' },
+        { id: 'fi', text: 'Fade in', name: 'fadeIn' },
+        { id: 'ri', text: 'Roll in', name: 'rollIn' },
+        { id: 'roi', text: 'Rotate in', name: 'rotateIn' },
+        { id: 'zi', text: 'Zoom in', name: 'zoomIn' },
     ]
-    ,at_styles: [
-        {id:'0',text:'Same place'},
-        {id:'t',text:'At top'},
-        {id:'r',text:'At right'},
-        {id:'b',text:'At bottom'},
-        {id:'l',text:'At left'}
+    , at_styles: [
+        { id: '0', text: 'Same place' },
+        { id: 't', text: 'At top' },
+        { id: 'r', text: 'At right' },
+        { id: 'b', text: 'At bottom' },
+        { id: 'l', text: 'At left' }
     ]
-    ,out_styles: [
-        {id:'0',text:'Just out'},
-        {id:'bt',text:'Bounce to top',name:'bounceOutUp'},
-        {id:'br',text:'Bounce to right',name:'bounceOutRight'},
-        {id:'bb',text:'Bounce to bottom',name:'bounceOutDown'},
-        {id:'bl',text:'Bounce to left',name:'bounceOutLeft'},
-        {id:'fo',text:'Fade out',name:'fadeOut'},
-        {id:'ro',text:'Roll out',name:'rollOut'},
-        {id:'roo',text:'Rotate out',name:'rotateOut'},
-        {id:'no',text:'Stay in place'},
-        {id:'st',text:'Stay, shift to top'},
-        {id:'sr',text:'Stay, shift to right'},
-        {id:'sb',text:'Stay, shift to bottom'},
-        {id:'sl',text:'Stay, shift to left'},
-        {id:'zo',text:'Zoom out',name:'zoomOut'},
+    , out_styles: [
+        { id: '0', text: 'Just out' },
+        { id: 'bt', text: 'Bounce to top', name: 'bounceOutUp' },
+        { id: 'br', text: 'Bounce to right', name: 'bounceOutRight' },
+        { id: 'bb', text: 'Bounce to bottom', name: 'bounceOutDown' },
+        { id: 'bl', text: 'Bounce to left', name: 'bounceOutLeft' },
+        { id: 'fo', text: 'Fade out', name: 'fadeOut' },
+        { id: 'ro', text: 'Roll out', name: 'rollOut' },
+        { id: 'roo', text: 'Rotate out', name: 'rotateOut' },
+        { id: 'no', text: 'Stay in place' },
+        { id: 'st', text: 'Stay, shift to top' },
+        { id: 'sr', text: 'Stay, shift to right' },
+        { id: 'sb', text: 'Stay, shift to bottom' },
+        { id: 'sl', text: 'Stay, shift to left' },
+        { id: 'zo', text: 'Zoom out', name: 'zoomOut' },
     ]
 }
 /* helper to slide */
@@ -115,7 +133,7 @@ SlideWidgetManager.prototype = {
         data.forEach(function (item) {
             // not been added into DOM yet；
             // 只產生widget物件，不放到DOM
-            try{
+            try {
                 var widget = WidgetGallery.all[item.classname].create_sample()
                 widget.deserialize(item)
                 self.widgets[widget.id] = widget
@@ -123,7 +141,7 @@ SlideWidgetManager.prototype = {
                 // 通知WidgetGallery 接上event handler
                 WidgetGallery.singleton.on_widget_created(widget)
             }
-            catch(e){
+            catch (e) {
                 console.warn(e)
             }
         })
@@ -132,7 +150,7 @@ SlideWidgetManager.prototype = {
             self.widgets[widget_id].find_parent_widget()
         }
     }
-    , state_save:function(do_sync){
+    , state_save: function (do_sync) {
         //slide為current slide時（widget在DOM上）
         for (var widget_id in this.widgets) {
             this.widgets[widget_id].state_manager.state_save()
@@ -141,19 +159,19 @@ SlideWidgetManager.prototype = {
             this.update_to_server()
             var s_idx = this.slide.idx
             var t_id = this.slide.t_id
-            WidgetGallery.singleton.presentation.send_to_bus('widget-sync', ['state', t_id, s_idx,1])
+            WidgetGallery.singleton.presentation.send_to_bus('widget-sync', ['state', t_id, s_idx, 1])
         }
     }
-    , state_restore:function(do_sync){
+    , state_restore: function (do_sync) {
         //slide為current slide時（widget在DOM上）
         for (var widget_id in this.widgets) {
             this.widgets[widget_id].state_manager.state_restore()
-        }        
+        }
         if (do_sync) {
             this.update_to_server()
             var s_idx = this.slide.idx
             var t_id = this.slide.t_id
-            WidgetGallery.singleton.presentation.send_to_bus('widget-sync', ['state', t_id, s_idx,-1])
+            WidgetGallery.singleton.presentation.send_to_bus('widget-sync', ['state', t_id, s_idx, -1])
         }
     }
     , add_widget: function (widget, do_sync) {
@@ -194,9 +212,21 @@ SlideWidgetManager.prototype = {
         var self = this
         var remove_from_dom = (this.slide == WidgetGallery.singleton.presentation.current_slide)
         widget_ids.forEach(function (widget_id) {
-            if (remove_from_dom) self.widgets[widget_id].ele.remove()
+            if (remove_from_dom) self.widgets[widget_id].ele.parentNode.removeChild(self.widgets[widget_id].ele)
             self.remove_widget(widget_id)
         })
+    }
+    , on_resize: function (before, after) {
+        var dx = after.width / before.width
+        //var dy = after.height/before.height, should be the same as dx
+        for (var widget_id in this.widgets) {
+            var x = Math.round(this.widgets[widget_id].x * dx)
+            var y = Math.round(this.widgets[widget_id].y * dx)
+            this.widgets[widget_id].move(x, y)
+            var w = Math.round(this.widgets[widget_id].w * dx)
+            var h = Math.round(this.widgets[widget_id].h * dx)
+            this.widgets[widget_id].resize(w, h)
+        }
     }
     , get_file_url: function (filename) {
         var p_id = WidgetGallery.singleton.presentation.p_id
@@ -209,14 +239,19 @@ SlideWidgetManager.prototype = {
         var s_idx = this.slide.idx
         var t_id = this.slide.t_id
         WidgetGallery.singleton.presentation.send_to_bus('widget-save', [t_id, s_idx, this.serialize()])
-        window.message('updated to server')
+        window.message('<span class="fa fa-cloud-upload-alt"></span>')
     }
     , on_hide: function () {
         //this slide is going to be blur
         //在此處將widget ele自DOM移除
         for (var id in this.widgets) {
             var widget = this.widgets[id]
-            widget.ele.remove()
+            if (widget.metadata.cross_slide) continue
+            //當rerender current slide時，widget會先被purge掉，此時widget.ele會沒有parentNode，所以要先檢查是否有parentNode
+            if (widget.ele.parentNode) {
+                widget.hide()
+                widget.ele.parentNode.removeChild(widget.ele)
+            }
         }
     }
     , on_show: function () {
@@ -224,11 +259,18 @@ SlideWidgetManager.prototype = {
         //在此處將widget加入DOM
         for (var id in this.widgets) {
             var widget = this.widgets[id]
+            if (widget.metadata.cross_slide && widget.ele.parentNode) {
+                //skip scroll_slide
+                continue
+            }
             if (widget.metadata.slot) {
+                // widget is in slot
                 var slot_ele = WidgetGallery.singleton.widget_drawer.querySelector('.slot[slot-idx="' + widget.metadata.slot + '"]')
                 WidgetGallery.singleton.slot_push(slot_ele, widget)
             }
             else {
+                // widget is foreground
+                widget.show()
                 WidgetGallery.singleton.widget_layer.appendChild(widget.ele)
             }
         }
@@ -249,8 +291,8 @@ function WidgetStateManager(widget) {
     this.widget = widget
     this.cache = {} //主要是保留widget顯態時的scale，degree數值
     this.state_data = {
-        expand:{
-            yes:true, //if false, in collapsed state
+        expand: {
+            yes: true, //if false, in collapsed state
             /*
             { id: -1, text: 'None' }, //none, do not collapse
             { id: 0, text: 'Top Collapsed' },//'collapsed-top'
@@ -261,14 +303,14 @@ function WidgetStateManager(widget) {
             { id: 5, text: 'Top-Right Collapsed' }, //'collapsed-top-right'
             { id: 6, text: 'Bottom-Right Collapsed' },//'collapsed-bottom-right'
             { id: 7, text: 'Bottom-Left Collapsed' } //'collapsed-bottom-left'
-            */            
-            type:4,
+            */
+            type: 4,
         }
-        ,slot:{ //animation style of in ant out
-            in:'0' 
-            ,out:'0'
+        , slot: { //animation style of in ant out
+            in: '0'
+            , out: '0'
         }
-        ,state: null
+        , state: null
     }
 }
 WidgetStateManager.prototype = {
@@ -288,76 +330,70 @@ WidgetStateManager.prototype = {
             this.widget.ele.classList.add('collapsed')
         }
     }
-    ,state_save:function(){
+    , state_save: function () {
+        // state 儲存與恢復的內容
+        // 1. 位置
+        // 2. size
+        // 3. scale
+        // 4. degree
+        // 5. origin(transform)
         this.state_data.state = {
-            x:this.widget.x,
-            y:this.widget.y,
-            w:this.widget.w,
-            h:this.widget.h,
-            o0:this.widget.origin[0],
-            o1:this.widget.origin[1],
-            s:this.widget.scale,
-            d:this.widget.degree[2],
-            ey:this.state_data.expand.yes ? 1 : 0,
-            et:this.state_data.expand.type,
-            units:{}
+            metadata: _.cloneDeep(this.widget.metadata),
+            ey: this.state_data.expand.yes ? 1 : 0,
+            et: this.state_data.expand.type,
+            units: {}
         }
         if (this.widget.ele.classList.contains('inslot')) {
             this.state_data.state.slot = this.widget.ele.parentNode.getAttribute('slot-idx')
         }
-        for (var unit_id in this.widget.units){
+        for (var unit_id in this.widget.units) {
             var data = this.widget.units[unit_id].state_save()
             if (data) this.state_data.state.units[unit_id] = data
         }
         return this.state_data
     }
-    ,state_restore:function(data){
+    , state_restore: function (data) {
         //注意：restore時不會restore因被upload而改變的圖檔
-        for (var unit_id in this.state_data.state.units){
-            if (this.widget.units[unit_id])  this.widget.units[unit_id].state_restore(this.state_data.state.units[unit_id])
+        for (var unit_id in this.state_data.state.units) {
+            if (this.widget.units[unit_id]) this.widget.units[unit_id].state_restore(this.state_data.state.units[unit_id])
         }
         // restore "slot" state
         var slot_restore_flag = 0
-        var widget_in_slot = typeof(this.widget.metadata.slot) != 'undefined'
-        var restore_to_slot = typeof(this.state_data.state.slot) != 'undefined'
-        if (widget_in_slot && restore_to_slot && (this.widget.metadata.slot == this.state_data.state.slot)){
+        var widget_in_slot = typeof (this.widget.metadata.slot) != 'undefined'
+        var restore_to_slot = typeof (this.state_data.state.slot) != 'undefined'
+        if (widget_in_slot && restore_to_slot && (this.widget.metadata.slot == this.state_data.state.slot)) {
             //已經在該在的slot上，不需作任何事
             return
         }
-        else if (restore_to_slot && ((!widget_in_slot) || (this.widget.metadata.slot != this.state_data.state.slot))){
+        else if (restore_to_slot && ((!widget_in_slot) || (this.widget.metadata.slot != this.state_data.state.slot))) {
             slot_restore_flag = 1
             //不是在原本的slot上的話，則先跳出slot
             if (widget_in_slot) WidgetGallery.singleton.slot_pop(this.widget)
         }
-        else if((!restore_to_slot) && widget_in_slot){
+        else if ((!restore_to_slot) && widget_in_slot) {
             slot_restore_flag = -1
         }
         //resotre size, angle, position, scale
-        this.widget.origin[0] = this.state_data.state.o0
-        this.widget.origin[1] = this.state_data.state.o1
-        this.widget.ele.style.transformOrigin = this.widget.origin[0]+'% '+this.widget.origin[1]+'%'
-        this.widget.move(this.state_data.state.x, this.state_data.state.y)
-        this.widget.rotate(this.state_data.state.d)
-        this.widget.zoom(this.state_data.state.s)
-        this.widget.resize(this.state_data.state.w, this.state_data.state.h)
+        console.log(this.state_data)
+        this.widget.deserialize_metadata(_.cloneDeep(this.state_data.state.metadata))
         //restore expand or collapse state
         this.state_data.expand.type = this.state_data.state.et
-        if (this.state_data.expand.yes &&  (this.state_data.state.ey==0)){
+        if (this.state_data.expand.yes && (this.state_data.state.ey == 0)) {
             this.collapse()
         }
-        else if ((!this.state_data.expand.yes) && this.state_data.state.et==1){
+        else if ((!this.state_data.expand.yes) && this.state_data.state.et == 1) {
             this.expand(false)//no animate
         }
         //restore in-slot or not state
-        if (slot_restore_flag == 1){
-            var slot_ele = WidgetGallery.singleton.widget_drawer.querySelector('.slot[slot-idx="'+this.state_data.state.slot+'"]')
+        if (slot_restore_flag == 1) {
+            var slot_ele = WidgetGallery.singleton.widget_drawer.querySelector('.slot[slot-idx="' + this.state_data.state.slot + '"]')
             WidgetGallery.singleton.slot_push(slot_ele, this.widget)
         }
-        else if (slot_restore_flag == -1){
+        else if (slot_restore_flag == -1) {
             WidgetGallery.singleton.slot_pop(this.widget)
         }
         this.widget.update_handles()
-    }    
+    }
     , change_expand_type: function (new_type) {
         if (this.state_data.expand.type == new_type) return
         if (this.state_data.expand.yes) {
@@ -414,7 +450,7 @@ WidgetStateManager.prototype = {
                 break
             //case 'collapsed-left':
             case 3:
-                //動畫效果（只有向下、向右的方向可以，向上與向左的方向不行）                
+                //動畫效果（只有向下、向右的方向可以，向上與向左的方向不行）
                 this.widget.ele.classList.add('collapsing')
                 this.widget.ele.addEventListener('transitionend', after_transition)
 
@@ -637,7 +673,7 @@ WidgetStateManager.prototype = {
     }
 
 }
-var Widget = function(ele) {
+function Widget(ele) {
     if (!(isElement(ele))) throw 'Widget need an element to create'
     Widget.counter += 1
     this.id = ele.getAttribute('id')
@@ -646,10 +682,14 @@ var Widget = function(ele) {
         ele.setAttribute('id', this.id)
     }
 
-    this.state = null //for restore 
+    this.state = null //for restore
     this.listener = {}
     this.units = {} //a dict for units of this widget to register
     this.ele = ele
+
+    this.ele.style.width = Constant.scale(200) + 'px'
+    this.ele.style.height = Constant.scale(200) + 'px'
+
     //ensure to have "widget" class, this is important for clone()
     this.ele.classList.add('widget')
     this.ele.style.zIndex = Widget.zindex_start + Widget.counter
@@ -660,22 +700,35 @@ var Widget = function(ele) {
 
     this.intractable = interact(ele)
     this.selected = false
-    var style = window.getComputedStyle(this.ele)
-    this.x = parseInt(style.left)
-    this.y = parseInt(style.top)
-    this.w = parseInt(this.ele.offsetWidth) || 200
-    this.h = parseInt(this.ele.offsetHeight) || 200
+    //var style = window.getComputedStyle(this.ele)
+    this.x = 0
+    this.y = 0
+    this.w = Constant.scale(200)
+    this.h = Constant.scale(200)
     this.degree = [0, 0, 0] //x, y, z rotation
-    this.origin = [50, 50] //transform orgin in %
+    this.origin = [50, 50] //transform orgin in % (1-100)
+    this.set_origin(50, 50)
     this.scale = 1 //zooming
+    this.normalize_unit = WidgetGallery.singleton.widget_layer_rect ? WidgetGallery.singleton.widget_layer_rect.width : null
     this.metadata = {
+        x: 0,
+        y: 0,
+        //在create時，本數值會被設定；在restore時，會在deserialize時取得
+        w: this.normalize_unit ? Constant.scale(200) / this.normalize_unit : 0,
+        h: this.normalize_unit ? Constant.scale(200) / this.normalize_unit : 0,
+        degree: [0, 0, 0],
+        origin: [50, 50],
+        scale: 1,
         handle: 0,
-        css: {}//與預設值不一樣的css
+        //與預設值不一樣的css and layer(zIndex)
+        css: {},
+        cross_slide: false //跨slide都在（例如字幕）
     }
-    //this.rect與scale的一致性有關
-    this.rect = null //assign later
-    this.rel_scale = 1
-    //this.css = {} 
+    //this.rect是本widget第一次被serialize時的widget_layer的尺寸，
+    //保留此尺存，將來及其他browser要restore時可取得一致的 scale
+    this.rect = null //assigned at 1st serialize() called
+    this.rel_scale = 1 //initially this is 1
+    //this.css = {}
     // 設定初始 tranfrom
     this.ele.style.transformOrigin = '50% 50%'
     this.update_css_transform()
@@ -774,6 +827,7 @@ Widget.create_sample = function (box) {
 Widget.prototype = {
     serialize: function (for_clone) {
         if (this.rect == null) {
+            //只有在第一次serialize時，此this.rect是 null時才指定數值
             this.rect = {
                 w: WidgetGallery.singleton.widget_layer_rect.width,
                 h: WidgetGallery.singleton.widget_layer_rect.height
@@ -782,22 +836,21 @@ Widget.prototype = {
         var data = {
             id: this.id,
             classname: this.constructor.name,
-            degree: this.degree,
-            origin: this.origin,
-            scale: this.scale,
-            w: this.w,
-            h: this.h,
-            x: this.x,
-            y: this.y,
             rect: this.rect,
+            //degree: this.degree,
+            //origin: this.origin,
+            //scale: this.scale,
+            //w: this.w,
+            //h: this.h,
+            //x: this.x,
+            //y: this.y,
             state_manager: this.state_manager.serialize(for_clone),
             metadata: this.metadata,
             // 不包括state，這是故意的，避免在save, restore當中呼叫serialize時產生循環呼叫
             //state:this.state
         }
-        WidgetGallery.singleton.normalize(data)//for w,h,x, y,
         return data
-    }    
+    }
     , deserialize: function (data, is_clone) {
         //deserialize a widget, maybe:
         // 1. load/reload a presentation
@@ -805,7 +858,6 @@ Widget.prototype = {
         // 3. clone, copy-paste a widget
         // 4. generate a new widget by sync
         if (!data.units) data.units = [] //temporary to be able to load old data
-
         if (is_clone) {
             //保留現在的臨時性ID（變成永久性）
         }
@@ -814,39 +866,43 @@ Widget.prototype = {
             this.id = data.id
             if (this.ele) this.ele.setAttribute('id', data.id)
         }
-        this.origin = data.origin
         this.rect = data.rect
-
         var self = this
-        var call_with_context = function () {
-            WidgetGallery.singleton.denormalize(data)
-            if (data.metadata) {
-                self.metadata = data.metadata
-                if (data.metadata.handle) {
-                    //restore handle
-                    if (data.metadata.handle >> 4) {
-                        self.set_fixed_handle('v' + (data.metadata.handle >> 4))
-                    }
-                    if (data.metadata.handle & 3) {
-                        self.set_fixed_handle('h' + (data.metadata.handle & 3))
-                    }
+        self.metadata = data.metadata
+        this.deserialize_metadata = function (metadata) {
+            //此時先不要使用set_origin(因為get_bbox還沒有值，還不能正確移動回原來的位置)
+            self.origin = [metadata.origin[0], metadata.origin[1]]
+            self.ele.style.transformOrigin = self.origin[0] + '% ' + self.origin[1] + '%'
+
+            if (metadata.handle) {
+                //restore handle
+                if (metadata.handle >> 4) {
+                    self.set_fixed_handle('v' + (metadata.handle >> 4))
                 }
-                if (data.metadata.css) {
-                    //restore css (includes layer)
-                    for (var name in data.metadata.css) {
-                        self.box.style[name] = data.metadata.css[name]
-                    }
+                if (metadata.handle & 3) {
+                    self.set_fixed_handle('h' + (metadata.handle & 3))
                 }
             }
-
-            self.rel_scale = WidgetGallery.singleton.widget_layer_rect.width / self.rect.w
-            self.degree[0] = data.degree[0]//還原因collapse而產生的X角度
-            self.degree[1] = data.degree[1]
-            self.degree[2] = data.degree[2]
-            if (data.scale != 1) self.zoom(data.scale)
-            self.rotate(data.degree[2])
-            self.resize(data.w, data.h)
-            self.move(data.x, data.y)
+            if (metadata.css) {
+                //restore css (includes layer)
+                for (var name in metadata.css) {
+                    //self.box.style[name] = metadata.css[name]
+                    self.ele.style[name] = metadata.css[name]
+                }
+            }
+            // 本次widget被restore時的環境尺度，相對於剛產生時的尺度的比例
+            self.rel_scale = self.normalize_unit / self.rect.w
+            self.degree[0] = metadata.degree[0]//還原因collapse而產生的X角度
+            self.degree[1] = metadata.degree[1]
+            self.degree[2] = metadata.degree[2]
+            self.zoom(metadata.scale)
+            self.rotate(self.degree[2])
+            self.resize(metadata.w * self.normalize_unit, metadata.h * self.normalize_unit)
+            self.move(metadata.x * self.normalize_unit, metadata.y * self.normalize_unit)
+        }
+        var call_with_context = function () {
+            self.normalize_unit = WidgetGallery.singleton.widget_layer_rect.width
+            self.deserialize_metadata(data.metadata)
             self.state_manager.deserialize(data.state_manager, is_clone)
         }
         if (WidgetGallery.singleton.context_ready) call_with_context()
@@ -861,49 +917,16 @@ Widget.prototype = {
         this.resize()
         //pending:reset all css
         this.ele.style.opacity = 1
-        for(var id in this.units){this.units[id].reset()}
+        for (var id in this.units) { this.units[id].reset() }
     }
-    , get_actions:function(){
+    , get_actions: function () {
         return []
     }
-    , get_dashboard:function(dashboard){
+    , get_dashboard: function (dashboard) {
     }
-    /*
-    , state_save: function () {
-        //implement this in subsclass, assign value to this.state
-        this.state = _.cloneDeep(this.serialize())
-        return this.state
-    }
-    , state_restore: function () {
-        //restore時不會restore因被upload而改變的圖檔
-        var slot_restore_flag = 0
-        var widget_in_slot = typeof(this.metadata.slot) != 'undefined'
-        var restore_to_slot = typeof(this.state.metadata.slot) != 'undefined'
-        if (widget_in_slot && restore_to_slot && (this.metadata.slot == this.state.metadata.slot)){
-            //已經在該在的slot上，不需作任何事
-            return
-        }
-        else if (restore_to_slot && ((!widget_in_slot) || (this.metadata.slot != this.state.metadata.slot))){
-            slot_restore_flag = 1
-            //不是在原本的slot上的話，則先跳出slot
-            if (widget_in_slot) WidgetGallery.singleton.slot_pop(this)
-        }
-        else if((!restore_to_slot) && widget_in_slot){
-            slot_restore_flag = -1
-        }
-        this.deserialize(_.cloneDeep(this.state))
-        if (slot_restore_flag == 1){
-            var slot_ele = WidgetGallery.singleton.widget_drawer.querySelector('.slot[slot-idx="'+this.state.metadata.slot+'"]')
-            WidgetGallery.singleton.slot_push(slot_ele, this)
-        }
-        else if (slot_restore_flag == -1){
-            WidgetGallery.singleton.slot_pop(this)
-        }
-    }
-    */
     , sync: function (data, do_normalize) {
         //widget's common sync function
-        if (typeof(data.id)=='undefined') data.id = 0 //sent to widget itself on another browser
+        if (typeof (data.id) == 'undefined') data.id = 0 //sent to widget itself on another browser
         if (do_normalize) {
             WidgetGallery.singleton.normalize(data)
         }
@@ -1067,7 +1090,6 @@ Widget.prototype = {
     selectable: function () {
         var self = this
         interact(this.ele).on('tap', function (evt) {
-            
 
             /* 2019-03-12T07:29:49+00:00 這一段是之前有利用到doubletap事件而寫的，因為已經沒有doubletap事件，應該不必這樣複雜了
             if (self._tap_timer) {
@@ -1089,30 +1111,41 @@ Widget.prototype = {
                 }
             }, 0)
             */
+
             if (self.ele.classList.contains('inslot')) {
                 //restore out of slot
                 WidgetGallery.singleton.slot_pop(self)
-                self.sync({id:0,on:'slot'})
+                self.sync({ id: 0, on: 'slot' })
             }
             else {
                 var yes = !self.selected
                 self.select(yes);
-            }            
+                if (yes && evt.shiftKey){
+                    WidgetGallery.singleton.update_handles(self, { rotate: true })
+                }
+                else if (yes && evt.metaKey){
+                    WidgetGallery.singleton.update_handles(self, { resize: true})
+                }
+                else if (yes){
+                    WidgetGallery.singleton.update_handles(self, { resize: false, rotate:false})
+                }
+            }
         })
         return this
     },
     draggable: function () {
         var self = this
-        var parent_degree = 0
-        var effective_scale = 1
         interact(this.ele).on('hold', function (evt) {
+
+            return //temporary disabled 2019-03-16T06:21:52+00:00
+
             //  因cue時會自動expand，所以不會跟自動解除cue衝突
             //  另一個選擇是用hold，但hold有時會黏住滑鼠
             //  此外，因為widget在最下面，上面有unit，
             //  本來此事件在提把跟收縮時才會被觸發。後因tap事件有偵測doubletap，才有作用
             //  後來改用hold，因為double tap不靈光，且連續按兩下很累
 
-            //only response to mouse's left-button 
+            //only response to mouse's left-button
             if (evt.which != 1) return
             if (self.state_manager.state_data.expand.yes) {
                 //收起來
@@ -1129,9 +1162,15 @@ Widget.prototype = {
             evt.stopPropagation()
         })
 
-        var _update_handles = _.throttle(function () {
+        var parent_degree = 0
+        var effective_scale = 1
+        var sync_and_update_handles = _.throttle(function () {
             self.update_handles()
             //sync to remove counterpart widget by set id = 0
+            var norm_x = Math.round(1000 * self.x / self.normalize_unit) / 1000
+            var norm_y = Math.round(1000 * self.y / self.normalize_unit) / 1000
+            self.metadata.x = norm_x
+            self.metadata.y = norm_y
             self.sync({ id: 0, on: 'move', x: self.x, y: self.y }, true) //true for do normalize
         })
         interact(this.ele).draggable({
@@ -1139,7 +1178,7 @@ Widget.prototype = {
             inertia: true,
             autoScroll: true,
             onstart: function (evt) {
-                self._changing_xy = true //aka moving
+                //self._changing_xy = true //aka moving
                 parent_degree = self.get_parent_degree()
                 effective_scale = self.get_parent_scale() * parseFloat(WidgetGallery.singleton.widget_layer.dataset.scale)
             },
@@ -1153,11 +1192,11 @@ Widget.prototype = {
                 var x = self.x + Math.round(dx / effective_scale)
                 var y = self.y + Math.round(dy / effective_scale)
                 self.move(x, y)
-                _update_handles()
+                sync_and_update_handles()
             },
             onend: function () {
                 setTimeout(function () {
-                    self._changing_xy = false
+                    //self._changing_xy = false
                     /* 暫時不需要，改成使用者手動設定
                     var has_added = false
                     self.iterate_siblings(function(widget){
@@ -1199,7 +1238,7 @@ Widget.prototype = {
                 bottom:Math.min(rect.bottom,_rect.bottom)
             }
             // the area of intersection is less than 75%, don't care it
-            if (((interset.right - interset.left) * (interset.bottom - interset.top)) > area * 0.75) {            
+            if (((interset.right - interset.left) * (interset.bottom - interset.top)) > area * 0.75) {
                 //自動加上拖出來的把手
                 var closest_side = ''
                 var min_value = Infinity
@@ -1208,7 +1247,7 @@ Widget.prototype = {
                         min_value = Math.abs(rect[side] - _rect[side])
                         closest_side = side
                     }
-                }) 
+                })
                 add_to_side = closest_side
             }
         }
@@ -1226,7 +1265,6 @@ Widget.prototype = {
         return add_to_side ? true : false
     }, */
     update_handles: function (options) {
-        //if (this.selected && window.WidgetGallery) 
         return window.WidgetGallery.singleton.update_handles(this, options)
     }
     , show_handler: function () {
@@ -1271,7 +1309,7 @@ Widget.prototype = {
             origin_handle.style.top = Math.round((self.origin[1] / 100 * rect.height) - origin_handle_rect.height / 2) + 'px'
         }
         self.update_handles()
-        var origin = null //rotation origin starting point        
+        var origin = null //rotation origin starting point
         var starting_degree = 0
         //var rect_for_rotation = null
         var origin_center = null
@@ -1473,6 +1511,7 @@ Widget.prototype = {
             if (after_zoom_height < 10 || after_zoom_width < 10) {
                 scale = Math.round(100 * Math.max(10 / this.w, 10 / this.h)) / 100
             }
+            self.metadata.scale = scale
             self.zoom(scale)
             do_sync(scale)
             if (self.selected) self.update_handles()
@@ -1505,10 +1544,10 @@ Widget.prototype = {
         image.src = url
         return this
     }
-    ,set_background_color: function (color) {
+    , set_background_color: function (color) {
         this.ele.style.backgroundColor = color
     }
-    ,iterate_siblings: function (callback) {
+    , iterate_siblings: function (callback) {
         //跟同一層次的widget比較
         //if callback return true, then stop iteration
 
@@ -1639,8 +1678,20 @@ Widget.prototype = {
         target.metadata.css.zIndex = target.ele.style.zIndex
         this.ele.style.zIndex = max
         this.metadata.css.zIndex = this.ele.style.zIndex
-    },
-    select: function (yes) {
+    }
+    , hide:function(){
+        for(var unit_id in this.units){
+            this.units[unit_id].hide()
+        }
+        if (this.ele) this.ele.style.display = 'none'
+    }
+    , show:function(){
+        for(var unit_id in this.units){
+            this.units[unit_id].show()
+        }
+        if (this.ele) this.ele.style.display = ''
+    }
+    , select: function (yes) {
         var self = this
         //console.log('selected==>',this.selected, yes)
         if (this.selected === yes) return //no changes
@@ -1661,66 +1712,66 @@ Widget.prototype = {
             this.fire('unselected')
         }
     }
-    ,css:function(css_name,css_value){
-        if (_.isObject(css_name)){
-            for(var name in css_name){
+    , css: function (css_name, css_value) {
+        if (_.isObject(css_name)) {
+            for (var name in css_name) {
                 this.box.style[name] = css_name[name]
             }
             _.assign(this.metadata.css, css_name)
         }
-        else{
+        else {
             this.metadata.css[css_name] = css_value
             this.box.style[css_name] = css_value
         }
     }
-    , attention:function(name){
+    , attention: function (name) {
         //讓此widget得到注意。不作用在widget.ele上，因為css animation使用transform與widget.ele的位置衝突。
         var attention_ele = this.box
-        var handler = function(){
-            attention_ele.removeEventListener('animationend',handler)
-            attention_ele.classList.remove('animated',name)
+        var handler = function () {
+            attention_ele.removeEventListener('animationend', handler)
+            attention_ele.classList.remove('animated', name)
         }
-        attention_ele.addEventListener('animationend',handler)
-        attention_ele.classList.add('animated',name)
+        attention_ele.addEventListener('animationend', handler)
+        attention_ele.classList.add('animated', name)
     }
-    ,resize: function (w, h, delta) {
+    , resize: function (w, h, delta) {
         if (typeof (w) == 'undefined') {
             w = this.w
             h = this.h
         }
         else {
-            this.w = w
-            this.h = h
+            this.w = Math.round(w)
+            this.h = Math.round(h)
         }
         this.ele.style.width = this.w + 'px'
         this.ele.style.height = this.h + 'px'
-        this.ele.dataset.width = this.w
-        this.ele.dataset.height = this.h
+        this.ele.dataset.width = w
+        this.ele.dataset.height = h
         this.fire('resize', { width: this.w, height: this.h, delta: delta })
-    },
-    move: function (x, y) {
+    }
+    , move: function (x, y) {
         // update the posiion attributes
         this.x = x
         this.y = y
         this.update_css_transform()
         this.fire('move', { x: x, y: y })
-    },
-    zoom: function (scale, deep) {
+    }
+    , zoom: function (scale, deep) {
         var self = this
         /* why? scale 本來就會影響到child，此參數似乎是不必要的
         if (deep){
             this.child_widgets.forEach(function(child){
                 child.zoom(scale,true)
-            })    
+            })
         }
         */
         if (this.scale == scale) return //same scale, do nothing
         this.scale = scale
         this.update_css_transform()
         this.fire('zoom', scale)
-    },
-    rotate: function (degree, deep) { //z-axis
-        degree = Math.round(degree % 360 * 100)/100
+    }
+    , rotate: function (degree, deep) { //z-axis
+        degree = Math.round(degree % 360 * 100) / 100
         if (deep) {
             this.child_widgets.forEach(function (child) {
                 child.rotate(degree, true)
@@ -1737,7 +1788,7 @@ Widget.prototype = {
         //刪除每一個child widget
         var child_widgets = this.child_widgets.slice()
         child_widgets.forEach(function (child) {
-            child.remove()
+            child.parentNode.removeChild(child)
         })
         delete this.child_widgets
 
@@ -1752,7 +1803,7 @@ Widget.prototype = {
         }
 
         // 從 DOM 中卸除
-        this.ele.remove() //parentNode.removeChild(this.ele)
+        this.ele.parentNode.removeChild(this.ele) //parentNode.removeChild(this.ele)
         this.fire('removed', this)
     },
     //clone and deserialize related routines
@@ -1794,11 +1845,11 @@ Widget.prototype = {
     /* dummy dnd and paste delegate */
     , on_dnd: function (data, evt) {
         //basically, redirect dnd to paste
-        this.on_paste(data,evt)
+        this.on_paste(data, evt)
     }
     , on_dnd_string: function (data, evt) {
         //basically, redirect dnd to paste
-        this.on_paste_string(data,evt)
+        this.on_paste_string(data, evt)
     }
     , on_paste: function (data, evt) {
         window.message(this.constructor.metadata.caption + ' does not accept pasting file')
@@ -1808,6 +1859,7 @@ Widget.prototype = {
     }
     , on_sync: function (data) {
         var self = this
+        var normalize_unit = WidgetGallery.singleton.widget_layer_rect.width
         switch (data.on) {
             case 'resize':
                 this.resize(data.w, data.h)
@@ -1849,10 +1901,10 @@ Widget.prototype = {
             case 'handle':
                 /*
                 data.add.forEach(function(cssclass){
-                    self.ele.classList.add('fixed-handle-'+cssclass)  
+                    self.ele.classList.add('fixed-handle-'+cssclass)
                 })
                 data.remove.forEach(function(cssclass){
-                    self.ele.classList.remove('fixed-handle-'+cssclass)  
+                    self.ele.classList.remove('fixed-handle-'+cssclass)
                 })
                 */
                 this.set_fixed_handle(data.value)
@@ -1869,20 +1921,26 @@ Widget.prototype = {
                     WidgetGallery.singleton.slot_push(slot_ele, this)
                 }
                 return true
-            case 'state': 
-                if (data.do == 'save'){
+            case 'state':
+                if (data.do == 'save') {
                     this.state_manager.state_save()
                 }
-                else if (data.do == 'restore'){
-                    this.state_restore()
+                else if (data.do == 'restore') {
+                    this.state_manager.state_restore()
                 }
-                else if (data.do == 'set'){
+                else if (data.do == 'set') {
                     if (data.slot) _.assign(this.state_manager.state_data.slot, data.slot)
                 }
                 return true
             case 'attention':
                 this.attention(data.name)
                 return true
+            case 'metadata':
+                for (var name in data.value) {
+                    this.metadata[name] = _.cloneDeep(data.value[name])
+                }
+
+                return
         }
         return false
     }
@@ -1917,13 +1975,13 @@ Widget.metadata = {
         ,{
             id:'widget-cue',
             type: 'button',
-            text:'Cue',            
+            text:'Cue',
             icon:'fa fa-plus-circle',
             tooltip:'Cue this widget',
             onClick:function(widget,toolbar){
                 var yes = !widget.state_manager.cuing
                 widget.state_manager.cue(yes)
-                
+
             }
         } */
         /*
@@ -1955,7 +2013,7 @@ Widget.metadata = {
             }
         },
         */
-    ],    
+    ],
     dashboard: [
         {
             id: 'widget-state',
@@ -1963,50 +2021,50 @@ Widget.metadata = {
             items: [
                 [
                     {
-                        type:'button-row',
-                        label:'Attention',
-                        buttons:[
+                        type: 'button-row',
+                        label: 'Attention',
+                        buttons: [
                             {
-                                icon:'fa fa-shake',
-                                button_label:'Bounce',
-                                onClick:function(widget,button_ele){
+                                icon: 'fa fa-shake',
+                                button_label: 'Bounce',
+                                onClick: function (widget, button_ele) {
                                     widget.attention('bounce')
-                                    widget.sync({on:'attention',name:'bounce'})
+                                    widget.sync({ on: 'attention', name: 'bounce' })
                                 }
-                            },{
-                                icon:'fa fa-shake',
-                                button_label:'Flash',
-                                onClick:function(widget,button_ele){
+                            }, {
+                                icon: 'fa fa-shake',
+                                button_label: 'Flash',
+                                onClick: function (widget, button_ele) {
                                     widget.attention('flash')
-                                    widget.sync({on:'attention',name:'flash'})
+                                    widget.sync({ on: 'attention', name: 'flash' })
                                 }
-                            },{
-                                icon:'fa fa-shake',
-                                button_label:'HeartBeat',
-                                onClick:function(widget,button_ele){
+                            }, {
+                                icon: 'fa fa-shake',
+                                button_label: 'HeartBeat',
+                                onClick: function (widget, button_ele) {
                                     widget.attention('heartBeat')
-                                    widget.sync({on:'attention',name:'heartBeat'})
+                                    widget.sync({ on: 'attention', name: 'heartBeat' })
                                 }
-                            },{
-                                icon:'fa fa-shake',
-                                button_label:'Shake',
-                                onClick:function(widget,button_ele){
+                            }, {
+                                icon: 'fa fa-shake',
+                                button_label: 'Shake',
+                                onClick: function (widget, button_ele) {
                                     widget.attention('shake')
-                                    widget.sync({on:'attention',name:'shake'})
+                                    widget.sync({ on: 'attention', name: 'shake' })
                                 }
                             }
                         ]
                     }
                 ]
-                ,[ //row 
+                , [ //row
                     {
-                        type:'button-row',
-                        label:'Collapse',
-                        buttons:[
+                        type: 'button-row',
+                        label: 'Collapse',
+                        buttons: [
                             {
                                 button_label: '',
                                 icon: 'fa fa-compress-arrows-alt',
-                                tooltip:'Collapse',
+                                tooltip: 'Collapse',
                                 onClick: function (widget) {
                                     widget.state_manager.collapse()
                                     widget.sync({ on: 'collapse' })
@@ -2015,7 +2073,7 @@ Widget.metadata = {
                             , {
                                 button_label: '',
                                 icon: 'fa fa-expand-arrows-alt',
-                                tooltip:'Expand',
+                                tooltip: 'Expand',
                                 onClick: function (widget) {
                                     widget.state_manager.expand()
                                     widget.sync({ on: 'expand' })
@@ -2035,7 +2093,7 @@ Widget.metadata = {
                                 { id: 3, text: 'Left Collapsed' }, //'collapsed-left'
                                 { id: 4, text: 'Top-Left Collapsed' }, //'collapsed-top-left'
                                 { id: 5, text: 'Top-Right Collapsed' }, //'collapsed-top-right'
-                                { id: 6, text: 'Bottom-Right Collapsed'}, //'collapsed-bottom-right'
+                                { id: 6, text: 'Bottom-Right Collapsed' }, //'collapsed-bottom-right'
                                 { id: 7, text: 'Bottom-Left Collapsed' }//'collapsed-bottom-left'
                             ]
                         },
@@ -2048,42 +2106,42 @@ Widget.metadata = {
                             widget.sync({ on: 'collapse-type', type: value.id })
                         }
                     }
-                ],[
+                ], [
                     {
                         type: 'list',
                         label: 'Go stage',
-                        style:'width:100%',
+                        style: 'width:100%',
                         legend: 'style of getting out of drawer',
-                        options:{
-                            items:Constant.in_styles
+                        options: {
+                            items: Constant.in_styles
                         },
-                        get:function(widget){
+                        get: function (widget) {
                             //slot."out" 對slot是退場，對畫面是進場
                             return widget.state_manager.state_data.slot.out
                         },
-                        set:function(widget,item){
+                        set: function (widget, item) {
                             widget.state_manager.state_data.slot.out = item.value.id
-                            widget.sync({on:'state',do:'set',slot:{out:item.value.id}})
+                            widget.sync({ on: 'state', do: 'set', slot: { out: item.value.id } })
                         }
                     }
-                    ,{
+                    , {
                         type: 'list',
                         label: 'Go Drawer',
-                        style:'width:100%',
+                        style: 'width:100%',
                         legend: 'style of backing to drawer',
-                        options:{
-                            items:Constant.out_styles
+                        options: {
+                            items: Constant.out_styles
                         },
-                        get:function(widget){
+                        get: function (widget) {
                             //slot."in" 對slot是進場，對畫面是離場
                             return widget.state_manager.state_data.slot.in
                         },
-                        set:function(widget,item){
+                        set: function (widget, item) {
                             widget.state_manager.state_data.slot.in = item.value.id
-                            widget.sync({on:'state',do:'set',slot:{in:item.value.id}})
+                            widget.sync({ on: 'state', do: 'set', slot: { in: item.value.id } })
                         }
                     }
-                ],[ //row 
+                ], [ //row
                     {
                         type: 'color',
                         label: 'Background',
@@ -2286,55 +2344,78 @@ Widget.metadata = {
                             }
                         }
                     ]//end of .buttons
-                    }
+                }
                 ]//end of row 4
                 , [
                     {
-                        type:'button-row',
-                        label:'State',
-                        legend: 'save state for restore',
-                        buttons:[
-                                {
-                                    type: 'button',
-                                    tooltip: 'save current state',
-                                    icon: 'fa fa-save',
-                                    button_label: 'Save',
-                                    onClick: function (widget, button_ele) {
-                                        widget.state_manager.state_save()
-                                        window.message('state saved')
-                                        widget.sync({id:0,on:'state',do:'save'})
-                                    }
-                                }
-                                , {
-                                    type: 'button',
-                                    tooltip: 'restore state',
-                                    icon: 'fa fa-share',
-                                    button_label: 'Restore',
-                                    onClick: function (widget, button_ele) {
-                                        widget.state_manager.state_restore()
-                                        window.message('state restored')
-                                        widget.sync({id:0,on:'state',do:'restore'})
-                                    }
-                                }
-                            ]//end of buttons
-                    }//end of button-row
-                ]
-                , [{
-                        type: 'button',
-                        tooltip: 'restore scale to 1, angle to 0',
-                        icon: 'fa fa-undo',
-                        button_label: '',
-                        label: 'Reset', //not button text
-                        legend:'restore scale to 1, angle to 0',
-                        onClick: function (widget, value) {
-                            widget.reset()
-                            widget.update_handles()
-                            widget.sync({ id: 0, on: 'reset' })
+                        type: 'radio',
+                        tooltip: '',
+                        legend: 'this widget appears in every slide after this one',
+                        icon: 'fa fa-angle-double-up',
+                        label: 'Cross slide',
+                        options: {
+                            items: [
+                                { id: 0, text: 'No' },
+                                { id: 1, text: 'Yes' }
+                            ]
+                        },
+                        get: function (widget, value) {
+                            return widget.metadata.cross_slide ? 1 : 0
+                        },
+                        set: function (widget, input_ele, item) {
+                            widget.metadata.cross_slide = input_ele.value == 1
+                            widget.sync({ on: 'metadata', data: { cross_slide: widget.metadata.cross_slide } })
                         }
                     }
                 ]
+                , [
+                    {
+                        type: 'button-row',
+                        label: 'State',
+                        legend: 'save state for restore',
+                        buttons: [
+                            {
+                                type: 'button',
+                                tooltip: 'save current state',
+                                icon: 'fa fa-save',
+                                button_label: 'Save',
+                                onClick: function (widget, button_ele) {
+                                    widget.state_manager.state_save()
+                                    window.message('state saved')
+                                    widget.sync({ id: 0, on: 'state', do: 'save' })
+                                }
+                            }
+                            , {
+                                type: 'button',
+                                tooltip: 'restore state',
+                                icon: 'fa fa-share',
+                                button_label: 'Restore',
+                                onClick: function (widget, button_ele) {
+                                    widget.state_manager.state_restore()
+                                    window.message('state restored')
+                                    widget.sync({ id: 0, on: 'state', do: 'restore' })
+                                }
+                            }
+                        ]//end of buttons
+                    }//end of button-row
+                ]
+                , [{
+                    type: 'button',
+                    tooltip: 'restore scale to 1, angle to 0',
+                    icon: 'fa fa-undo',
+                    button_label: '',
+                    label: 'Reset', //not button text
+                    legend: 'restore scale to 1, angle to 0',
+                    onClick: function (widget, value) {
+                        widget.reset()
+                        widget.update_handles()
+                        widget.sync({ id: 0, on: 'reset' })
+                    }
+                }
+                ]
             ]//end of tab's items
         }//end of Widget tab
+        /*
         ,{
             id: 'slide-tab',
             text: 'Slide',
@@ -2353,7 +2434,6 @@ Widget.metadata = {
                                 onClick: function (widget, button_ele) {
                                     WidgetGallery.singleton.presentation.current_slide.widget_manager.state_save(true)
                                     window.message('all state saved')
-                                    widget.sync({id:0,on:'state',do:'save'})
                                 }
                             }
                             , {
@@ -2364,14 +2444,14 @@ Widget.metadata = {
                                 onClick: function (widget, button_ele) {
                                     WidgetGallery.singleton.presentation.current_slide.widget_manager.state_restore(true)
                                     window.message('all state restored')
-                                    widget.sync({id:0,on:'state',do:'restore'})
                                 }
                             }
                         ]//end of buttons
-                    }//end of button-row                    
+                    }//end of button-row
                 ]//end of row
             ]//end of tab's items
         }//end of Slide tab's
+        */
     ]
 }
 /*
@@ -2381,7 +2461,7 @@ Widget.metadata = {
  2.管理使用者所擁有的widget
  3.當作UI產生器(based on w2ui)
  */
-var WidgetGallery = function(){
+var WidgetGallery = function () {
     var self = this
     this.context_ready = false
     this.listener = {}
@@ -2497,14 +2577,14 @@ WidgetGallery.prototype = {
                 WidgetGallery.singleton.denormalize(payload.data)
                 var slide = this.presentation.threads[t_id].slides[s_idx]
                 var widget = slide.widget_manager.widgets[payload.id]
-                if (!widget){
+                if (!widget) {
                     console.warn('widget', payload.id, 'not existed')
                 }
                 else if (payload.data.id) {
                     //message to unit
                     var unit = widget.units[payload.data.id]
                     if (unit) unit.on_sync(payload.data)
-                    else console.warn('unit', payload.data.id, 'not existed in ',widget)
+                    else console.warn('unit', payload.data.id, 'not existed in ', widget)
                 }
                 else {
                     //message to widget
@@ -2514,7 +2594,7 @@ WidgetGallery.prototype = {
             case 'add': //新增widget到slide
                 var t_id = data[1]
                 var s_idx = data[2]
-                var wdata = data[3]//serialized data 
+                var wdata = data[3]//serialized data
                 var slide = this.presentation.threads[t_id].slides[s_idx]
                 var box = (slide == this.presentation.current_slide) ? this.widget_layer : null
                 //指定box會讓此widget加入DOM
@@ -2602,17 +2682,22 @@ WidgetGallery.prototype = {
                 }
             }
             else if (options.resize) {
-                this.rotator.style.display = 'none'
                 this.origin_handle.style.display = 'none'
                 if (widget.ele.classList.contains('resizable')) {
                     // 更動尺寸把手的位置
                     var w = bbox.width / 2 * abs_scale
                     var h = bbox.height / 2 * abs_scale
                     var dxy = Widget.utils.transform(w, h, degree)
-                    var rx = bbox.cx + dxy[0] - rect.left
-                    var ry = bbox.cy + dxy[1] - rect.top
-                    this.resizer.style.transform = 'translate(' + Math.round(rx) + 'px,' + Math.round(ry) + 'px) scale(' + handles_scale + ')'
+                    // #widget-resizer is 30x30, put it to bottom-right corner
+                    var rx = bbox.cx + dxy[0] - rect.left - 30
+                    var ry = bbox.cy + dxy[1] - rect.top - 30
+                    var degree = widget.degree[2] + widget.get_parent_degree()
+                    this.resizer.style.transformOrigin = degree ? 'bottom right' : 'top left'
+                    this.resizer.style.transform = 'translate(' + Math.round(rx) + 'px,' + Math.round(ry) + 'px) scale(' + handles_scale + ') rotate(' + degree + 'deg)'
                     this.resizer.style.display = 'inline-block'
+                }
+                else {
+                    this.rotator.style.display = 'none'
                 }
             }
             else {
@@ -2661,11 +2746,13 @@ WidgetGallery.prototype = {
         var self = this
         this.context_ready = true
         this.widget_layer = context.layer
-        this.widget_layer_rect = context.content_rect
+        this.widget_layer_rect = _.clone(context.content_rect)
         this.widget_drawer = context.drawer
         this.presentation = context.presentation
-        this.presentation.on('RESIZE',function(content_rect){
-            self.widget_layer_rect = content_rect
+        this.presentation.on('RESIZE', function (content_rect) {
+            //resize and re-position all widgets
+            self.presentation.current_slide.widget_manager.on_resize(_.clone(self.widget_layer_rect), content_rect)
+            self.widget_layer_rect = _.clone(content_rect)
         })
         this.presentation.on('widget', function (data) {
             switch (data.name) {
@@ -2673,6 +2760,10 @@ WidgetGallery.prototype = {
                     self.show_gallery()
                     return
             }
+        })
+        this.presentation.on('DELETE', function (data) {
+            //keyboard "delete" and "backspace"
+            WidgetGallery.singleton.on_user_remove_widget()
         })
 
         this.init_dashboard(context.dashboard)
@@ -2697,23 +2788,49 @@ WidgetGallery.prototype = {
         //這要在 fire 'context-ready' 事件之後，因為on_show需要widget.metadata已經完全restore之後
         //決定其show的方式（如同slide之間跳來跳去的情況）
         self.presentation.current_slide.widget_manager.on_show()
-    },
-    init_dashboard: function (box) {
+    }
+    , on_user_remove_widget: function () {
+        // 使用者驅動的刪除事件處理
+        if (Widget.selected.length) {
+            w2confirm({
+                msg: 'Hands up, are you sure to remvoe the selected widget?',
+                title: 'Remove Widget',
+                btn_yes: {
+                    class: 'w2ui-btn-red'
+                },
+                btn_no: {
+                    text: 'Cancel'
+                }
+            })
+                .yes(function () {
+                    var widget = Widget.selected[0]
+                    widget.select(false)
+                    WidgetGallery.singleton.destroy_dashboard(widget)
+                    //從DOM中刪除
+                    widget.remove()
+                    //從資料結構中刪除，並且同步
+                    WidgetGallery.singleton.presentation.current_slide.widget_manager.remove_widget(widget.id, true)
+                })
+        }
+    }
+    , init_dashboard: function (box) {
         var self = this
         //建立控制面板
         this.dashboard_box = box //#widget-dashboard
         this.dashboard_toolbar = box.querySelector('#widget-dashboard-toolbar')
         this.dashboard_form = box.querySelector('#widget-dashboard-form')
-        // adjust box's position; 
+        this.dashboard_content = box.querySelector('#widget-dashboard-content')
+        // adjust box's position;
         this.dashboard_box.classList.add('active') //讓此Node可見以取尺寸
         var box_rect = this.dashboard_box.getBoundingClientRect()
         this.dashboard_box.classList.remove('active')
         // top,left各留1px做區隔
         this.dashboard_box.style.top = '1px'
         //this.dashboard_box.style.left = ((this.widget_layer_rect.left - this.widget_layer_rect.left_offset) + this.widget_layer_rect.width - box_rect.width) + 'px'
-        this.dashboard_box.style.left = ( 1 + (this.widget_layer_rect.left - this.widget_layer_rect.left_offset) + this.widget_layer_rect.width) + 'px'
+        this.dashboard_box.style.left = (1 + (this.widget_layer_rect.left - this.widget_layer_rect.left_offset) + this.widget_layer_rect.width) + 'px'
         // 60 is height of page's header
-        this.dashboard_box.style.height =  (this.widget_layer_rect.height) + 'px'
+        this.dashboard_box.style.height = (this.widget_layer_rect.height + 58) + 'px'
+        this.dashboard_content.style.height = (this.widget_layer_rect.height - 60) + 'px'
 
         //建立轉動把手
         var z_index = 2000
@@ -2746,6 +2863,7 @@ WidgetGallery.prototype = {
         var origin_center
         var sDegree
         var do_rotate = _.throttle(function (degree) {
+            widget.metadata.degree[2] = degree
             widget.rotate(degree)
             self.update_handles(widget)
             widget.sync({ id: 0, on: 'rotate', degree: degree })
@@ -2762,13 +2880,13 @@ WidgetGallery.prototype = {
             autoScroll: true,
             onstart: function (evt) {
                 evt.stopPropagation()
-                widget = Widget.all[WidgetGallery.singleton.dashboard_box.dataset.widget_id]
+                //widget = Widget.all[WidgetGallery.singleton.dashboard_box.dataset.widget_id]
+                widget = Widget.selected[0]
                 widget.ele.classList.add('freeze') //讓內容不可互動
                 var rect = widget.get_bbox()
                 var origin = { x: evt.pageX, y: evt.pageY }
                 //旋轉中心點
                 origin_center = [rect.cx, rect.cy]
-
                 if (widget.origin[0] != 50 || widget.origin[1] != 50) {
                     //旋轉中心點不在物件中央，根據目前物件角度而調整，求得旋轉中心點的確實位置
                     var offset_x = (widget.origin[0] - 50) / 100 * rect.width, offset_y = (widget.origin[1] - 50) / 100 * rect.height
@@ -2807,7 +2925,8 @@ WidgetGallery.prototype = {
             autoScroll: true,
             onstart: function (evt) {
                 evt.stopPropagation()
-                widget = Widget.all[WidgetGallery.singleton.dashboard_box.dataset.widget_id]
+                //widget = Widget.all[WidgetGallery.singleton.dashboard_box.dataset.widget_id]
+                widget = Widget.selected[0]
                 //widget._changing_origin = true
                 widget.ele.classList.add('freeze') //讓內容不可互動
                 x = parseFloat(self.origin_handle.dataset.x)
@@ -2839,11 +2958,12 @@ WidgetGallery.prototype = {
                 // 以50，50為原點，修正得到新的比例
                 widget.origin[0] = 50 + dxy_percent[0]
                 widget.origin[1] = 50 + dxy_percent[1]
+                widget.metadata.origin = [widget.origin[0], widget.origin[1]]
                 self.update_handles(widget)
 
 
                 //變更TransformOrigin圖案會跳一下，所以根據中心位置（cx,cy)不變的原則把位置調整回來
-                //目前這個作法會使得畫面閃一下,但似乎沒有更好的作法        
+                //目前這個作法會使得畫面閃一下,但似乎沒有更好的作法
                 var _rect1 = widget.get_bbox() // 儲存變動前的中心位置
                 widget.ele.style.transformOrigin = widget.origin[0] + '% ' + widget.origin[1] + '%'
                 setTimeout(function () {
@@ -2876,6 +2996,8 @@ WidgetGallery.prototype = {
             // 改變大小後，若有scale transform，
             // 因左上角位置也會變，移動物件以保持左上角固定
             var corners0 = widget.get_corners()
+            widget.metadata.w = Math.round(1000 * w / widget.normalize_unit) / 1000
+            widget.metadata.h = Math.round(1000 * h / widget.normalize_unit) / 1000
             widget.resize(w, h, delta)
             widget.sync({ id: 0, on: 'resize', w: w, h: h }, true)
             var corners1 = widget.get_corners()
@@ -2886,7 +3008,8 @@ WidgetGallery.prototype = {
         })
         interact(this.resizer).draggable({
             onstart: function (event) {
-                widget = Widget.all[WidgetGallery.singleton.dashboard_box.dataset.widget_id]
+                //widget = Widget.all[WidgetGallery.singleton.dashboard_box.dataset.widget_id]
+                widget = Widget.selected[0]
                 rect = { w: widget.w, h: widget.h }
                 preserveAspectRatio = widget.ele.getAttribute('preserveAspectRatio') ? (rect.w / rect.h) : 0
                 widget.ele.classList.add('freeze') //讓內容不可互動
@@ -2946,7 +3069,7 @@ WidgetGallery.prototype = {
         interact(dashboard_resizer).draggable({
             onstart: function () {
                 rect = box.getBoundingClientRect()
-                rect2 = self.dashboard_form.getBoundingClientRect()
+                //rect2 = self.dashboard_content.getBoundingClientRect()
                 w = rect.width
                 h = rect.height
             }
@@ -2955,13 +3078,14 @@ WidgetGallery.prototype = {
                 h += evt.dy
                 box.style.width = w + 'px'
                 box.style.height = h + 'px'
-                self.dashboard_form.style.width = w + 'px'
+                //self.dashboard_content.style.width = w + 'px'
+                self.dashboard_content.style.height = (h - 60) + 'px'
             }
         })
         /* toolbar at top of dashboard */
         var items = [
             { type: 'button', id: 'toggle', caption: '<span class="fa fa-sort"></span>' }
-            ,{ type: 'button', id: 'widget-drawer', text: 'Drawer', icon: 'fa fa-boxes', overlay: { width: 120 }, tooltip: 'a place to store widgets' }
+            //,{ type: 'button', id: 'widget-drawer', text: 'Drawer', icon: 'fa fa-boxes', overlay: { width: 120 }, tooltip: 'a place to store widgets' }
 
         ]
         items.push({ type: 'spacer' })
@@ -2978,53 +3102,37 @@ WidgetGallery.prototype = {
         items.push({ type: 'button', id: 'add', caption: '', icon: 'fa fa-plus', tooltip: 'create widget' })
         items.push({ type: 'break' })
         items.push({ type: 'button', id: 'remove', caption: '', icon: 'fa fa-backspace', tooltip: 'remove widget' })
+        if (w2ui['widget-dashboard-header']) w2ui['widget-dashboard-header'].destroy()
         $(this.dashboard_box.querySelector('#widget-dashboard-header')).w2toolbar({
             name: 'widget-dashboard-header',
             items: items,
             onClick: function (evt) {
                 switch (evt.target) {
                     case 'toggle':
-                        var show = self.dashboard_form.style.display == 'none' ? true : false
+                        var show = self.dashboard_content.style.display == 'none' ? true : false
                         if (show) {
-                            self.dashboard_form.style.display = ''
+                            self.dashboard_content.style.display = ''
                             dashboard_resizer.style.display = ''
                             self.dashboard_box.style.height = self.dashboard_box.dataset.height
-                            setTimeout(function () {
-                                //強迫重新render
-                                var widget = Widget.all[self.dashboard_box.dataset.widget_id]
-                                self.dashboard_box.dataset.widget_id = ''
-                                self.render_dashboard(widget)
-                            })
+                            if (self.dashboard_box.dataset.widget_id) {
+                                //剛開始時沒有render過任何widget時， self.dashboard_box.dataset 不會有數值
+                                setTimeout(function () {
+                                    //強迫重新render
+                                    var widget = Widget.all[self.dashboard_box.dataset.widget_id]
+                                    self.dashboard_box.dataset.widget_id = ''
+                                    self.render_dashboard(widget)
+                                })
+                            }
                         }
                         else {
-                            self.dashboard_form.style.display = 'none'
+                            self.dashboard_content.style.display = 'none'
                             dashboard_resizer.style.display = 'none'
                             self.dashboard_box.dataset.height = self.dashboard_box.style.height
                             self.dashboard_box.style.height = '60px'
                         }
                         break
                     case 'remove':
-                        if (Widget.selected.length) {
-                            w2confirm({
-                                msg: 'Hands up, are you sure to remvoe the selected widget?',
-                                title: 'Remove Widget',
-                                btn_yes: {
-                                    class: 'w2ui-btn-red'
-                                },
-                                btn_no: {
-                                    text: 'Cancel'
-                                }
-                            })
-                                .yes(function () {
-                                    var widget = Widget.selected[0]
-                                    widget.select(false)
-                                    WidgetGallery.singleton.destroy_dashboard(widget)
-                                    //從DOM中刪除
-                                    widget.remove()
-                                    //從資料結構中刪除，並且同步
-                                    WidgetGallery.singleton.presentation.current_slide.widget_manager.remove_widget(widget.id, true)
-                                })
-                        }
+                        WidgetGallery.singleton.on_user_remove_widget()
                         break
                     case 'add':
                         /*
@@ -3040,9 +3148,9 @@ WidgetGallery.prototype = {
                         //show/hide widget gallery
                         WidgetGallery.singleton.show_gallery()
                         break
-                    case 'widget-drawer':
-                        WidgetGallery.singleton.presentation.fire('ACTION', { name: 'widget-drawer', yes: (!document.querySelector('#widget-drawer').classList.contains('open')) })
-                        break
+                    //case 'widget-drawer':
+                    //    WidgetGallery.singleton.presentation.fire('ACTION', { name: 'widget-drawer', yes: (!document.querySelector('#widget-drawer').classList.contains('open')) })
+                    //    break
                     default:
                         if (Widget.selected.length) {
                             items.some(function (item) {
@@ -3084,13 +3192,13 @@ WidgetGallery.prototype = {
         //在box (htmlelement)中顯示widget的控制面盤
         // render toolbar items only if widget is changed
         // if necessary, call update_dashboard() to enforce re-rendering
-        if (this.dashboard_box.dataset.widget_id == widget.id) return
+        if (this.dashboard_box.dataset && this.dashboard_box.dataset.widget_id == widget.id) return
         var self = this
         this.dashboard_box.dataset.widget_id = widget.id
         var actions = widget.get_actions()
         var toolbar_items = []
         actions.forEach(function (action, idx) {
-            var toolbar_item = { id: action.id, idx: idx, type: action.type, text: action.text, icon: action.icon, tooltip: action.tooltip, disabled:action.disabled }
+            var toolbar_item = { id: action.id, idx: idx, type: action.type, text: action.text, icon: action.icon, tooltip: action.tooltip, disabled: action.disabled }
             Array.prototype.forEach.call(['items', 'html'], function (name) {
                 if (action[name]) toolbar_item[name] = action[name]
             })
@@ -3110,14 +3218,14 @@ WidgetGallery.prototype = {
                         action.onClick(widget, w2ui['dashboard-toolbar'], evt)
                 }
             }
-        })        
+        })
         /* 隱藏的話不需要render form */
-        if (self.dashboard_form.style.display == 'none') return
+        if (self.dashboard_content.style.display == 'none') return
         /* field type supported by w2ui: http://w2ui.com/web/docs/1.5/w2form.fields */
         var widget_dashboard_items = []
         widget.get_dashboard(widget_dashboard_items)
-        var dashboard = _.concat(widget_dashboard_items,Widget.metadata.dashboard)
-    
+        var dashboard = _.concat(widget_dashboard_items, Widget.metadata.dashboard)
+
         var html = []
         var fields = []
         var tabs = []
@@ -3150,7 +3258,7 @@ WidgetGallery.prototype = {
                         html.push('<div class="w2ui-field dashboard-item' + (item.item_class ? ' ' + item.item_class : '') + '">')
                         var tooltip = item.tooltip ? ' onmouseout="$(this).w2tag()" onmouseover="$(this).w2tag(unescape(\'' + escape(item.tooltip) + '\'));"' : ''
                         html.push('<label' + tooltip + '>' + item.label + '</label><div>')
-                        html.push('<button'+ (item.disabled ? ' disabled="1"' : '')+' name="' + name + '" class="w2ui-btn' + (item.class ? ' ' + item.class : '') + '" style="' + (item.style || '') + '"><span class="' + item.icon + '"> ' + item.button_label + '</span></button>')
+                        html.push('<button' + (item.disabled ? ' disabled="1"' : '') + ' name="' + name + '" class="w2ui-btn' + (item.class ? ' ' + item.class : '') + '" style="' + (item.style || '') + '"><span class="' + item.icon + '"> ' + item.button_label + '</span></button>')
                         if (item.legend) html.push('<div class="legend">' + item.legend + '</div>')
                         html.push('</div></div>') // end this item
                         return
@@ -3161,7 +3269,7 @@ WidgetGallery.prototype = {
                         html.push('<div class="button-row-buttons">')
                         item.buttons.forEach(function (subitem, idx) {
                             var tooltip = subitem.tooltip ? ' onmouseout="$(this).w2tag()" onmouseover="$(this).w2tag(unescape(\'' + escape(subitem.tooltip) + '\'));"' : ''
-                            html.push('<button' + tooltip + (subitem.disabled ? ' disabled="1"' : '')+' name="' + name + '" idx="' + idx + '" class="w2ui-btn' + (subitem.class ? ' ' + subitem.class : '') + '" style="' + (subitem.style || '') + '"><span class="' + subitem.icon + '"> ' + subitem.button_label + '</span></button>')
+                            html.push('<button' + tooltip + (subitem.disabled ? ' disabled="1"' : '') + ' name="' + name + '" idx="' + idx + '" class="w2ui-btn' + (subitem.class ? ' ' + subitem.class : '') + '" style="' + (subitem.style || '') + '"><span class="' + subitem.icon + '"> ' + subitem.button_label + '</span></button>')
                         })
                         html.push('</div>')
                         if (item.legend) html.push('<div class="legend">' + item.legend + '</div>')
@@ -3173,11 +3281,11 @@ WidgetGallery.prototype = {
                         item.html(widget, html)
                         html.push('</div>') // end this item
                         return
-                    }                    
+                    }
 
                     var field = { field: name, type: item.type }
-                    
-                    // format: {group:'some group name' , column:0} 
+
+                    // format: {group:'some group name' , column:0}
                     // see w2ui's document: http://w2ui.com/web/demos/#!forms/forms-11
                     Array.prototype.forEach.call(['html', 'options'], function (prop_name) {
                         //copy specific prop to field
@@ -3212,11 +3320,11 @@ WidgetGallery.prototype = {
                             })
                             break
                         default:
-                            html.push('<input type="' + item.type + '" style="' + (item.style || '') + '" name="' + name + '">')
+                            html.push('<input type="' + item.type + '" style="' + (item.style || '') + '" name="' + name + '" placeholder="' + (item.placeholder || '') + '">')
                     }
                     if (item.legend) html.push('<div class="legend">' + item.legend + '</div>')
                     html.push('</div>') //field
-                    html.push('</div>') //item                
+                    html.push('</div>') //item
                 })
                 html.push('</div>') //column
             })
@@ -3235,11 +3343,11 @@ WidgetGallery.prototype = {
             }
             return item
         }
-        
+
         //restore to same tab if any
         if (w2ui['dashboard-form']) {
-            w2ui['dashboard-form'].tabs.tabs.some(function(tab,idx){
-                if (tab.id == w2ui['dashboard-form'].tabs.active ){
+            w2ui['dashboard-form'].tabs.tabs.some(function (tab, idx) {
+                if (tab.id == w2ui['dashboard-form'].tabs.active) {
                     active_tab_idx = idx
                     tabs[idx].active = true
                     return true
@@ -3260,7 +3368,7 @@ WidgetGallery.prototype = {
                 var item = get_item(evt.target)
                 if (item._ignore) return
                 // evt.target 只是string類型的id, 此處模擬一個<input>讓item.set使用
-                item.set(widget, { value: evt.value_new }, item,w2ui['dashboard-form']) 
+                item.set(widget, { value: evt.value_new }, item, w2ui['dashboard-form'])
             },
             toolbar: toolbar
         })
@@ -3268,7 +3376,7 @@ WidgetGallery.prototype = {
         var value_changed = function (evt) {
             var item = get_item(evt.currentTarget.getAttribute('name'))
             item._ignore = true //已經在oninput事件中改變的屬性，不要在最後重複設定
-            item.set(widget, evt.currentTarget, item, w2ui['dashboard-form']) //miso
+            item.set(widget, evt.currentTarget, item, w2ui['dashboard-form'])
         }
         this.dashboard_form.querySelectorAll('.dashboard-item input, .dashboard-item textarea').forEach(function (ele) {
             //不要讓presentation的keyboard事件干擾輸入
@@ -3315,7 +3423,7 @@ WidgetGallery.prototype = {
     ,restore_slide_widgets:function(slide){
         // data is an array of serialzed data of widgets belongs to this slide
         var self = this
-        
+
         // delete all existing widgets
         Widget.selected.forEach(function(widget){
             widget.select(false)
@@ -3358,7 +3466,7 @@ WidgetGallery.prototype = {
         }
     },
     */
-    ,show_gallery: function () {
+    , show_gallery: function () {
         //讓使用者挑選widget以新增
         var self = this
         var screen_rect = this.widget_layer_rect// document.getElementById('screen-frame').getBoundingClientRect()
@@ -3378,7 +3486,7 @@ WidgetGallery.prototype = {
                 panels: [
                     { type: 'left', size: 300, resizable: true, content: 'sidebar' },
                     { type: 'main', size: 200, resizable: false, style: 'padding:10px', content: '<h3 class="widget-classname"><span></span><button disabled class="do-add-widget w2ui-btn w2ui-btn-blue">Add</button></h3><div style="line-height:1.25em" class="widget-description"></div>' },
-                    { type: 'preview', size: (screen_rect.height * 0.8 - 200), resizable: true, content: '<div class="widget-video"></div>'}
+                    { type: 'preview', size: (screen_rect.height * 0.8 - 200), resizable: true, content: '<div class="widget-video"></div>' }
                 ]
             });
             //sidebar for category
@@ -3418,18 +3526,18 @@ WidgetGallery.prototype = {
                     $popup.find('.do-add-widget').attr('kind', classname)
                     $popup.find('.widget-classname span').html(a_class.metadata.caption)
                     $popup.find('.widget-description').html(a_class.metadata.description)
-                    var whratio = 560/315
+                    var whratio = 560 / 315
                     var space_size = $popup.find('.widget-video').parent()[0].getBoundingClientRect()
                     var width, height
-                    if (space_size.width / space_size.height > whratio){//fit height
+                    if (space_size.width / space_size.height > whratio) {//fit height
                         height = space_size.height
                         width = Math.round(height * whratio)
                     }
-                    else{
+                    else {
                         width = space_size.width
                         height = Math.round(width / whratio)
                     }
-                    var video_iframe = '<iframe width="'+width+'" height="'+height+'" src="https://www.youtube.com/embed/'+a_class.metadata.video+'" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+                    var video_iframe = '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube.com/embed/' + a_class.metadata.video + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
 
                     $popup.find('.widget-video').html(video_iframe)
                     $popup.find('.do-add-widget').attr('disabled', null)
@@ -3454,7 +3562,7 @@ WidgetGallery.prototype = {
         this.on_paste(data, evt)
     }
     , on_dnd_string: function (text, evt) {
-        this.on_paste_string(text,evt)
+        this.on_paste_string(text, evt)
     }
     , on_paste: function (data, evt) {
         if (Widget.selected.length) Widget.selected[0].on_paste(data, evt)
@@ -3530,8 +3638,8 @@ WidgetGallery.prototype = {
             f: options.flag || flag,
             n: options.name || options.file.name
         }]
-        if (!options.file instanceof File){
-            console.error('options.file is not file, failed to upload',options.file)
+        if (!options.file instanceof File) {
+            console.error('options.file is not file, failed to upload', options.file)
             return
         }
         this._send_command('upload_widget_file', args, options.file).done(function (filename) {
@@ -3602,37 +3710,37 @@ WidgetGallery.prototype = {
     , slot_push: function (slot_ele, widget) {
         //把widget放入slot(可能是使用者，或者是slide異動
         widget.select(false)
-        if (slot_ele.dataset.id && slot_ele.dataset.id != widget.id){
+        if (slot_ele.dataset.id && slot_ele.dataset.id != widget.id) {
             //slot上有其他的widget的話，則先將其踢出slot
             WidgetGallery.singleton.slot_pop(Widget.all[slot_ele.dataset.id])
         }
         if (widget.ele.dataset.transform) {
-            // case 1: 被放到slot之後，換slide被移出，現又回到該slide而重新被放回 slot; 
+            // case 1: 被放到slot之後，換slide被移出，現又回到該slide而重新被放回 slot;
             // case 2: 在別的slot,要搬到此slot; switch slot (such as when restoring state)
             // case 2-1: 此slot是空的，case 2-2: 此slot有別的slot（因為已經被踢出，此情況不會發生）
             // 不需作任何css style的改變
-            if (widget.metadata.slot == slot_ele.getAttribute('slot-idx')){
-                if (widget.ele.parentNode){ 
+            if (widget.metadata.slot == slot_ele.getAttribute('slot-idx')) {
+                if (widget.ele.parentNode) {
                     //widget.ele.parentNode is not widget-layer, because
                     //"widget.ele.dataset.transform" is removed when a widget has pop out of slot
                     //why? (push the same widget twice?)
                     console.warn('case unknow 1')
                     return
                 }
-                else{
+                else {
                     //case 1
                     slot_ele.dataset.id = widget.id
                 }
             }
-            else{
-                if (widget.ele.parentNode){
+            else {
+                if (widget.ele.parentNode) {
                     var src_slot = widget.ele.parentNode
                     //case 2
-                    if (slot_ele.dataset.id){
+                    if (slot_ele.dataset.id) {
                         console.warn('case unknow 2-2')
                         return
                     }
-                    else{
+                    else {
                         //case 2-1
                         // reset src slot
                         delete src_slot.dataset.id
@@ -3640,7 +3748,7 @@ WidgetGallery.prototype = {
                         slot_ele.dataset.id = widget.id
                     }
                 }
-                else{
+                else {
                     // why?
                     console.warn('case unknow 2')
                     return
@@ -3650,7 +3758,7 @@ WidgetGallery.prototype = {
             slot_ele.appendChild(widget.ele)
         }
         else {
-            var callback = function(){
+            var callback = function () {
                 //初次被放到slot
                 slot_ele.dataset.id = widget.id
                 widget.metadata.slot = slot_ele.getAttribute('slot-idx') //must be string type to evalute true
@@ -3666,46 +3774,49 @@ WidgetGallery.prototype = {
                     var scale = Math.round(100 * Math.min(scale_w, scale_h)) / 100
                     widget.ele.style.transform = 'scale(' + scale + ')'
                     //調整到中心位置
-                    if (scale_w <= scale_h) {
+                    if (widget_rect.width >= widget_rect.height) {
+                        //landscape
                         widget.ele.style.top = Math.round((slot_rect.height - widget_rect.height * scale) / 2) + 'px'
                     }
                     else {
-                        widget.ele.style.left = Math.round((widget_rect.width * scale - slot_rect.width) / 2) + 'px'
+                        //potarit
+                        widget.ele.style.left = Math.round((slot_rect.width - widget_rect.width * scale) / 2) + 'px'
+                        console.log('==>left', widget.ele.style.left)
                     }
                     widget.ele.classList.add('inslot')
                 })
                 slot_ele.classList.remove('empty')
-                slot_ele.appendChild(widget.ele) 
+                slot_ele.appendChild(widget.ele)
             }
 
-            var do_animation = function(callback){
+            var do_animation = function (callback) {
                 //以進入slot而言，這是最早的步驟
                 var animation_name;
-                Constant.out_styles.some(function(item){
-                    if (widget.state_manager.state_data.slot.in == item.id){
+                Constant.out_styles.some(function (item) {
+                    if (widget.state_manager.state_data.slot.in == item.id) {
                         animation_name = item.name
                         return true
                     }
                 })
-                if (!widget.ele.parentNode || !animation_name  || animation_name == '0'){
-                    // no animation; 
+                if (!widget.ele.parentNode || !animation_name || animation_name == '0') {
+                    // no animation;
                     // ex.slide 一開始時widget.ele不在DOM內，沒有parentNode，不必有動畫
                     callback()
                 }
-                else{
-                    var animationend = function(){
-                        widget.box.classList.remove('animated',animation_name)
-                        widget.box.removeEventListener('animationend',animationend)
+                else {
+                    var animationend = function () {
+                        widget.box.classList.remove('animated', animation_name)
+                        widget.box.removeEventListener('animationend', animationend)
                         callback()
                     }
-                    widget.box.addEventListener('animationend',animationend)
-                    widget.box.classList.add('animated',animation_name)    
-                }            
+                    widget.box.addEventListener('animationend', animationend)
+                    widget.box.classList.add('animated', animation_name)
+                }
             }
-            
+
             do_animation(callback)
         }
-        
+
     }
     , slot_pop: function (widget) {
         //把widget移出slot
@@ -3722,24 +3833,24 @@ WidgetGallery.prototype = {
         delete widget.ele.dataset.transform
         //inform object in widget that the widget is going out of slot
         var animation_name;
-        Constant.in_styles.some(function(item){
-            if (widget.state_manager.state_data.slot.out == item.id){
+        Constant.in_styles.some(function (item) {
+            if (widget.state_manager.state_data.slot.out == item.id) {
                 animation_name = item.name
                 return true
             }
         })
-        if (!animation_name  || animation_name == '0'){
+        if (!animation_name || animation_name == '0') {
             //no animation
             widget.fire('show')
         }
-        else{
-            var animationend = function(){
-                widget.box.classList.remove('animated',animation_name)
-                widget.box.removeEventListener('animationend',animationend)
+        else {
+            var animationend = function () {
+                widget.box.classList.remove('animated', animation_name)
+                widget.box.removeEventListener('animationend', animationend)
                 widget.fire('show')
             }
-            widget.box.addEventListener('animationend',animationend)
-            widget.box.classList.add('animated',animation_name)    
+            widget.box.addEventListener('animationend', animationend)
+            widget.box.classList.add('animated', animation_name)
         }
     }
     , slot_purge: function () {
@@ -3776,18 +3887,22 @@ function GenericUnit(widget, box, func_name) {
     this.widget.units[this.id] = this
     this.box = box //container element belongs to parent unit or widget
     //this.ele 是此unit的最上層node，如果有值的話是clone的情況，此ele在呼叫destroy時會自動從DOM移除
-    //在此，this.ele只會assign，不會create；ele要有classname是其所屬的unit的名稱
+    //在此，this.ele只會assign，不會create ele要有classname是其所屬的unit的名稱
     this.ele = func_name ? (box.querySelector('div.' + func_name) || null) : null
-    if (this.ele) this.ele.setAttribute('id', this.id)
+    if (this.ele) {
+        this.ele.setAttribute('id', this.id)
+        this.add_scroll_handler()
+    }
     //this.relay = this
     this.listener = {}
     this.metadata = {
         id: this.id
         , classname: func_name
-        , css:{}
+        , css: {}
+        //為了節省儲存空間，不放x,y,w,h,scale,degree,除非必要（非預設值）
     }
-
     this.resizable_options = null
+
 }
 GenericUnit.prototype = {
     constructor: GenericUnit
@@ -3799,11 +3914,52 @@ GenericUnit.prototype = {
             this.ele.style[prop] = options.style[prop]
         }
         this.box.appendChild(this.ele)
+        this.add_scroll_handler()
+    }
+    , add_scroll_handler:function(){
+        //同步scroll的位置, scroll 事件目前無法分辨是程式產生或是使用者產生,所以用 _scroll_handler_disabled 當flag作區別
+        var self = this
+        this._scroll_handler = _.throttle(function (evt) {
+            if (self._scroll_handler_disabled) return
+            self.metadata.scroll_left = Math.round(1000 * self.ele.scrollLeft / self.widget.w) //in 100%
+            self.metadata.scroll_top = Math.round(1000 * self.ele.scrollTop / self.widget.h) //in 100%
+            self.sync({ topic: 'scroll', xy: { left: self.metadata.scroll_left, top: self.metadata.scroll_top } })
+            console.log('set stop to',self.ele.scrollTop,'as',self.metadata.scroll_top,'for',self.id)
+        }, 100, { leading: false, trailing: true })
+        $(this.ele).on('scroll', this._scroll_handler)    
     }
     , get_actions: function () { return [] }
-    , get_dashboard: function (dashboard) {}
+    , get_dashboard: function (dashboard) { }
     , serialize: function (for_clone) {
         return _.cloneDeep(this.metadata)
+    }
+    , deserialize_metadata: function (metadata) {
+        var self = this
+        if (metadata.scale) { // this is a normalized scale value
+            //YoutubeUnit 在一開始，video還沒載入時，不能resize
+            self.metadata.scale = metadata.scale
+            if (self.resizable_options && self.resizable_options.scale_target) {
+                self.resizable_options.scale_target.dataset.scale = self.metadata.scale
+                //把normalize的scale轉成實際的scale (可能不必管rel_scale了)
+                var scale = metadata.scale //* self.widget.rel_scale
+                self.zoom(scale)
+            }
+        }
+        if (metadata.size) {
+            self.metadata.size = metadata.size
+            //YoutubeUnit 在一開始，video還沒載入時，不能resize
+            if (self.resizable_options && self.resizable_options.resize_target) {
+                var size = _.clone(self.metadata.size)
+                WidgetGallery.singleton.denormalize(size)
+                self.resize(size.w, size.h)
+            }
+        }
+        if (metadata.xy && (metadata.xy.x || metadata.xy.y)) { //ignore {x:0, y:0}
+            self.metadata.xy = _.clone(metadata.xy)
+            var xy = _.clone(self.metadata.xy)
+            WidgetGallery.singleton.denormalize(xy)
+            self.move(xy.x, xy.y)
+        }
     }
     , deserialize: function (metadata, is_clone) {
         if (is_clone) {
@@ -3823,106 +3979,64 @@ GenericUnit.prototype = {
 
         // 等WidgetGallery被set_context之後再恢復位置跟大小
         var self = this
+
         var call_with_context = function () {
-            if (self.metadata.scale) { // this is a normalized scale value
-                //YoutubeUnit 在一開始，video還沒載入時，不能resize
-                if (self.resizable_options && self.resizable_options.scale_target) {
-                    self.resizable_options.scale_target.dataset.scale = self.metadata.scale
-                    //把normalize的scale轉成實際的scale
-                    var scale = self.metadata.scale * self.widget.rel_scale
-                    self.zoom(scale)
-                }
-            }
-            if (self.metadata.resize) {
-                //YoutubeUnit 在一開始，video還沒載入時，不能resize 
-                if (self.resizable_options && self.resizable_options.resize_target) {
-                    var resize = _.clone(self.metadata.resize)
-                    WidgetGallery.singleton.denormalize(resize)
-                    self.resize(resize.w, resize.h)
-                }
-            }
-            if (self.metadata.move) {
-                var move = _.clone(self.metadata.move)
-                WidgetGallery.singleton.denormalize(move)
-                self.move(move.x, move.y)
-            }
+            self.deserialize_metadata(self.metadata)
         }
         if (WidgetGallery.singleton.context_ready) call_with_context()
         else WidgetGallery.singleton.on('context-ready', call_with_context)
     }
-    ,state_save:function(){
+    , state_save: function () {
         var data = {}
-        if (this.ele){
-            if (this.metadata.move){
-                data.x = this.metadata.move.x
-                data.y = this.metadata.move.y
+        if (this.ele) {
+            if (this.metadata.xy) {
+                data.xy = _.clone(this.metadata.xy)
             }
             else {
-                var drag_target = this.ele
-                var normal_xy = WidgetGallery.singleton.normalize({
-                    w:parseFloat(drag_target.style.left),
-                    h:parseFloat(drag_target.style.top)})
-                data.x = normal_xy.x
-                data.y = normal_xy.y
+                data.xy = this.get_xy()
+                WidgetGallery.singleton.normalize(data.xy)
             }
         }
-        if (this.resizable_options && this.resizable_options.resize_target){
-            if (this.metadata.resize){
-                data.w = this.metadata.resize.w
-                data.h = this.metadata.resize.h    
+        if (this.resizable_options && this.resizable_options.resize_target) {
+            if (this.metadata.size) {
+                data.size = _.close(this.metadata.size)
             }
-            else{
-                var normal_wh = WidgetGallery.singleton.normalize({w:parseFloat(this.resizable_options.resize_target.style.width),
-                    h:parseFloat(this.resizable_options.resize_target.style.height)})
-                data.w = normal_wh.w
-                data.h = normal_wh.h
+            else {
+                data.size = thi.get_size()
+                WidgetGallery.singleton.normalize(data.size)
             }
-            if (this.resizable_options.scale_target) data.s = this.metadata.scale || 1
         }
-        if (_.size(data) == 0 ) return null
-        data._n = 1 //data的數值都是normalized過的，手動加上flag
+        if (this.resizable_options && this.resizable_options.scale_target && this.metadata.scale) data.scale = this.metadata.scale
         return data
     }
-    ,state_restore:function(_data){
+    , state_restore: function (_data) {
         // unit
         var data = _.cloneDeep(_data)
-        WidgetGallery.singleton.denormalize(data)
-        if (data.x || data.y) this.move(data.x, data.y)
-        if (this.resizable_options){
-            if (data.w || data.h) this.resize(data.w, data.h)
-            if (data.s && data.s != 1) {
-                this.metadata.scale = data.s
-                //重新把normalize的scale寫回ele.dataset，使得手動縮放時可得到正確的scale
-                //這個作法不是很好，暫時先這樣了
-                this.resizable_options.scale_target.dataset.scale = data.s
-                var denormalized_scale = this.resizable_options.static_scale  ? data.s : data.s * this.widget.rel_scale
-                this.zoom(denormalized_scale)
-            }
-        }
+        this.deserialize_metadata(data)
     }
-    , reset:function(){
-        this.move(0,0)
+    , reset: function () {
+        this.move(0, 0)
         this.zoom(1)
     }
-    , get_info:function(){
+    , get_info: function () {
         // dashboard 以grid顯示此unit時會用到,subclass需複寫
         return {
-            type:this.constructor.name,
-            content:''
+            type: this.constructor.name,
+            content: ''
         }
     }
-    ,css:function(css_name,css_value){
-        if (_.isObject(css_name)){
-            for(var name in css_name){
+    , css: function (css_name, css_value) {
+        if (_.isObject(css_name)) {
+            for (var name in css_name) {
                 this.box.style[name] = css_name[name]
             }
             _.assign(this.metadata.css, css_name)
         }
-        else{
+        else {
             this.metadata.css[css_name] = css_value
             this.box.style[css_name] = css_value
         }
-    }    
+    }
     , fire: function (name) {
         var self = this
         var args = [name]
@@ -3977,17 +4091,17 @@ GenericUnit.prototype = {
             delete this.listener[name]
         }
     }
-    , on_dnd: function (data,evt) {
+    , on_dnd: function (data, evt) {
         //basically, redirect dnd to paste
-        this.on_paste(data,evt)
+        this.on_paste(data, evt)
     }
-    , on_dnd_string: function (data,evt) {
+    , on_dnd_string: function (data, evt) {
         //basically, redirect dnd to paste
-        this.on_paste(data,evt)
+        this.on_paste(data, evt)
     }
-    , on_paste: function (data,evt) {
+    , on_paste: function (data, evt) {
     }
-    , on_paste_string: function (data,evt) {
+    , on_paste_string: function (data, evt) {
     }
     , sync: function (payload, do_normalize) {
         //unit's common sync function
@@ -3997,7 +4111,7 @@ GenericUnit.prototype = {
     // only remove the unit's node from DOM
     , destroy: function () {
         if (this.ele) {
-            this.ele.remove()
+            this.ele.parentNode.removeChild(this.ele)
             this.ele = null
         }
         // 解除在this.widget.units當中的id註冊
@@ -4007,10 +4121,15 @@ GenericUnit.prototype = {
     }
     , move: function (x, y) {
         if (!this.ele) return
-        var drag_target_style = this.ele.style
-        drag_target_style.left = x + 'px'
-        drag_target_style.top = y + 'px'
-        this.metadata.move = WidgetGallery.singleton.normalize({ x: x, y: y })
+        this.ele.style.left = x + 'px'
+        this.ele.style.top = y + 'px'
+    }
+    , get_xy: function () {
+        if (!this.ele) return { x: 0, y: 0 }
+        return {
+            x: parseFloat(this.ele.style.left || 0),
+            y: parseFloat(this.ele.style.top || 0)
+        }
     }
     //make this unit draggable
     , draggable: function () {
@@ -4041,6 +4160,7 @@ GenericUnit.prototype = {
                 self.move(x, y)
             }
             , onend: function (evt) {
+                self.metadata.xy = WidgetGallery.singleton.normalize({ x: x, y: y })
                 drag_target.classList.remove('freeze')
                 self.sync({ topic: 'move', x: x, y: y }, true)
             }
@@ -4059,9 +4179,16 @@ GenericUnit.prototype = {
     , resize: function (w, h) {
         this.resizable_options.resize_target.style.width = w + 'px'
         this.resizable_options.resize_target.style.height = h + 'px'
-        this.metadata.resize = WidgetGallery.singleton.normalize({ w: w, h: h })
+        //this.metadata.resize = WidgetGallery.singleton.normalize({ w: w, h: h })
         //TextboxUnit need this to fit_size
-        this.fire('resize', { width:w, height: h})//, target: this.resizable_options.resize_target })
+        this.fire('resize', { width: w, height: h })//, target: this.resizable_options.resize_target })
+    }
+    , get_size: function () {
+        var ele = this.ele ? this.ele : (this.resizable_options ? this.resizable_options.resize_target : null)
+        return {
+            width: ele ? parseFloat(ele.style.width) : 0,
+            height: ele ? parseFloat(ele.style.height) : 0
+        }
     }
     //make this unit resizable and scalable
     , resizable: function (options) {
@@ -4091,6 +4218,7 @@ GenericUnit.prototype = {
             var rect, in_rect, w, h;
             var abs_degree, abs_scale, dx, dy
             var do_resize = _.throttle(function () {
+                self.metadata.size = WidgetGallery.singleton.normalize({ w: self.w, h: self.h })
                 self.resize(w, h)
             })
 
@@ -4142,7 +4270,18 @@ GenericUnit.prototype = {
         if (scale_target) {
 
             //可以scale時，用圓形的符號
-            this.resizer.innerHTML = '<span>◶</span>'
+            //if (this.resizer) this.resizer.innerHTML = '<span>◶</span>'
+            /* 這個方式比用::after穩定，::after經常會讓滑鼠黏住放不開*/
+            this.scalar = this.ele.querySelector('.scalar')
+            if (this.scalar) {
+                //cloned or this function been called twice
+            }
+            else {
+                this.scalar = document.createElement('div')
+                this.scalar.classList.add('scalar')
+                this.ele.appendChild(this.scalar)
+                this.scalar.innerHTML = '<span>◶</span>'
+            }
 
             //this is required to be scaled
             scale_target.style.transformOrigin = 'top left'
@@ -4152,18 +4291,18 @@ GenericUnit.prototype = {
             var do_sync = _.throttle(function (scale) {
                 //往外同步與寫回metadata（下次reload時會用到），需正規化(除了YoutubeUnit)
                 //YoutubeUnit 的特性是scale時保持一致，不必管widget.rel_scale
-                var normalized_scale = self.resizable_options.static_scale ? scale : scale / self.widget.rel_scale
+                var normalized_scale = self.resizable_options.static_scale ? scale : scale
                 self.metadata.scale = normalized_scale
+                console.log('set scale to ', self.metadata.scale)
                 scale_target.dataset.scale = normalized_scale
                 self.sync({ topic: 'scale', scale: normalized_scale, static: self.resizable_options.static_scale })
             }, 1000, { leading: false, trailing: true })
 
             //因為ele的scale可能在別地方被改變（ex state_restore)，所以三秒後重設ele_scale
-            var reset_ele_scale = _.debounce(function(){
+            var reset_ele_scale = _.debounce(function () {
                 ele_scale = null
-            },3000)
+            }, 3000)
             this._scaling_handler = function (evt) {
-
                 //initial ele_scale ; 從scale_target.dataset取出前次normalized的scale,轉成denormalized的scale
                 //ele_scale是目前scale的數值，讓scale的改變從現有scale開始，這樣會比較平滑
                 if (ele_scale === null)
@@ -4186,14 +4325,29 @@ GenericUnit.prototype = {
                 reset_ele_scale.cancel()
                 reset_ele_scale()
             }
-            this.ele.addEventListener('mousewheel', this._scaling_handler)
+            this.scalar.addEventListener('mousewheel', this._scaling_handler)
         }
     }
-    , hide:function(){
-        if (this.ele) this.ele.style.display = 'none'
+    , hide: function () {
+        if (this.ele) {
+            //widget被blur時會暫時從DOM移除而呼叫hide，但是scrollLeft, scrollTop 會在被從DOM中移除時reset為0,0,所以要先紀錄下來
+            this.ele.dataset.s_left = this.ele.scrollLeft
+            this.ele.dataset.s_top = this.ele.scrollTop
+            this.ele.style.display = 'none'
+        }
+        this.fire('hide')
     }
-    , show:function(){
-        if (this.ele) this.ele.style.display = ''
+    , show: function () {
+        if (this.ele) {
+            this.ele.style.display = ''
+            //slide內的widget會重新加入DOM而呼叫show，但是scrollLeft, scrollTop 會在被從DOM中移除時reset為0,0,所以要restore
+            var self = this
+            _.defer(function(){
+                // 要defer一下才會有作用
+                self.restore_scroll_xy_nosync()
+            })
+        }
+        this.fire('show')
     }
     , on_sync: function (data) {
         switch (data.topic) {
@@ -4210,8 +4364,37 @@ GenericUnit.prototype = {
                 var scale = data.static ? data.scale : data.scale * this.widget.rel_scale
                 this.zoom(scale)
                 return true
+            case 'metadata':
+                for (var name in data.data) {
+                    this.metadata[name] = _.cloneDeep(data.data[name])
+                }
+                return true
+            case 'scroll':
+                //scroll 這個event找不到比較好的作法分辨是人產生的還是程式產生的，暫時只好這樣(2019-03-16T10:42:13+00:00)
+                this.metadata.scroll_left = data.xy.left
+                this.metadata.scroll_top = data.xy.top
+                this.restore_scroll_xy_nosync()
+                return true
+
         }
         return false
+    }
+    , restore_scroll_xy_nosync: function () {
+        //scrollLeft, scrollTop 有一個特點是設定值不一定等於得到的值
+        if (this.metadata.scroll_left === undefined) return
+
+        var self = this
+        var x = Math.round(self.metadata.scroll_left / 1000 * self.widget.w)
+        var y = Math.round(self.metadata.scroll_top / 1000 * self.widget.h)
+
+        this._scroll_handler_disabled = true
+        this.ele.scrollLeft = x
+        this.ele.scrollTop = y
+        if (this._rescroll_timer) clearTimeout(this._rescroll_timer)
+        this._rescroll_timer = setTimeout(function () {
+            delete self._rescroll_timer
+            delete self._scroll_handler_disabled
+        }, 2000)
     }
 }
 
@@ -4250,7 +4433,7 @@ SampleWidget.metadata = {
     description:'book-style box of images',
     icon:'fa fa-card',
     //information to render items on action-menu for user to take
-    actions:[ 
+    actions:[
     ],
     dashboard:[
     ]
@@ -4272,7 +4455,6 @@ WidgetGallery.register(SampleWidget)
 function ImageUnit(widget, box) {
     var func_name = arguments.callee.name //TextBoxUnit
     GenericUnit.call(this, widget, box, func_name)
-    //這可能可以視為一個系統常數
     if (this.ele) {
         this.image_ele = this.ele.querySelector('img')
     }
@@ -4280,14 +4462,16 @@ function ImageUnit(widget, box) {
         this.create_ele({
             classname: func_name,
             style: {
-                width: '200px'//widget_rect.width + 'px'
-                , height: '200px'//widget_rect.height + 'px'
+                width: '100%'
+                , height: '100%',
             }
         })
         this.image_ele = document.createElement('img')
         this.ele.appendChild(this.image_ele)
     }
     var self = this
+
+    /* 2019-03-16T07:55:44+00:00 以目前的作法似乎已經不需要
     var set_base_rect = function () {
         //因為unit會放大跟縮放，在deserialize時候為了還原之前的狀態，load_url(image)之後需要有一個基準尺寸
         //這個基準尺寸是widget產生時的初始尺寸
@@ -4299,12 +4483,16 @@ function ImageUnit(widget, box) {
     }
     if (WidgetGallery.singleton.context_ready) set_base_rect()
     else WidgetGallery.singleton.on('context-ready', set_base_rect)
+    */
 
     this.resizable({
-        resize_target: this.ele,
+        //2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
+        resize_target: null, // this.ele,
         scale_target: this.image_ele,
     })
-    this.draggable()
+
+    //2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
+    //this.draggable()
 
     this.on('destroyed', function () {
         //由WidgetGallery統一批次通知server，此unit被刪除了，需刪除他的圖檔
@@ -4317,90 +4505,117 @@ ImageUnit.prototype = _.create(GenericUnit.prototype, {
         var data = GenericUnit.prototype.serialize.call(this, for_clone)
         return data
     }
+    , deserialize_metadata: function (metadata, _is_clone) {
+        var self = this
+        if (metadata.file) {
+            self.metadata.file = metadata.file
+            if (_is_clone) {
+                WidgetGallery.singleton.clone_widget_file({
+                    file: self.metadata.file,
+                    uuid: self.id
+                }).done(function (filename) {
+                    self.metadata.file = filename
+                    self.load_file(self.metadata.file, false)
+                }).fail(function (retcode, err_message) {
+                    delete self.metadata.file
+                    console.warn(err_message)
+                })
+            }
+            else {
+                self.load_file(self.metadata.file, false)
+            }
+        }
+        else if (metadata.src) {
+            self.metadata.src = metadata.src
+            self.load_url(self.metadata.src, false)
+        }
+    }
     , deserialize: function (data, is_clone) {
         GenericUnit.prototype.deserialize.call(this, data, is_clone)
         var self = this
         //data is now self.metadata
+
         var call_with_context = function () {
-            if (self.metadata.file) {
-                if (is_clone) {
-                    WidgetGallery.singleton.clone_widget_file({
-                        file: self.metadata.file,
-                        uuid: self.id
-                    }).done(function (filename) {
-                        self.metadata.file = filename
-                        self.load_file(self.metadata.file, false)
-                    }).fail(function (retcode, err_message) {
-                        delete self.metadata.file
-                        console.warn(err_message)
-                    })
-                }
-                else {
-                    self.load_file(self.metadata.file, false)
-                }
-            }
-            else if (self.metadata.src) {
-                self.load_url(self.metadata.src, false)
-            }
+            self.deserialize_metadata(self.metadata, is_clone)
         }
         if (WidgetGallery.singleton.context_ready) call_with_context()
         else WidgetGallery.singleton.on('context-ready', call_with_context)
         return this
     }
+    , state_save: function () {
+        var data = GenericUnit.prototype.state_save.call(this)
+        if (this.metadata.src || this.metadata.file) data.image_unit = {
+            src: this.metadata.src,
+            file: this.metadata.file,
+            scroll_left: this.metadata.scroll_left,
+            scroll_top: this.metadata.scroll_top
+        }
+        return data
+    }
+    , state_restore: function (data) {
+        GenericUnit.prototype.state_restore.call(this, data)
+        if (data.image_unit) {
+            this.deserialize_metadata(data.image_unit, false)
+        }
+    }
     , get_actions: function () {
         var self = this
-        return [
-            /*
-            {
-                id: 'roll',
-                type: 'button',
-                text: 'Roll',
-                icon: 'fa fa-trash',
-                onClick: function (widget, toolbar) {
-                }
-            }
-            */
-        ]
+        return []
     }
     , get_dashboard: function (dashboard) {
     }
-    , get_info:function(){
-        var filename = this.metadata.file 
+    , get_info: function () {
+        var filename = this.metadata.file
         var src = filename ? WidgetGallery.singleton.presentation.current_slide.widget_manager.get_file_url(filename) : this.metadata.src
-        var content = src ? '<img style="width:auto;max-height:50px" src="'+src+'"/>' : ''
+        var content = src ? '<img style="width:auto;max-height:50px" src="' + src + '"/>' : ''
         return {
-            type:'Image',
+            type: 'Image',
             content: content
         }
     }
-    /*
-    , on_paste_string: function (text) {
-        var self = this
-        window.slide_resource_factory.from_string(text).done(function (slide_resource) {
-            if (slide_resource.type == 'IMG' || (slide_resource.type == 'URL' && slide_resource.kind && slide_resource.kind.indexOf('image') == 0)) {
-                self.load_url(slide_resource.url)
-            }
-        })
-    }*/
-
+    , get_size: function () {
+        if (!this.image_ele) return { width: 0, height: 0 }
+        var scale = typeof(this.metadata.scale) == 'undefined' ? 1 : this.metadata.scale
+        var width = parseFloat(this.image_ele.style.width) * scale
+        var height = Math.round(this.image_ele.naturalHeight * width / this.image_ele.naturalWidth)
+        return {
+            width: width,
+            height: height
+        }
+    }
     /* 此處不要發出sync事件，避免導致無限循環*/
     , load_url: function (url, add_to_metadata) {
         var self = this
         var promise = new $.Deferred()
         this.image_ele.onload = function () {
             _.defer(function () {
-                var base_rect = JSON.parse(self.ele.dataset.base_rect)
+                var base_rect = { width: self.widget.w, height: self.widget.h }
+                self.image_ele.style.width = base_rect.width + 'px'
+                self.image_ele.style.height = 'auto'
+
+                /*
+
+                var base_rect = JSON.parse(self.ele.dataset.base_rect) //這是restore時會用到的
                 var h = base_rect.width * (self.image_ele.naturalHeight / self.image_ele.naturalWidth)
                 self.image_ele.style.width = base_rect.width + 'px'
-                self.image_ele.style.height = h + 'px'
+                self.image_ele.style.height = 'auto'
+
+                self.image_ele.style.width = '100%'
+                self.image_ele.style.height = '100%'
+                */
+
                 // 恢復前次的scale（需乘上本次的相對scale)
-                var init_scale = typeof (self.metadata.scale) == 'undefined' ? 1 : self.metadata.scale
-                var scale = self.widget.rel_scale * init_scale
+                var init_scale = typeof(self.metadata.scale) == 'undefined' ? 1 : self.metadata.scale
+                var scale = Math.round(100 * init_scale) / 100
                 self.image_ele.style.transform = 'scale(' + scale + ')'
                 self.image_ele.dataset.scale = scale
-                // 通知內容有變動，可以讓dashboard的圖形清單（ex BoxUnit)更新
-                self.fire('content')
-                promise.resolve(true)
+                // 恢復前次的 scroll offset
+                _.delay(function () {
+                    self.restore_scroll_xy_nosync()
+                    // 通知內容有變動，可以讓dashboard的圖形清單（ex BoxUnit)更新
+                    self.fire('content')
+                    promise.resolve(true)
+                }, 100)
             }, 100)
         }
         this.image_ele.src = url
@@ -4410,10 +4625,10 @@ ImageUnit.prototype = _.create(GenericUnit.prototype, {
         }
         return promise
     }
-    /* 
+    /*
         此file 是在自己的server上的, 寫在metadata.file 而不是 metadata.src
         */
-    , load_file:function(filename, add_timestamp) {
+    , load_file: function (filename, add_timestamp) {
         var url = WidgetGallery.singleton.presentation.current_slide.widget_manager.get_file_url(filename)
 
         if (add_timestamp) {
@@ -4424,8 +4639,8 @@ ImageUnit.prototype = _.create(GenericUnit.prototype, {
     }
     , on_sync: function (data) {
         // check default sync in advance
+        //console.log('>>>',data)
         if (GenericUnit.prototype.on_sync.call(this, data)) return
-
         switch (data.topic) {
         }
     }
@@ -4446,27 +4661,34 @@ function TextBoxUnit(widget, box) {
         this.create_ele({
             classname: func_name,
             style: {
-                width: (this.widget.w - 20) + 'px'
-                , height: '100px'
-                , left: '10px'
-                , top: '10px'
+                width: '100%'
+                , height: '100%'
                 , textAlign: 'center'
             }
         })
         this.textbox = document.createElement('span')
         this.ele.appendChild(this.textbox)
-        this.reset()
     }
+    this.textbox.style.width = '100%'
+    this.textbox.style.height = '100%'
+
+    //initialize metadata and test
+    this.reset()
+
     //initial event listeners
     var self = this
-    //initial value
-    this.set_text('text')
-    this.draggable()
+    //2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
+    //this.draggable()
     this.resizable({
-        resize_target: this.ele
+        //2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
+        resize_target: null //this.ele
     })
+
     var self = this
-    this.on('resize', function (data) {
+    this.widget.on('resize', function (data) {
+        self.fit_fontsize()
+    })
+    this.on('show', function () {
         self.fit_fontsize()
     })
 }
@@ -4490,11 +4712,25 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
     , deserialize: function (data, is_clone) {
         GenericUnit.prototype.deserialize.call(this, data, is_clone)
         var self = this
-        $(self.textbox).css(self.metadata.css) //lazy implement
         var call_with_context = function () {
+            self.widget.metadata.cross_slide = self.metadata.script.url ? true : false
             //context-ready還不足以取得rect,再等下一輪，故defer
-            _.defer(function(){
+            _.defer(function () {
                 self.set_text(self.metadata.text)
+
+                //apply css
+                var css = _.clone(self.metadata.css)
+                if (css.color) css.color = '#' + css.color
+                if (!css.fontFamily) css.fontFamily = self.font_family_options[0].text
+                if (css.textShadow || css.shadowColor) {
+                    var color = css.shadowColor ? '#' + css.shadowColor : '#000000'
+                    var value = css.textShadow || 1
+                    css.textShadow = color + ' ' + value + 'px ' + value + 'px ' + Math.abs(Math.round(100 * value * 2) / 100) + 'px'
+                }
+                else {
+                    css.textShadow = 'none'
+                }
+                $(self.textbox).css(css) //lazy implement
             })
         }
         if (WidgetGallery.singleton.context_ready) call_with_context()
@@ -4502,16 +4738,36 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
 
         return this
     }
-    ,reset: function () {
-        this.metadata.css.color = '#000000'
-        this.metadata.css['fontFamily'] = this.font_family_options[0]
-        this.metadata.scroll = { speed:250 }
-        $(this.textbox).css(this.metadata.css) //lazy implement
+    , reset: function () {
+        this.metadata = _.assign({
+            css: {
+                color: '000000',
+                fontFamily: ''//default to font_family_options[0]
+            }
+            , scroll: {
+                speed: 250
+            }
+            , script: {
+                url: '', // a url to provide a line of text
+                freq: 1//in seconds, retrieve new line from url interval
+            }
+            , text: ''
+        }, this.metadata)
+
+        //apply css
+        var css = _.clone(this.metadata.css)
+        css.color = '#' + css.color
+        if (!css.fontFamily) css.fontFamily = this.font_family_options[0].text
+        $(this.textbox).css(css) //lazy implement
+
+        //default text
+        this.metadata.text = 'text'
         this.set_text('text')
     }
-    ,get_actions:function(){
+    , get_actions: function () {
         var self = this
         return [
+            /* 2019-03-21T06:59:09+00:00 特效；暫時取消
             {
                 id: 'scroll',
                 type: 'button',
@@ -4527,13 +4783,43 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
                     })
                     self.sync({topic: 'scroll', yes:yes})
                 }
+            },*/
+            {
+                id: 'script',
+                type: 'button',
+                text: 'Start',
+                icon: 'fa fa-gear',
+                onClick: function (widget, toolbar) {
+                    var yes = toolbar.get('script').text == 'Start'
+                    toolbar.get('script').text = yes ? 'Stop' : 'Start'
+                    toolbar.refresh('script')
+                    if (yes) {
+                        self.script_start(yes)
+                    }
+                    else {
+                        toolbar.get('script').text = 'Start'
+                        toolbar.refresh('script')
+                        self.script_start(false)
+                        self.set_text(self.metadata.text) //restore original text
+                    }
+                    self.sync({ topic: 'script', yes: yes })
+                }
             }
-        ] 
+            , {
+                id: 'script-timer',
+                type: 'button',
+                text: '<span class="script-timer"><span>',
+                icon: '',
+                onClick: function (widget, toolbar) {
+                }
+            }
+        ]
     }
-    ,get_dashboard:function(dashboard){
+    , get_dashboard: function (dashboard) {
         //加到第一個tab的最後面
         var self = this
         dashboard[0].items.push([
+            /* 2019-03-21T06:59:09+00:00 特效；暫時取消
             {
                 type: 'range',
                 label: 'Scroll Interval',
@@ -4552,15 +4838,149 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
                     self.sync({topic: 'scroll-speed', speed:parseInt(value)})
                 }
             }
+            */
+            {
+                type: 'text',
+                label: 'Script source',
+                tooltip: 'A url to get scripts',
+                icon: 'fa fa-align-left',
+                placeholder: 'http://',
+                get: function (widget) {
+                    return self.metadata.script.url
+                },
+                set: function (widget, input_ele) {
+                    var url = input_ele.value.trim()
+                    if (url == '' || /^http/.test(url)) {
+                        self.metadata.script.url = url
+                        if (url == '') {
+                            self.widget.metadata.cross_slide = false
+                        }
+                        else {
+                            $.get(url).done(function (tsv) {
+                                //take 2nd line's content as default text
+                                var text = tsv.split('\n')[1].split('\t')[1]
+                                self.metadata.text = text
+                                self.widget.metadata.cross_slide = true
+                                self.set_text(text)
+                                self.sync({ topic: 'script-set', text: text, url: url })
+                            }).fail(function () {
+                                w2alert('Failed to request given url')
+                            })
+                        }
+                    }
+                    else {
+                        w2alert('Failed to request given url')
+                    }
+                }
+            }
+            , {
+                type: 'color',
+                label: 'Font color',
+                get: function (widget) {
+                    var color = self.metadata.css.color
+                    if (/rgb\(/.test(color)) {
+                        var rgb = []
+                        color.match(/\d+/g).forEach(function (v) {
+                            rgb.push((v < 16 ? '0' : '') + Number(v).toString(16))
+                        })
+                        return '' + rgb.join('')
+                    }
+                    return (color || '000000')
+                },
+                set: function (widget, input_ele) {
+                    var value = input_ele.value
+                    self.metadata.css.color = value
+                    self.textbox.style.color = '#' + value
+                    self.sync({ topic: 'css', css: { color: value } })
+                }
+            }
+            , {
+                type: 'list',
+                label: 'Font Family',
+                style: 'width:180px',
+                options: function (widget) {
+                    return { items: self.font_family_options }
+                },
+                get: function (widget) {
+                    var style = window.getComputedStyle(self.textbox)
+                    var family = style.getPropertyValue('font-family')
+                    var selected = null
+                    var font_family_options = self.font_family_options
+                    font_family_options.some(function (option) {
+                        if (option.text.toLowerCase().indexOf(family.toLowerCase()) >= 0) {
+                            selected = option
+                            return true
+                        }
+                    })
+                    if (selected == null) {
+                        selected = { id: font_family_options.length, text: family }
+                        font_family_options.push(selected)
+                    }
+                    return selected.id
+                },
+                set: function (widget, input_ele) {
+                    var value = input_ele.value
+                    self.metadata.css.fontFamily = value.text
+                    self.textbox.style.fontFamily = value.text
+                    self.sync({ topic: 'css', css: { fontFamily: value.text } })
+                }
+            }
+            , {
+                type: 'range',
+                style: '',
+                min: -10,
+                max: 10,
+                step: 0.1,
+                label: 'Text Shadow',
+                get: function (widget) {
+                    return self.metadata.css.textShadow || 0
+                },
+                set: function (widget, input_ele) {
+                    var value = parseFloat(input_ele.value)
+                    self.metadata.css.textShadow = value
+                    if (value) {
+                        var color = self.metadata.css.shadowColor ? '#' + self.metadata.css.shadowColor : '#000000'
+                        self.textbox.style.textShadow = color + ' ' + value + 'px ' + value + 'px ' + Math.abs(Math.round(100 * value * 2) / 100) + 'px'
+                    }
+                    else {
+                        self.textbox.style.textShadow = 'none'
+                    }
+                    self.sync({ topic: 'css', css: { textShadow: value } })
+                }
+            }
+            , {
+                type: 'color',
+                label: 'Shadow Color',
+                get: function (widget) {
+                    var color = self.metadata.css.shadowColor || '000000'
+                    if (/rgb\(/.test(color)) {
+                        var rgb = []
+                        color.match(/\d+/g).forEach(function (v) {
+                            rgb.push((v < 16 ? '0' : '') + Number(v).toString(16))
+                        })
+                        return '' + rgb.join('')
+                    }
+                    return (color || '000000')
+                },
+                set: function (widget, input_ele) {
+                    var value = input_ele.value
+                    self.metadata.css.shadowColor = value
+                    var color = '#' + value
+                    var value = self.metadata.css.textShadow || 1
+                    self.textbox.style.textShadow = color + ' ' + value + 'px ' + value + 'px ' + Math.abs(Math.round(100 * value * 2) / 100) + 'px'
+                    self.sync({ topic: 'css', css: { shadowColor: input_ele.value } })
+                }
+            }
         ])
     }
-    , get_info:function(){
+    , get_info: function () {
         return {
-            type:'Text',
-            content:this.metadata.text.substring(0,20) + (this.metadata.text.length > 20 ? '...' : '')
+            type: 'Text',
+            content: this.metadata.text.substring(0, 20) + (this.metadata.text.length > 20 ? '...' : '')
         }
-    }    
+    }
     , on_paste_string: function (text) {
+        this.metadata.text = text
         this.set_text(text)
         this.widget.update_handles()
     }
@@ -4570,17 +4990,39 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
         var self = this
         //console.log('sync>>', data)
         switch (data.topic) {
+            case 'script':
+                this.script_start(data.yes)
+                break
+            case 'script-set':
+                this.metadata.script.url = data.url
+                this.widget.metadata.cross_slide = data.url ? true : false
+                this.metadata.text = data.text
+                this.set_text(data.text)
+                break
             case 'scroll':
                 this.scroll(data.yes)
                 break
             case 'scroll-speed':
                 this.metadata.scroll.speed = data.speed
                 break
+            case 'css':
+                _.assign(this.metadata.css, data.css)
+                var css = _.clone(this.metadata.css)
+                if (css.color) css.color = '#' + css.color
+                if (css.textShadow || css.shadowColor) {
+                    var color = css.shadowColor ? '#' + css.shadowColor : '#000000'
+                    var value = css.textShadow || 1
+                    css.textShadow = color + ' ' + value + 'px ' + value + 'px ' + Math.abs(Math.round(100 * value * 2) / 100) + 'px'
+                }
+                else {
+                    css.textShadow = 'none'
+                }
+                $(this.textbox).css(css)
+                break
         }
     }
     , set_text: function (content) {
         this.textbox.innerText = content
-        this.metadata.text = content
         if (content) {
             this.ele.style.display = ''
             this.fit_fontsize()
@@ -4590,28 +5032,6 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
         }
         this.fire('content')
     },
-    /*
-    editable:function(yes){
-        this.textbox.contentEditable = yes
-        WidgetGallery.singleton.presentation.keyboard_shortcut.suspend = yes
-        if (yes){
-            var self = this
-            this.textbox.oninput = function(evt){
-                self.fit_fontsize()
-            }
-            //失焦時，自動關閉編輯
-            this._unedit = this.on('unselected',function(){
-                self.edit_text(false)
-                delete self._unedit
-            })
-            //要這樣，不然會觸發unselected事件
-            this.textbox.focus()
-        }
-        else{
-            if (this._unedit) this.off('unselected',this._unedit)
-            this.textbox.oninput = null
-        }
-    },*/
     fit_fontsize: function () {
         var t = this.textbox
         var rect = this.ele.getBoundingClientRect()
@@ -4621,9 +5041,9 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
         var rect_t //should adjust to degree later
         var curr_size = parseInt(t.style.fontSize) || 9
         var direction = 0 //samll to big
+        t.style.lineHeight = '1.2em'
         for (var size = curr_size; size >= 9 && size <= 900; size += direction) {
-            t.style.lineHeight =
-                t.style.fontSize = size + 'px'
+            t.style.fontSize = size + 'px'
             rect_t = t.getBoundingClientRect()
             var smaller = rect_t.width <= rect.width && rect_t.height <= rect.height
             var bigger = !smaller
@@ -4636,8 +5056,8 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
                 continue
             }
             else if (bigger && direction == 1) {
-                t.style.lineHeight =
-                    t.style.fontSize = (size - 1) + 'px'
+                //t.style.lineHeight =
+                t.style.fontSize = (size - 1) + 'px'
                 break
             }
             else if (smaller && direction == -1) {
@@ -4646,32 +5066,102 @@ TextBoxUnit.prototype = _.create(GenericUnit.prototype, {
         }
         this.metadata.css.fontsize = this.textbox.style.fontSize
     }
-    ,scroll:function(yes){
-        if (!yes){
+    , scroll: function (yes) {
+        // 特效測試；暫時取消
+        if (!yes) {
             if (this.scrolling_timer) clearInterval(this.scrolling_timer)
             delete this.scrolling_timer
             this.textbox.innerText = this.metadata.text
             return $.when()
         }
-        var promise = new $.Deferred()
         var self = this
-        this.scrolling_timer = 0
-        var text =  this.metadata.text
-        this.textbox.innerHTML = ''
-        var cursor = 0, end = text.length
-        var scrolling = function(){
-            if (cursor >= end) {
-                clearInterval(self.scrolling_timer)
-                delete self.scrolling_timer
-                promise.resolve()
-                return
+        var scrolling = function (text) {
+            var promise = new $.Deferred()
+            self.scrolling_timer = 0
+            self.textbox.innerHTML = ''
+            var cursor = 0, end = text.length
+            var scrolling = function () {
+                if (cursor >= end) {
+                    clearInterval(self.scrolling_timer)
+                    delete self.scrolling_timer
+                    promise.resolve()
+                    return
+                }
+                var span = document.createElement('span')
+                span.innerText = text.substr(cursor, 1)
+                self.textbox.appendChild(span)
+                cursor += 1
             }
-            var span = document.createElement('span')
-            span.innerText = text.substr(cursor,1)
-            self.textbox.appendChild(span)
-            cursor += 1
+            self.scrolling_timer = setInterval(scrolling, self.metadata.scroll.speed)
+            return promise
         }
-        self.scrolling_timer = setInterval(scrolling,this.metadata.scroll.speed)
+        var text = this.metadata.text
+        return scrolling(text)
+    }
+    , script_start: function (yes) {
+        var self = this
+        if (!yes) {
+            //取消next text
+            $('#widget-dashboard').find('.script-timer').html('')
+            this.set_text(this.metadata.text)
+            clearInterval(this.script_timer)
+            //萬一clearTimeout沒有攔住
+            this.script_stop = true
+            delete this.script_timer
+            setTimeout(function () {
+                //清除第二道防線
+                delete self.script_stop
+            }, 500)
+            return
+        }
+        var promise = new $.Deferred()
+        var texts = []
+        var play = function (idx) {
+            if (idx < texts.length) {
+                self.set_text(texts[idx][1])
+                if (self.script_stop) {
+                    //stopped
+                    delete self.script_stop
+                    return
+                }
+                var seconds = texts[idx][0]
+                $('#widget-dashboard').find('.script-timer').html(seconds)
+                self.script_timer = setInterval(function () {
+                    seconds -= 1
+                    $('#widget-dashboard').find('.script-timer').html(seconds)
+                    if (seconds < 1) {
+                        clearInterval(self.script_timer)
+                        delete self.script_timer
+                        play(idx + 1)
+                    }
+                }, 1000)
+            }
+            else {
+                promise.resolve()
+            }
+        }
+        if (this.metadata.script.url) {
+            $.get(this.metadata.script.url).done(function (tsv) {
+                tsv.split('\n').forEach(function (line) {
+                    //format: time, duration, text
+                    var cols = line.split('\t')
+                    if (!/^\d+$/.test(cols[0])) return //skip line if it is not starts width digits
+                    var line = cols[1].trim()
+                    texts.push([cols[0], line])
+                })
+                self.metadata.text = texts.length ? texts[0][1] : ''
+                promise.resolve(texts)
+                play(0)
+            })
+
+        }
+        else {
+            this.metadata.text.split('\n').forEach(function (line) {
+                //default 3 seconds per line
+                texts.push([3, line])
+            })
+            play(0)
+        }
         return promise
     }
 })
@@ -4683,7 +5173,7 @@ function CardUnit(widget, box) {
     GenericUnit.call(this, widget, box, func_name)
     //本unit 沒有 this.ele
     var self = this
-    this.supported_units = [YoutubeUnit, WebcamUnit, ImageUnit, TextBoxUnit, IframeUnit]
+    this.supported_units = [ImageUnit, TextBoxUnit, IframeUnit, YoutubeUnit, FBVideoUnit,  WebcamUnit]
     this.empty_card = box.querySelector('.unit.empty-card')
     this.unit = null
     if (this.empty_card) {
@@ -4694,7 +5184,7 @@ function CardUnit(widget, box) {
         this.empty_card.classList.add('unit', 'empty-card')
         this.supported_units.some(function (unit_class) {
             if (box.querySelector('.' + unit_class.name)) {
-                //self.unit = 
+                //self.unit =
                 self.set_unit(new unit_class(self.widget, self.box))
                 return true
             }
@@ -4719,7 +5209,7 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
         GenericUnit.prototype.deserialize.call(this, data, is_clone)
         if (data.units) {
             //this.box.removeChild(this.empty_card)
-            this.empty_card.remove()
+            this.empty_card.parentNode.removeChild(this.empty_card)
             var self = this
             self.supported_units.some(function (unit_class) {
                 if (unit_class.name == data.units[0].classname) {
@@ -4740,41 +5230,57 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
     }
     , on_paste_string: function (text) {
         var self = this
-
         window.slide_resource_factory.from_string(text).done(function (slide_resource) {
-            if (slide_resource.type == 'FILE'){
+            console.log(slide_resource)
+            if (slide_resource.type == 'FILE') {
                 self.on_paste({
-                    is_file:true,
-                    file:slide_resource.file,
-                    mimetype:slide_resource.kind
+                    is_file: true,
+                    file: slide_resource.file,
+                    mimetype: slide_resource.kind
                 })
             }
-            else if (slide_resource.type == 'VIDEO' && slide_resource.kind == 'YT') {
-                if (self.unit && self.unit.constructor.name == 'YoutubeUnit') {
-                    //reuse exiting unit
+            else if (slide_resource.type == 'VIDEO') {
+                if (slide_resource.kind == 'YT'){
+                    if (self.unit && self.unit.constructor.name == 'YoutubeUnit') {
+                        //reuse exiting unit
+                    }
+                    else {
+                        self.set_unit(new YoutubeUnit(self.widget, self.box))
+                    } 
+                    self.unit.load_video(slide_resource.vid) 
                 }
-                else {
-                    self.reset_unit(true)
-                    self.set_unit(new YoutubeUnit(self.widget, self.box))
+                else if (slide_resource.kind == 'FB'){
+                    /*
+                    * youtube的api在改變影片時，需呼叫 loadVideoById，但facebook不能reuse現有的 element
+                    * 所以兩者在使用者貼上新的影片在既有影片上時的處理方式不一樣
+                    */
+
+                    // 雖然set_unit內會呼叫 reset_unit，但仍必須先reset_unit，
+                    // 因為有new 新的unit,否則當新建的unit class與既有的unit class一樣時，
+                    // 新建的unit class會抓到既有的unit class的ele,然後該ele會在
+                    // set_unit時，因set_unit內部又呼叫reset_unit而被destroy.                   
+                    self.reset_unit(true)                    
+
+                    self.set_unit(new FBVideoUnit(self.widget, self.box))
+                    self.unit.load_video(slide_resource.vid)
                 }
-                self.unit.load_video(slide_resource.vid)
+                
                 // sync to remote
                 var metadata = self.unit.serialize(false)
                 // 這是不等load_url完成才取unit.serialized()之下的權宜作法
                 metadata.video_id = slide_resource.vid
-                //self.widget.sync({ id: self.id, topic: 'new-unit', metadata: metadata })
-                self.sync({topic: 'new-unit', metadata: metadata })
+                self.sync({ topic: 'new-unit', metadata: metadata })
             }
-            else if (slide_resource.kind && slide_resource.kind.indexOf('image') == 0){
+            else if (slide_resource.kind && slide_resource.kind.indexOf('image') == 0) {
                 //image
-                var handle_image = function(url){
+                var handle_image = function (url) {
                     var sync_data = {}
                     if (self.unit && self.unit.constructor.name == 'ImageUnit') {
                         //reuse exiting unit, do nothing
                         sync_data.topic = 'tainted'
                     }
                     else {
-                        self.reset_unit(true)
+                        //self.reset_unit(true)
                         self.set_unit(new ImageUnit(self.widget, self.box))
                         sync_data.topic = 'new-unit'
                     }
@@ -4788,9 +5294,9 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
                         }
                         else sync_data.url = slide_resource.url
                         self.sync(sync_data)
-                    })    
+                    })
                 }
-                if (slide_resource.type == 'URL'){
+                if (slide_resource.type == 'URL') {
                     handle_image(slide_resource.url)
                 }
             }
@@ -4799,7 +5305,7 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
                     //reuse exiting unit
                 }
                 else {
-                    self.reset_unit(true)
+                    //self.reset_unit(true)
                     self.set_unit(new IframeUnit(self.widget, self.box))
                 }
                 self.unit.load_url(slide_resource.url).done(function () {
@@ -4807,29 +5313,29 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
                     var metadata = self.unit.serialize(false)
                     // 這是不等load_url完成才取unit.serialized()之下的權宜作法
                     metadata.src = slide_resource.url
-                    self.sync({topic: 'new-unit', metadata: metadata })
+                    self.sync({ topic: 'new-unit', metadata: metadata })
                 })
             }
-            else {
+            else if (slide_resource.type == 'TEXT') {
+                //text
                 if (self.unit && self.unit.constructor.name == 'TextBoxUnit') {
                     //reuse exiting unit
                 }
                 else {
-                    self.reset_unit(true)
+                    //self.reset_unit(true)
                     self.set_unit(new TextBoxUnit(self.widget, self.box))
                 }
+                self.unit.metadata.text = text
                 self.unit.set_text(text)
                 // sync to remote
                 var metadata = self.unit.serialize(false)
-                // 這是不等load_url完成才取unit.serialized()之下的權宜作法
-                metadata.text = text
-                self.sync({topic: 'new-unit', metadata: metadata })
+                self.sync({ topic: 'new-unit', metadata: metadata })
             }
 
-            _.delay(function(){
+            _.delay(function () {
                 //request re-render dashboard; wait a while for some unit to be ready. (ex. youtube unit)
                 WidgetGallery.singleton.update_dashboard(self.widget)
-            },500)
+            }, 500)
         })
     }
     , on_paste: function (data) {
@@ -4846,7 +5352,7 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
                     }
                     else {
                         topic = 'new-unit'
-                        self.reset_unit(true)
+                        //self.reset_unit(true)
                         self.set_unit(new ImageUnit(self.widget, self.box))
                     }
                     /* 上傳到系統*/
@@ -4865,7 +5371,7 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
                         }
                         self.sync(sync_data)
                         promise.resolve(true)
-                    }).fail(function(err){
+                    }).fail(function (err) {
                         console.warn(err)
                     })
                 })
@@ -4881,69 +5387,87 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
         //來自遠端對應的unit傳來同步訊息
         if (GenericUnit.prototype.on_sync.call(this, data)) return
         var self = this
-        console.log('CardUnit sync>>', data)
         switch (data.topic) {
             case 'new-unit':
                 var metadata = data.metadata
-                self.reset_unit(true) //true means not to add "empty-card"
-                self.supported_units.some(function (unit_class) {
-                    if (metadata.classname == unit_class.name) {
-                        self.set_unit(new unit_class(self.widget, self.box))
-                        self.unit.deserialize(metadata)
-                        return true
-                    }
+                _.defer(function () {
+                    self.supported_units.some(function (unit_class) {
+                        if (metadata.classname == unit_class.name) {
+                            // 雖然set_unit內會呼叫 reset_unit，但仍必須先reset_unit，
+                            // 因為有new 新的unit,否則當新建的unit class與既有的unit class一樣時，
+                            // 新建的unit class會抓到既有的unit class的ele,然後該ele會在
+                            // set_unit時，因set_unit內部又呼叫reset_unit而被destroy.
+                            self.reset_unit(true)
+                            self.set_unit(new unit_class(self.widget, self.box))
+                            self.unit.deserialize(metadata)
+                            return true
+                        }
+                    })
                 })
                 break
             case 'tainted':
                 if (data.file) this.unit.load_file(data.file)
-                else if (data.url) this.unit.load_url(data.url,true)
+                else if (data.url) this.unit.load_url(data.url, true)
                 break
             case 'reset-unit':
                 self.reset_unit()
                 break
-
         }
     }
-    , destroy(){
+    , destroy() {
         GenericUnit.prototype.destroy.call(this)
         if (this.unit) this.unit.destroy()
     }
-    , hide:function(){
+    , hide: function () {
         if (this.unit) this.unit.hide()
+        GenericUnit.prototype.hide.call(this)
     }
-    , show:function(){
+    , show: function () {
         if (this.unit) this.unit.show()
-    }    
-    , set_unit:function(unit){
-        this.unit = unit
+        GenericUnit.prototype.show.call(this)
+    }
+    , set_unit: function (unit) {
         var self = this
+        this.reset_unit(true)
+
+        this.unit = unit
         //divert unit's content event
-        this.unit.on('content',function(){
+        this.unit.on('content', function () {
             self.fire('content')
         })
+        WidgetGallery.singleton.update_dashboard(this.widget)
     }
     , reset_unit: function (no_empty_card) {
         //remove current unit and add an empty_card unless no_empty_card is true
         //aka reset to initial state
         if (this.unit) {
+            console.log('current unit removed<<<<<<<')
             this.unit.destroy()
             this.unit = null
         }
         if (no_empty_card) {
             if (this.empty_card.parentNode == this.box) {
-                //this.box.removeChild(this.empty_card)
-                this.empty_card.remove()
+                this.empty_card.parentNode.removeChild(this.empty_card)
             }
         }
         else {
             this.box.appendChild(this.empty_card)
         }
+        //這cross_slide已經是使用者設定的，不要改動
+        //this.widget.metadata.cross_slide = false
     }
     , insert_webcam_unit: function () {
+        
         //don't insert twice
-        if (this.unit && this.box.querySelector('.webcam-unit')) return
-        this.reset_unit()
-        this.unit = new WebcamUnit(this.widget, this.box)
+        
+        if (this.unit && this.box.querySelector('.webcam-unit')){
+            console.log('n==>',this.unit.prototype.constructor.name)
+            console.log('already is a webcam unit')
+            return
+        }
+
+        this.set_unit(new WebcamUnit(this.widget, this.box))
+        this.widget.metadata.cross_slide = true
         var self = this
         var promise = new $.Deferred()
         self.unit.play().done(function () {
@@ -4955,14 +5479,25 @@ CardUnit.prototype = _.create(GenericUnit.prototype, {
         })
         return promise
     }
-    , move: function (x, y) {
-        if (this.unit) this.unit.move(x,y)
+    , insert_text_unit: function () {
+        this.set_unit(new TextBoxUnit(this.widget, this.box))
+        return $.when()
     }
-
+    , move: function (x, y) {
+        if (this.unit) this.unit.move(x, y)
+    }
+    , get_size: function () {
+        if (this.unit) return this.unit.get_size()
+        else return { width: 0, height: 0 }
+    }
+    , get_xy: function () {
+        if (this.unit) return this.unit.get_xy()
+        else return { x: 0, y: 0 }
+    }
 })
 
 
-var CardWidget = function(ele) {
+function CardWidget(ele) {
     /* 單張卡片，可以貼各種素材 */
     Widget.call(this, ele)
     //預設一個容易辨識的顏色
@@ -4985,13 +5520,18 @@ CardWidget.prototype = _.create(Widget.prototype, {
     }
     , deserialize: function (data, is_clone) {
         Widget.prototype.deserialize.call(this, data, is_clone)
-        this.unit.deserialize(data.units[0], is_clone)
+        var self = this
+        var call_with_context = function () {
+            self.unit.deserialize(data.units[0], is_clone)
+        }
+        if (WidgetGallery.singleton.context_ready) call_with_context()
+        else WidgetGallery.singleton.on('context-ready', call_with_context)
         return this
     }
     , on_sync: function (data) {
         //處理遠端widget傳來同步訊息
         if (Widget.prototype.on_sync.call(this, data)) return
-        switch(data.on){
+        switch (data.on) {
         }
     }
     , on_paste_string: function (text, evt) {
@@ -5010,16 +5550,29 @@ CardWidget.prototype = _.create(Widget.prototype, {
                 id: 'card',
                 text: 'Card',
                 items: [
-                   [
+                    [
                         {
                             type: 'button',
                             label: 'Insert Webcam',
-                            tooltip: 'insert webcam to this face',
+                            tooltip: 'insert webcam to this card',
                             icon: 'fa fa-camera',
                             button_label: '',
                             legend: '',
                             onClick: function (widget) {
-                                self.unit.insert_webcam_unit()
+                                self.unit.insert_webcam_unit().fail(function(errmsg){
+                                    w2alert(errmsg)
+                                })
+                            }
+                        }
+                        , {
+                            type: 'button',
+                            label: 'Insert Text',
+                            tooltip: 'insert text to this card',
+                            icon: 'fa fa-align-left',
+                            button_label: '',
+                            legend: '',
+                            onClick: function (widget) {
+                                self.unit.insert_text_unit()
                             }
                         }
                     ]
@@ -5035,12 +5588,12 @@ CardWidget.metadata = {
     description: 'The Card is a single face widget. It can display \
         text, image, Youtube video, web-cam and webpage in IFrame. Please be noted, not every URL\
         can be loaded into an IFrame.',
-    video:'xSglOJP1OtY', //video id
+    video: 'xSglOJP1OtY', //video id
     icon: 'fa fa-image',
 }
 CardWidget.factory = function (ele, features) {
     ele.setAttribute('kind', 'CardWidget')
-    if (typeof (features) == 'undefined') features = ['draggable', 'resizable', 'rotatable', 'zoomable']
+    if (typeof(features) == 'undefined') features = ['draggable', 'resizable', 'rotatable', 'zoomable']
     features.forEach(function (feature) { ele.classList.add(feature) })
     return new CardWidget(ele)
 }
@@ -5052,10 +5605,130 @@ CardWidget.create_sample = function (box) {
 }
 WidgetGallery.register(CardWidget)
 
+
+function HacksonWidget(ele) {
+    Widget.call(this, ele)
+    var self = this
+    // picture of knee
+    self.knee_box = document.createElement('div')
+    $(self.knee_box).css({
+        overflow: 'hidden'
+    })
+    self.knee_img = document.createElement('img')
+    self.knee_img.src = 'hackson/left_knee.png'
+    $(self.knee_img).css({
+        width: '100%',
+        height: '100%'
+    })
+    self.knee_box.appendChild(self.knee_img)
+    self.ele.appendChild(self.knee_box)
+    self.left_knee_state_div = document.createElement('div')
+    self.left_knee_state_div.classList.add('knee_state', 'left')
+    self.knee_box.appendChild(self.left_knee_state_div)
+    self.right_knee_state_div = document.createElement('div')
+    self.right_knee_state_div.classList.add('knee_state', 'right')
+    self.knee_box.appendChild(self.right_knee_state_div)
+    self.middle_knee_state_div = document.createElement('div')
+    self.middle_knee_state_div.classList.add('knee_state', 'middle')
+    self.knee_box.appendChild(self.middle_knee_state_div)
+
+    self.meter_box = document.createElement('table')
+    self.meter_box.classList.add('meter-box')
+    self.knee_box.appendChild(self.meter_box)
+    self.meter_box.innerHTML = '<table><tr><td class="left_meter"><img src="hackson/pointer.png"/></td><td class="middle_meter"><img src="hackson/pointer.png"/></td><td class="right_meter"><img src="hackson/pointer.png"/></td></tr>'
+    self.pointers = []
+    self.meter_box.querySelectorAll('td').forEach(function (td) {
+        self.pointers.push(td.querySelector('img'))
+    })
+    self.simulate_start()
+}
+HacksonWidget.prototype = _.create(Widget.prototype, {
+    constructor: HacksonWidget,
+    clone: function (parent_ele) {
+        //這個一定要有，如果直接呼叫widget.clone會造成clone出來的物件是Widget，而不是CardWidget
+        var widget = Widget.prototype.clone.call(this, parent_ele, this.constructor.factory)
+        return widget
+    },
+    serialize: function (for_clone) {
+        var data = Widget.prototype.serialize.call(this)
+        return data
+    },
+    deserialize: function (data) {
+        Widget.prototype.deserialize.call(this, data)
+        return this
+    }
+    , reset: function () {
+        Widget.prototype.reset.call(this)
+    }
+    , on_paste: function (data, evt) {
+    }
+    , on_paste_string: function (text, evt) {
+    }
+    , set_keen_state: function (side, state) {
+        var ele = this.ele.querySelector('.knee_state.' + side)
+        ele.classList.remove('red', 'yellow')
+        if (state) ele.classList.add(state)
+    }
+    , set_keen_point: function (side, percent) {
+        var pointer = this.ele.querySelector('.' + side + '_meter img')
+        var top = - ((percent - 50) * (47 / 50)) //upsidedown
+        pointer.style.top = top + 'px'
+        if (percent >= 75) {
+            this.set_keen_state(side, 'red')
+        }
+        else if (percent >= 50) {
+            this.set_keen_state(side, 'yellow')
+        }
+        else {
+            this.set_keen_state(side, 'green')
+        }
+    }
+    , simulate_start: function () {
+        var self = this
+        self.percents = [70, 70, 70]
+        var sides = ['left', 'middle', 'right']
+        var simulate = function () {
+            for (var i = 0; i < 3; i++) {
+                var n = Math.random() * 20 - 10
+                self.percents[i] += n
+                if (self.percents[i] > 100) self.percents[i] = 100
+                else if (self.percents[i] < 0) self.percents[i] = 0
+                self.set_keen_point(sides[i], self.percents[i])
+            }
+        }
+        setInterval(simulate, 500)
+    }
+})
+HacksonWidget.metadata = {
+    category: 'general',
+    caption: 'Hackson', //display name for i18n
+    description: 'book-style box of images',
+    icon: 'fa fa-card',
+    //information to render items on action-menu for user to take
+    actions: [
+    ],
+    dashboard: [
+    ]
+}
+HacksonWidget.factory = function (ele, features) {
+    ele.setAttribute('kind', 'HacksonWidget')
+    if (typeof(features) == 'undefined') features = ['draggable', 'resizable', 'rotatable', 'zoomable', 'flippable']
+    features.forEach(function (feature) { ele.classList.add(feature) })
+    return new HacksonWidget(ele)
+}
+HacksonWidget.create_sample = function (box) {
+    //Gallery呼叫此程式產生樣本物件展示給使用者看
+    var div = document.createElement('div')
+    if (box) box.appendChild(div)
+    return HacksonWidget.factory(div)
+}
+WidgetGallery.register(HacksonWidget)
+
+
 function FlipCardUnit(widget, box) {
     //GenericUnit.call(this, widget, box)
     var func_name = arguments.callee.name
-    GenericUnit.call(this, widget, box, func_name)    
+    GenericUnit.call(this, widget, box, func_name)
     var self = this
     this.box.classList.add('flippable')
     this.flipper_ele = this.box.querySelector('.flipper')
@@ -5091,7 +5764,7 @@ function FlipCardUnit(widget, box) {
         is_front: true,
         origin: [50, 50]//center 50%, 50%
     }
-    //this.unit is a symbolic link 
+    //this.unit is a symbolic link
     this.unit = (this.is_front ? this.front_unit : this.back_unit)
 
 
@@ -5131,10 +5804,10 @@ FlipCardUnit.prototype = _.create(GenericUnit.prototype, {
         if (WidgetGallery.singleton.context_ready) call_with_context()
         else WidgetGallery.singleton.on('context-ready', call_with_context)
     }
-    , state_save:function(){
+    , state_save: function () {
         return _.cloneDeep(this.metadata.flip_options)
     }
-    , state_restore:function(data){
+    , state_restore: function (data) {
         /*
         direction: 'h',
         speed: 0.3,
@@ -5144,7 +5817,7 @@ FlipCardUnit.prototype = _.create(GenericUnit.prototype, {
         this.metadata.flip_options.direction = data.direction
         this.metadata.flip_options.speed = data.speed
         this.metadata.flip_options.origin = data.origin
-        if (this.metadata.flip_options.is_front != data.is_front){
+        if (this.metadata.flip_options.is_front != data.is_front) {
             this.flip() //toggle
         }
     }
@@ -5234,7 +5907,6 @@ FlipCardUnit.prototype = _.create(GenericUnit.prototype, {
                         legend: '',
                         onClick: function (widget) {
                             self.unit.insert_webcam_unit()
-                            //self.unit.sync({topic:'reset-unit'})
                         }
                     }
                     ]
@@ -5284,8 +5956,8 @@ FlipCardUnit.prototype = _.create(GenericUnit.prototype, {
     , flip: function (yes) {
         //這裡不發出同步事件，避免無限循環
         var self = this
-        //if yes is not given, do toggle 
-        var go_back = (typeof (yes) == 'undefined') ? this.is_front : yes
+        //if yes is not given, do toggle
+        var go_back = (typeof(yes) == 'undefined') ? this.is_front : yes
         if (go_back) this.flipper_ele.classList.add('flipped')
         else this.flipper_ele.classList.remove('flipped')
         this.unit.fire('hide') //inform current unit that it is hidden
@@ -5299,11 +5971,11 @@ FlipCardUnit.prototype = _.create(GenericUnit.prototype, {
     }
 })
 
-var FlipCardWidget = function(ele) {
+var FlipCardWidget = function (ele) {
     /* 單張可翻面卡片，可以貼各種素材 */
     Widget.call(this, ele)
     //預設一個容易辨識的顏色
-    this.css('backgroundColor','#c0c0c0')
+    this.css('backgroundColor', '#c0c0c0')
 
     this.unit = new FlipCardUnit(this, this.box)
     var self = this
@@ -5330,7 +6002,13 @@ FlipCardWidget.prototype = _.create(Widget.prototype, {
     }
     , deserialize: function (data, is_clone) {
         Widget.prototype.deserialize.call(this, data, is_clone)
-        this.unit.deserialize(data.units[0], is_clone)
+        var self = this
+        var call_with_context = function () {
+            self.unit.deserialize(data.units[0], is_clone)
+        }
+        if (WidgetGallery.singleton.context_ready) call_with_context()
+        else WidgetGallery.singleton.on('context-ready', call_with_context)
+
         return this
     }
     , on_sync: function (data) {
@@ -5363,12 +6041,12 @@ FlipCardWidget.metadata = {
     description: 'The Flip-card is a two-face widget. Both front and back faces can display \
         text, image, Youtube video, web-cam and webpage in IFrame. Please be noted, not every URL\
         can be loaded into an IFrame.',
-    video:'gy5Ys3UVOMU',
+    video: 'gy5Ys3UVOMU',
     icon: 'fa fa-images'
 }
 FlipCardWidget.factory = function (ele, features) {
     ele.setAttribute('kind', 'FlipCardWidget')
-    if (typeof (features) == 'undefined')
+    if (typeof(features) == 'undefined')
         features = ['draggable', 'resizable', 'rotatable', 'zoomable', 'flippable']
     features.forEach(function (feature) { ele.classList.add(feature) })
     return new FlipCardWidget(ele)
@@ -5385,74 +6063,83 @@ WidgetGallery.register(FlipCardWidget)
 * Multiple-cards
 * Box-Unit and Box-Widget
 */
-function BoxUnitSlideshow(boxunit){
+function BoxUnitSlideshow(boxunit) {
     this.boxunit = boxunit
     this.units = this.boxunit.units
     this.metadata = {
-        show:false, //true if started
-        pos:-1,//initial hide
-        in:'0',//none,
-        out:'0',//none,
-        at:'0'//same place
+        show: false, //true if started
+        pos: -1,//initial hide
+        in: '0',//none,
+        out: '0',//none,
+        at: '0'//same place
     }
 
 }
 BoxUnitSlideshow.prototype = {
-    serialize:function(for_clone){
+    serialize: function (for_clone) {
         return _.cloneDeep(this.metadata)
     }
-    ,deserialize:function(data,is_clone){
+    , deserialize: function (data, is_clone) {
         this.metadata = _.cloneDeep(data)
         if (this.metadata.show) {
             //在showing的半途，追上進度
             var self = this
             var count = this.metadata.pos
-            _.defer(function(){
+            _.delay(function () {
                 self.start()
-                for (var i=0;i<=count;i++){
+                for (var i = 0; i <= count; i++) {
                     self.next()
-                }    
-            })
+                }
+            }, 500) //delay to wait for widget to has dimemsion
         }
     }
-    ,start:function(){
+    , start: function () {
+        // 2019-03-14T09:15:01+00:00
+        // 注意：動畫移動的對象是boxunit承裝 unit 的box（.slice）, 而不是 unit本身
         this.boxunit.ele.style.overflow = 'visible' //default is hidden
-        this.boxunit.widget.box.style.overflow = 'visible' ///default is hidden
-
+        this.boxunit.widget.box.classList.add('playing')
+        //var scale = this.boxunit.widget.scale * this.boxunit.widget.get_parent_scale()
+        //var degree = this.boxunit.widget.degree[2] + this.boxunit.widget.get_parent_degree()
         this.metadata.show = true
         this.metadata.pos = -1
+        var solo_unit = this.boxunit.metadata.solo_id ? this.boxunit.get_unit(this.boxunit.metadata.solo_id) : null
         var self = this
-        var offset_x = 0, offset_y = 0
-        this.units.forEach(function(unit){
-            self.move_unit(unit,offset_x,offset_y)
+        var offset_x = 0, offset_y = 0, w = 0, h = 0
+        this.units.forEach(function (unit) {
+            self.move_unit(unit, offset_x, offset_y)
 
-            self.show_unit(unit,true)
-            var rect = getActuralRect(unit.box)
-            unit.box.dataset.width = rect.width
-            unit.box.dataset.height = rect.height
-            //計算下一張的位置
-            if (self.metadata.at == 't'){
-                offset_y -= rect.height
+            self.show_unit(unit, true)//for getting size
+            // sunit.get_size()// getActuralRect(unit.box)
+            var rect = { width: self.boxunit.widget.w, height: self.boxunit.widget.h }
+            //console.log('rect=>',rect)
+            w = Math.round(rect.width);
+            h = Math.round(rect.height);
+            unit.box.dataset.width = w
+            unit.box.dataset.height = h
+            //根據metadata.at計算下一張的位置
+            if (self.metadata.at == 't') {
+                offset_y -= h
             }
-            else if (self.metadata.at == 'r'){
-                offset_x += rect.width
+            else if (self.metadata.at == 'r') {
+                offset_x += w
             }
-            else if (self.metadata.at == 'b'){
-                offset_y += rect.height
+            else if (self.metadata.at == 'b') {
+                offset_y += h
             }
-            else if (self.metadata.at == 'l'){
-                offset_x -= rect.width
+            else if (self.metadata.at == 'l') {
+                offset_x -= w
             }
-            self.show_unit(unit,false)
-        })    
+            self.show_unit(unit, false)
+        })
     }
-    ,next:function(dst_pos){
+    , next: function (dst_pos) {
         //anitmation features, see https://github.com/daneden/animate.css
         var self = this
-        
+        //var scale = this.boxunit.widget.scale * this.boxunit.widget.get_parent_scale()
+        //var degree = this.boxunit.widget.degree[2] + this.boxunit.widget.get_parent_degree()
         var prev_unit = null, prev_unit_idx = null, next_unit = null, next_unit_idx = null
-        if (this.metadata.pos >= 0){
-            prev_unit_idx  = this.metadata.pos
+        if (this.metadata.pos >= 0) {
+            prev_unit_idx = this.metadata.pos
             prev_unit = this.units[this.metadata.pos]
         }
         if (this.metadata.pos < this.units.length - 1) {
@@ -5460,111 +6147,96 @@ BoxUnitSlideshow.prototype = {
             next_unit_idx = this.metadata.pos
             next_unit = this.units[this.metadata.pos]
         }
-        
 
-        var slide_in = function(unit_idx){
+
+        var slide_in = function (unit_idx) {
             var unit = self.units[unit_idx]
-            var speed_class='faster', animation_name
-            self.show_unit(unit,true)
-
-            var animationend = function(){
-                unit.box.classList.remove('animated',speed_class,animation_name)
-                unit.box.removeEventListener('animationend',animationend)
+            var speed_class = 'faster', animation_name
+            self.show_unit(unit, true)
+            var animationend = function () {
+                unit.box.classList.remove('animated', speed_class, animation_name)
+                unit.box.removeEventListener('animationend', animationend)
             }
             var animation_name;
-            Constant.in_styles.some(function(item){
-                if (self.metadata.in == item.id){
+            Constant.in_styles.some(function (item) {
+                if (self.metadata.in == item.id) {
                     animation_name = item.name
                     return true
                 }
             })
-            switch(self.metadata.in){
+            switch (self.metadata.in) {
                 case '0':
                     break
                 default:
-                    unit.box.addEventListener('animationend',animationend)
-                    unit.box.classList.add('animated',speed_class,animation_name)
+                    unit.box.addEventListener('animationend', animationend)
+                    unit.box.classList.add('animated', speed_class, animation_name)
             }
         }
-        var slide_out = function(unit_idx,callback){
+        var slide_out = function (unit_idx, callback) {
             var unit = self.units[unit_idx]
-            var next_unit = unit_idx == self.units.length - 1 ? null : self.units[unit_idx+1]
-            var prev_speed_class='faster', prev_animation_name
-            var prev_animationend = function(){
-                this.box.classList.remove('animated',prev_speed_class,prev_animation_name)
-                this.box.removeEventListener('animationend',this._handler)
-                if (this.hide_unit_flag) self.show_unit(this,false)
+            var next_unit = unit_idx == self.units.length - 1 ? null : self.units[unit_idx + 1]
+            var prev_speed_class = 'faster', prev_animation_name
+            var prev_animationend = function () {
+                this.box.classList.remove('animated', prev_speed_class, prev_animation_name)
+                this.box.removeEventListener('animationend', this._handler)
+                if (this.hide_unit_flag) self.show_unit(this, false)
                 if (this.call_callback_flag) callback()
                 delete this.hide_unit_flag
                 delete this.call_callback_flag
                 delete this._handler
             }
             var prev_animation_name;
-            Constant.out_styles.some(function(item){
-                if (self.metadata.out == item.id){
+            Constant.out_styles.some(function (item) {
+                if (self.metadata.out == item.id) {
                     prev_animation_name = item.name
                     return true
                 }
-            })            
-            switch(self.metadata.out){
+            })
+            switch (self.metadata.out) {
                 case '0':
-                    self.show_unit(unit,false)
+                    self.show_unit(unit, false)
                     callback()
                     break
                 case 'no':
                     callback()
-                    break                    
+                    break
                 case 'sr':
-                    //prev_animation_class = 'slideInLeft'
-                    var offset = parseFloat(next_unit.box.dataset.width)
-                    for (var i=0;i<=unit_idx;i++){
+                    var offset = next_unit ? parseFloat(next_unit.box.dataset.width) : 0
+                    for (var i = 0; i <= unit_idx; i++) {
                         var _unit = self.units[i]
                         var top = parseFloat(_unit.box.style.top)
                         var left = parseFloat(_unit.box.style.left)
-                        /* No amimation
-                        _unit.hide_unit_flag = false
-                        if (i == unit_idx) {
-                            _unit.call_callback_flag = false
-                        }
-                        else {
-                            _unit.call_callback_flag = false
-                        }                        
-                        _unit._handler = prev_animationend.bind(_unit)
-                        _unit.box.addEventListener('animationend',_unit._handler)
-                        self.move_unit(_unit,left+offset,top)
-                        _unit.box.classList.add('animated',prev_speed_class,prev_animation_class) 
-                        */
-                        self.move_unit(_unit,left+offset,top)
+                        self.move_unit(_unit, left + offset, top)
                     }
                     callback()
                     break
                 case 'sl':
-                    var offset = parseFloat(next_unit.box.dataset.width)
-                    for (var i=0;i<=unit_idx;i++){
+                    var offset = next_unit ? parseFloat(next_unit.box.dataset.width) : 0
+                    for (var i = 0; i <= unit_idx; i++) {
                         var _unit = self.units[i]
                         var top = parseFloat(_unit.box.style.top)
                         var left = parseFloat(_unit.box.style.left)
-                        self.move_unit(_unit,left-offset,top)
+                        self.move_unit(_unit, left - offset, top)
                     }
                     callback()
                     break
                 case 'st':
-                    var offset = parseFloat(next_unit.box.dataset.height)
-                    for (var i=0;i<=unit_idx;i++){
+                    var offset = next_unit ? parseFloat(next_unit.box.dataset.height) : 0
+                    for (var i = 0; i <= unit_idx; i++) {
                         var _unit = self.units[i]
                         var top = parseFloat(_unit.box.style.top)
                         var left = parseFloat(_unit.box.style.left)
-                        self.move_unit(_unit,left,top-offset)
+                        self.move_unit(_unit, left, top - offset)
                     }
                     callback()
-                    break 
+                    break
                 case 'sb':
-                    var offset = parseFloat(next_unit.box.dataset.height)
-                    for (var i=0;i<=unit_idx;i++){
+                    var offset = next_unit ? parseFloat(next_unit.box.dataset.height) : 0
+                    for (var i = 0; i <= unit_idx; i++) {
                         var _unit = self.units[i]
                         var top = parseFloat(_unit.box.style.top)
                         var left = parseFloat(_unit.box.style.left)
-                        self.move_unit(_unit,left,top+offset)
+                        self.move_unit(_unit, left, top + offset)
                     }
                     callback()
                     break
@@ -5572,48 +6244,53 @@ BoxUnitSlideshow.prototype = {
                     unit.call_callback_flag = true
                     unit.hide_unit_flag = true
                     unit._handler = prev_animationend.bind(unit)
-                    unit.box.addEventListener('animationend',unit._handler)
-                    unit.box.classList.add('animated',prev_speed_class,prev_animation_name)
-                    break                                     
+                    unit.box.addEventListener('animationend', unit._handler)
+                    unit.box.classList.add('animated', prev_speed_class, prev_animation_name)
+                    break
             }
         }
         if (next_unit) {
             //first unit has no prev_unit
-            if (prev_unit){
-                slide_out(prev_unit_idx,function(){
+            if (prev_unit) {
+                slide_out(prev_unit_idx, function () {
                     //last unit has no next_unit
                     slide_in(next_unit_idx)
-                })    
+                })
             }
             else slide_in(next_unit_idx)
         }
-        else if (prev_unit){
+        else if (prev_unit) {
             //last slide
-            slide_out(prev_unit_idx,function(){
+            slide_out(prev_unit_idx, function () {
             })
         }
         return next_unit ? true : false
     }
-    ,stop:function(){
+    , stop: function () {
         this.boxunit.ele.style.overflow = ''//restore to default (hide)
-        this.boxunit.widget.box.style.overflow = '' //restore to default (hide)
+        //this.boxunit.widget.box.style.overflow = '' //restore to default (hide)
+        this.boxunit.widget.box.classList.remove('playing')
         this.metadata.show = false
         this.metadata.pos = -1
-        //show all at stop()
         var self = this
-        this.units.forEach(function(unit){
-            self.show_unit(unit,true)
+        this.units.forEach(function (unit) {
+            self.move_unit(unit, 0, 0)
         })
+        //show origin solo_id
+        var solo_unit = this.boxunit.hide_all_units(this.boxunit.metadata.solo_id)
+        if (solo_unit) this.move_unit(solo_unit, 0, 0)
     }
-    ,move_unit:function(unit,x,y){
+    , move_unit: function (unit, x, y) {
         //unitity function
-        unit.box.style.left = x+'px'
-        unit.box.style.top = y+'px'
+        unit.box.style.left = x + 'px'
+        unit.box.style.top = y + 'px'
     }
-    ,show_unit:function(unit,yes){
-        //unitity function
+    , show_unit: function (unit, yes) {
+        //一般unit.show/hide操作的是unit.ele,但此處所要操作的是unit.box
         unit.box.style.display = yes ? '' : 'none'
-    }  
+        if (yes) unit.show()
+        else unit.hide()
+    }
 }
 
 function BoxUnit(widget, box) {
@@ -5634,57 +6311,58 @@ function BoxUnit(widget, box) {
     }
     this.ele.style.pointerEvents = 'none'
     this.units = []
-    this.metadata.cursor = -1 //current focus image (unit),for navigation
+    this.metadata.solo_id = null //current focus image (unit),for navigation
     this.slideshow = new BoxUnitSlideshow(this)
 }
 
 BoxUnit.prototype = _.create(GenericUnit.prototype, {
-    constructor:BoxUnit
-    ,serialize:function(for_clone){
-        var data = GenericUnit.prototype.serialize.call(this,for_clone)
+    constructor: BoxUnit
+    , serialize: function (for_clone) {
+        var data = GenericUnit.prototype.serialize.call(this, for_clone)
         var units = []
-        this.units.forEach(function(unit){
+        this.units.forEach(function (unit) {
             units.push(unit.serialize(for_clone))
         })
         data.units = units
         data.slideshow = this.slideshow.serialize(for_clone)
         return data
     }
-    ,deserialize:function(data,is_clone){
-        GenericUnit.prototype.deserialize.call(this,data, is_clone)
+    , deserialize: function (data, is_clone) {
+        GenericUnit.prototype.deserialize.call(this, data, is_clone)
         /* 本函式要負責從serialized的data把widget的內容生回來*/
         var self = this
         var call_with_context = function () {
-            data.units.forEach(function(unit_data,idx){
+            data.units.forEach(function (unit_data, idx) {
                 var unit = self.add_unit(unit_data)
             })
-            self.slideshow.deserialize(data.slideshow,is_clone)
+            self.slideshow.deserialize(data.slideshow, is_clone)
+            if (self.metadata.solo_id) self.hide_all_units(self.metadata.solo_id)
         }
         if (WidgetGallery.singleton.context_ready) call_with_context()
         else WidgetGallery.singleton.on('context-ready', call_with_context)
     }
-    , get_actions:function(){
+    , get_actions: function () {
         if (this.units.length == 0) return []
         var self = this
         return [
             {
                 id: 'start',
                 type: 'button',
-                text:  self.slideshow.metadata.show ? 'Next' : 'Start',
+                text: self.slideshow.metadata.show ? 'Next' : 'Start',
                 icon: 'fa fa-play',
-                tooltip:'start slide show',
+                tooltip: 'start slide show',
                 onClick: function (widget, toolbar) {
 
-                    if (self.slideshow.metadata.show){
-                        if (!self.slideshow.next()){
+                    if (self.slideshow.metadata.show) {
+                        if (!self.slideshow.next()) {
                             // no more next unit
                             toolbar.disable('start')
                         }
-                        self.sync({topic:'slideshow',do:'next'})//,pos:self.slideshow.metadata.pos})
+                        self.sync({ topic: 'slideshow', do: 'next' })//,pos:self.slideshow.metadata.pos})
                     }
-                    else{
+                    else {
                         self.slideshow.start()
-                        self.sync({topic:'slideshow',do:'start'})
+                        self.sync({ topic: 'slideshow', do: 'start' })
                         //update GUI
                         toolbar.get('start').text = 'Next'
                         toolbar.refresh('start')
@@ -5692,16 +6370,16 @@ BoxUnit.prototype = _.create(GenericUnit.prototype, {
                     }
                 }
             }
-            ,{
+            , {
                 id: 'stop',
                 type: 'button',
-                text:'Stop',
+                text: 'Stop',
                 disabled: !self.slideshow.metadata.show,
                 icon: 'fa fa-pause',
-                tooltip:'stop slide show',
+                tooltip: 'stop slide show',
                 onClick: function (widget, toolbar) {
                     self.slideshow.stop()
-                    self.sync({topic:'slideshow',do:'stop'})
+                    self.sync({ topic: 'slideshow', do: 'stop' })
                     toolbar.disable('stop')
                     toolbar.enable('start')
                     toolbar.get('start').text = 'Start'
@@ -5710,319 +6388,358 @@ BoxUnit.prototype = _.create(GenericUnit.prototype, {
             }
         ]
     }
-    ,get_dashboard:function(dashboard){
+    , get_dashboard: function (dashboard) {
         var self = this
         var my_dashboard =
-            {
-                id: 'cardbox',
-                text: 'CardBox',
-                items: [
-                    [ //row 1
-                        {
-                            type: 'button',
-                            label: 'Show All',
-                            button_label:'Show All',
-                            legend: '',
-                            onClick:function(widget,button_ele){
-                                self.sync({topic:'showall'})
-                                self.units.forEach(function(unit){
-                                    self.slideshow.show_unit(unit,true)
-                                })
-                            }
+        {
+            id: 'cardbox',
+            text: 'CardBox',
+            items: [
+                [ //row 1
+                    {
+                        type: 'button',
+                        label: 'Show All',
+                        button_label: 'Show All',
+                        legend: '',
+                        onClick: function (widget, button_ele) {
+                            self.sync({ topic: 'showall' })
+                            /*
+                            self.units.forEach(function(unit){
+                                self.slideshow.show_unit(unit,true)
+                            })
+                            */
+                            self.show_all_units()
                         }
-                        ,{
-                            type: 'button',
-                            label: 'Hide All',
-                            button_label:'Hide All',
-                            legend: '',
-                            onClick:function(widget,button_ele){
-                                self.sync({topic:'hideall'})
-                                self.units.forEach(function(unit){
-                                    self.slideshow.show_unit(unit,false)
-                                })
-                            }
+                    }
+                    , {
+                        type: 'button',
+                        label: 'Hide All',
+                        button_label: 'Hide All',
+                        legend: '',
+                        onClick: function (widget, button_ele) {
+                            self.sync({ topic: 'hideall' })
+                            self.hide_all_units()
                         }
-                        , {
-                            type: 'button',
-                            label: 'Reverse',
-                            button_label:'Reverse',
-                            legend: '',
-                            onClick:function(widget,button_ele){
-                                self.reverse_units()
-                                w2ui['boxunit-units'].records.reverse()
-                                w2ui['boxunit-units'].refresh()
-                                self.sync({topic:'reverse'})
-                            }
+                    }
+                    , {
+                        type: 'button',
+                        label: 'Reverse',
+                        button_label: 'Reverse',
+                        legend: '',
+                        onClick: function (widget, button_ele) {
+                            self.reverse_units()
+                            w2ui['boxunit-units'].records.reverse()
+                            w2ui['boxunit-units'].refresh()
+                            self.sync({ topic: 'reverse' })
                         }
-                        ,{
-                            type: 'list',
-                            label: 'In Style',
-                            style:'width:100%',
-                            legend: 'animation style of the next one',
-                            options:{
-                                items:Constant.in_styles
-                                ,selected: self.slideshow.metadata.in
-                            },
-                            get:function(widget){
-                                return self.slideshow.metadata.in
-                            },
-                            set:function(widget,item){
-                                self.slideshow.metadata.in = item.value.id
-                                self.sync({topic:'slideshow',do:'set',data:{in:self.slideshow.metadata.in}})
-                            }
+                    }
+                    , {
+                        type: 'list',
+                        label: 'In Style',
+                        style: 'width:100%',
+                        legend: 'animation style of the next one',
+                        options: {
+                            items: Constant.in_styles
+                            , selected: self.slideshow.metadata.in
+                        },
+                        get: function (widget) {
+                            return self.slideshow.metadata.in
+                        },
+                        set: function (widget, item) {
+                            self.slideshow.metadata.in = item.value.id
+                            self.sync({ topic: 'slideshow', do: 'set', data: { in: self.slideshow.metadata.in } })
                         }
-                        ,{
-                            type: 'list',
-                            label: 'Place',
-                            style:'width:100%',
-                            legend: 'Where the next one goes to',
-                            options:{
-                                items:Constant.at_styles,
-                                selected: self.slideshow.metadata.at
-                            },
-                            get:function(widget){
-                                return self.slideshow.metadata.at
-                            },
-                            set:function(widget,field, item,w2dashboard_form){
-                                self.slideshow.metadata.at = field.value.id
-                                self.sync({topic:'slideshow',do:'set',data:{at:self.slideshow.metadata.at}})
-                            }
-                        }                        
-                        ,{
-                            type: 'list',
-                            label: 'Out Style',
-                            style:'width:100%',
-                            legend: 'Out-going style of the current one',
-                            options:{
-                                items:Constant.out_styles
-                                ,selected:self.slideshow.metadata.out
-                            },
-                            get:function(widget){
-                                return self.slideshow.metadata.out
-                            },
-                            set:function(widget,field){
-                                self.slideshow.metadata.out = field.value.id
-                                self.sync({topic:'slideshow',do:'set',data:{out:self.slideshow.metadata.out}})
-                            }
+                    }
+                    , {
+                        type: 'list',
+                        label: 'Place',
+                        style: 'width:100%',
+                        legend: 'Where the next one goes to',
+                        options: {
+                            items: Constant.at_styles,
+                            selected: self.slideshow.metadata.at
+                        },
+                        get: function (widget) {
+                            return self.slideshow.metadata.at
+                        },
+                        set: function (widget, field, item, w2dashboard_form) {
+                            self.slideshow.metadata.at = field.value.id
+                            self.sync({ topic: 'slideshow', do: 'set', data: { at: self.slideshow.metadata.at } })
                         }
-                    ]
-                    ,[
-                        {
-                            type:'html',
-                            html:function(widget, tags){
-                                //tags is an array for pushing html tags
-                                if (self.units.length == 0) return 
-                                
-                                var records = []
-                                for (var i=0;i<self.units.length;i++){
-                                    // 注意：至少有3個地方在產生這份清單
-                                    var info = self.units[i].unit ? self.units[i].unit.get_info() : {}
-                                    info.recid = self.units[i].id
-                                    records.push(info)
-                                }
-                                
-                                var table_height = self.units.length > 5 ? 400 : 300;
-                                tags.push('<div class="boxunit-grid" style="height:'+table_height+'px;width:100%;margin-left:0px"></div>')
-                                _.defer(function(){
-                                    if (w2ui['boxunit-units']) w2ui['boxunit-units'].destroy()
-                                    var grid = document.querySelector('.boxunit-grid')
-                                    $(grid).w2grid({ 
-                                        name: 'boxunit-units',
-                                        recordHeight : 50,
-                                        show: {
-                                            toolbar:true,
-                                            toolbarAdd:false,
-                                            toolbarDelete:true,
-                                            toolbarSearch:false,
-                                            toolbarReload:false,
-                                            toolbarColumns:false,
-                                            toolbarInput:false,
-                                            emptyRecords:false,
-                                            lineNumbers : true
-                                        },
-                                        multiSelect:false,
-                                        reorderRows: true,
-                                        columns: [    
-                                            { field: 'type', caption: 'Type', size: '50px', resizable: true },
-                                            { field: 'content',caption:'Content',size:'100%',render:function(record){
+                    }
+                    , {
+                        type: 'list',
+                        label: 'Out Style',
+                        style: 'width:100%',
+                        legend: 'Out-going style of the current one',
+                        options: {
+                            items: Constant.out_styles
+                            , selected: self.slideshow.metadata.out
+                        },
+                        get: function (widget) {
+                            return self.slideshow.metadata.out
+                        },
+                        set: function (widget, field) {
+                            self.slideshow.metadata.out = field.value.id
+                            self.sync({ topic: 'slideshow', do: 'set', data: { out: self.slideshow.metadata.out } })
+                        }
+                    }
+                ]
+                , [
+                    {
+                        type: 'html',
+                        html: function (widget, tags) {
+                            //tags is an array for pushing html tags
+                            if (self.units.length == 0) return
+
+                            var records = []
+                            for (var i = 0; i < self.units.length; i++) {
+                                // 注意：至少有3個地方在產生這份清單
+                                var info = self.units[i].unit ? self.units[i].unit.get_info() : {}
+                                info.recid = self.units[i].id
+                                records.push(info)
+                            }
+
+                            var table_height = self.units.length > 5 ? 400 : 300;
+                            tags.push('<div class="boxunit-grid" style="height:' + table_height + 'px;width:100%;margin-left:0px"></div>')
+                            _.defer(function () {
+                                if (w2ui['boxunit-units']) w2ui['boxunit-units'].destroy()
+                                var grid = document.querySelector('.boxunit-grid')
+                                $(grid).w2grid({
+                                    name: 'boxunit-units',
+                                    recordHeight: 50,
+                                    show: {
+                                        toolbar: true,
+                                        toolbarAdd: false,
+                                        toolbarDelete: true,
+                                        toolbarSearch: false,
+                                        toolbarReload: false,
+                                        toolbarColumns: false,
+                                        toolbarInput: false,
+                                        emptyRecords: false,
+                                        lineNumbers: true
+                                    },
+                                    multiSelect: false,
+                                    reorderRows: true,
+                                    columns: [
+                                        { field: 'type', caption: 'Type', size: '50px', resizable: true },
+                                        {
+                                            field: 'content', caption: 'Content', size: '100%', render: function (record) {
                                                 //recorder時，此block會先呼叫（以舊的order)
                                                 var cardunit
-                                                self.units.some(function(unit){
-                                                    if (unit.id == record.recid) {cardunit = unit;return true}
+                                                self.units.some(function (unit) {
+                                                    if (unit.id == record.recid) { cardunit = unit; return true }
                                                 })
-                                                
-                                                if (cardunit && cardunit.unit){// && cardunit.unit.constructor.name == 'ImageUnit'){
+
+                                                if (cardunit && cardunit.unit) {// && cardunit.unit.constructor.name == 'ImageUnit'){
                                                     return cardunit.unit.get_info().content
                                                     /*
-                                                    var filename = cardunit.unit.metadata.file 
+                                                    var filename = cardunit.unit.metadata.file
                                                     var src = filename ? WidgetGallery.singleton.presentation.current_slide.widget_manager.get_file_url(filename) : cardunit.unit.metadata.src
                                                     return src ? '<img style="width:auto;max-height:50px" src="'+src+'"/>' : ''
                                                     */
                                                 }
                                                 else return ''
-                                            }}
-                                        ],
-                                        records: records,
-                                        onSelect:function(evt){
-                                            var target_idx
-                                            w2ui['boxunit-units'].records.some(function(record,idx){
-                                                if (record.recid == evt.recid) {target_idx = idx;return true}
-                                            })                                            
-                                            var unit = self.units[target_idx]
-                                            unit.box.style.display = ''
-                                            self.sync({topic:'show',uid:unit.id})
-                                        },
-                                        onReorderRow:function(evt){
-                                            //注意：不論變換幾次，evt.recid跟evt.moveAfter都是最早一開始設定的那個值
-                                            //所以，需要每次更新 record.idx使其與 self.units的順序一致
-                                            if (typeof(evt.moveAfter) == 'undefined') return //no change
-                                            var from_idx
-                                            w2ui['boxunit-units'].records.some(function(record,idx){
-                                                if (record.recid == evt.recid) {from_idx = idx;return true}
-                                            })
-                                            var to_idx;
-                                            w2ui['boxunit-units'].records.some(function(record,idx){
-                                                if (record.recid == evt.moveAfter) {to_idx = idx;return true}
-                                            })
-                                            evt.done(function(){
-                                                //要放在done裡面重組self.units，因為re-render rows，使用的是舊的recid
-                                                if (from_idx < to_idx) to_idx -= 1
-                                                if (from_idx == to_idx) return //make no sense
-                                                var src_unit = self.units[from_idx]
-                                                self.units.splice(from_idx,1) //remove from array
-                                                self.units.splice(to_idx,0,src_unit) //add back to array
-                                                
-                                                //swap DOM nodes
-                                                var src_box = self.ele.querySelector('div[unit="'+src_unit.id+'"]')
-                                                src_box.remove()
-                                                var prev_box = to_idx == 0 ? null : self.ele.querySelector('div[unit="'+self.units[to_idx-1].id+'"]')
-                                                if (prev_box) self.ele.insertBefore(src_box, prev_box)
-                                                else self.ele.appendChild(src_box)
-
-                                                self.sync({topic:'reorder',from:from_idx, to:to_idx})
-                                            })
-                                            
-                                        },
-                                        onDelete:function(evt){
-                                            //w2ui此處有個bug，它會呼叫兩次，但兩次的evt.phase都是before
-                                            //先defer之後才會有evt.phase=='after'
-                                            var delete_recid = w2ui['boxunit-units'].getSelection()[0]
-                                            evt.done(function(evt2){
-                                                //只有回答yes才會執行此區塊
-                                                //w2ui.grid有bug, 刪除時他會根據recid重新sort，以至於只能再重新產生一次
-                                                var records = []
-                                                var target_idx = -1
-                                                self.units.forEach(function(unit,idx){
-                                                    // 注意：至少有3個地方在產生這份清單
-                                                    if (unit.id == delete_recid) {
-                                                        target_idx = idx
-                                                    }
-                                                    else{
-                                                        var info = unit.unit ? unit.get_info() : {}
-                                                        info.recid = unit.id
-                                                        records.push(info)
-                                                    }
-                                                })
-                                                if (target_idx >=0) self.remove_unit(target_idx)
-                                                w2ui['boxunit-units'].records = records
-                                                w2ui['boxunit-units'].refresh()
-                                                self.sync({topic:'remove',uid:delete_recid})
-                                            })
+                                            }
                                         }
-                                    })
-                                    w2ui['boxunit-units'].refresh()
+                                    ],
+                                    records: records,
+                                    onSelect: function (evt) {
+                                        var but_idx
+                                        w2ui['boxunit-units'].records.some(function (record, idx) {
+                                            if (record.recid == evt.recid) { but_idx = idx; return true }
+                                        })
+                                        var unit = self.units[but_idx]
+                                        self.hide_all_units(unit.id)
+                                        self.sync({ topic: 'hideall', solo_id: unit.id })
+                                    },
+                                    onReorderRow: function (evt) {
+                                        //注意：不論變換幾次，evt.recid跟evt.moveAfter都是最早一開始設定的那個值
+                                        //所以，需要每次更新 record.idx使其與 self.units的順序一致
+                                        if (typeof(evt.moveAfter) == 'undefined') return //no change
+                                        var from_idx
+                                        w2ui['boxunit-units'].records.some(function (record, idx) {
+                                            if (record.recid == evt.recid) { from_idx = idx; return true }
+                                        })
+                                        var to_idx;
+                                        w2ui['boxunit-units'].records.some(function (record, idx) {
+                                            if (record.recid == evt.moveAfter) { to_idx = idx; return true }
+                                        })
+                                        evt.done(function () {
+                                            //要放在done裡面重組self.units，因為re-render rows，使用的是舊的recid
+                                            if (from_idx < to_idx) to_idx -= 1
+                                            if (from_idx == to_idx) return //make no sense
+                                            var src_unit = self.units[from_idx]
+                                            self.units.splice(from_idx, 1) //remove from array
+                                            self.units.splice(to_idx, 0, src_unit) //add back to array
+
+                                            //swap DOM nodes
+                                            var src_box = self.ele.querySelector('div[unit="' + src_unit.id + '"]')
+                                            src_box.parentNode.removeChild(src_box)
+                                            var prev_box = to_idx == 0 ? null : self.ele.querySelector('div[unit="' + self.units[to_idx - 1].id + '"]')
+                                            if (prev_box) self.ele.insertBefore(src_box, prev_box)
+                                            else self.ele.appendChild(src_box)
+
+                                            self.sync({ topic: 'reorder', from: from_idx, to: to_idx })
+                                        })
+
+                                    },
+                                    onDelete: function (evt) {
+                                        //w2ui此處有個bug，它會呼叫兩次，但兩次的evt.phase都是before
+                                        //先defer之後才會有evt.phase=='after'
+                                        var delete_recid = w2ui['boxunit-units'].getSelection()[0]
+                                        evt.done(function (evt2) {
+                                            //只有回答yes才會執行此區塊
+                                            //w2ui.grid有bug, 刪除時他會根據recid重新sort，以至於只能再重新產生一次
+                                            var records = []
+                                            var target_idx = -1
+                                            self.units.forEach(function (unit, idx) {
+                                                // 注意：至少有3個地方在產生這份清單
+                                                if (unit.id == delete_recid) {
+                                                    target_idx = idx
+                                                }
+                                                else {
+                                                    var info = unit.unit ? unit.get_info() : {}
+                                                    info.recid = unit.id
+                                                    records.push(info)
+                                                }
+                                            })
+                                            if (target_idx >= 0) self.remove_unit(target_idx)
+                                            w2ui['boxunit-units'].records = records
+                                            w2ui['boxunit-units'].refresh()
+                                            self.sync({ topic: 'remove', uid: delete_recid })
+                                        })
+                                    }
                                 })
-                            }
+                                w2ui['boxunit-units'].refresh()
+                            })
                         }
-                    ]
-                ]// end of items
-            }         
-        
+                    }
+                ]
+            ]// end of items
+        }
+
         dashboard.push(my_dashboard)
-    }    
+    }
     , on_paste: function (data) {
         if (data.is_file) {
             var unit = this.add_unit()
             //必要時在dashboard的unit清單中增加一列
             if (WidgetGallery.singleton.dashboard_box.dataset.widget_id == this.widget.id &&
-                w2ui['boxunit-units']){
+                w2ui['boxunit-units']) {
                 w2ui['boxunit-units'].records.push({
-                    recid:unit.id,
-                    type:unit.unit ?  unit.unit.constructor.name : ''
+                    recid: unit.id,
+                    type: unit.unit ? unit.unit.constructor.name : ''
                 })
                 w2ui['boxunit-units'].refresh()
-            }            
+            }
             unit.on_paste(data)
-            this.sync({topic:'add',data:unit.serialize()})
+            this.sync({ topic: 'add', data: unit.serialize() })
         }
     }
     , on_paste_string: function (text) {
-       /* 本函式要負責從使用者給的URL中生出內容*/
+        /* 本函式要負責從使用者給的URL中生出內容*/
         var unit = this.add_unit()
-        this.sync({topic:'add',data:unit.serialize()}) //sync "add" 要立刻送，才能接收後續的content
-        console.log('add unit syck')
+        this.sync({ topic: 'add', data: unit.serialize() }) //sync "add" 要立刻送，才能接收後續的content
         //必要時在dashboard的unit清單中增加一列
         if (WidgetGallery.singleton.dashboard_box.dataset.widget_id == this.widget.id &&
-            w2ui['boxunit-units']){
+            w2ui['boxunit-units']) {
             w2ui['boxunit-units'].records.push({
-                recid:unit.id,
-                type:unit.unit ?  unit.unit.constructor.name : ''
+                recid: unit.id,
+                type: unit.unit ? unit.unit.constructor.name : ''
             })
             w2ui['boxunit-units'].refresh()
         }
         unit.on_paste_string(text)
+        this.hide_all_units(unit.id)
     }
-    ,add_unit: function (unit_data) {
+    , show_all_units: function () {
+        var self = this
+        this.units.forEach(function (unit) {
+            self.slideshow.show_unit(unit, true)
+        })
+    }
+    , hide_all_units: function (solo_id) {
+        var self = this
+        var solo_unit = null;
+        if (this.metadata.solo_id) {
+            var pre_solo_unit = this.get_unit(this.metadata.solo_id)
+            // 2019-03-19T07:10:48+00:00 按理不應該找不到，暫時先這樣，以後再查原因
+            if (pre_solo_unit) pre_solo_unit.hide()
+        }
+        this.units.forEach(function (unit) {
+            if ((typeof solo_id !== undefined) && unit.id == solo_id) {
+                self.slideshow.show_unit(unit, true)
+                solo_unit = unit
+                solo_unit.show()
+            }
+            else self.slideshow.show_unit(unit, false)
+        })
+        this.metadata.solo_id = solo_id || null
+        return solo_unit
+    }
+    , get_unit: function (unit_id) {
+        var target = null
+        this.units.some(function (unit) {
+            if (unit.id == unit_id) {
+                target = unit
+                return true
+            }
+        })
+        return target
+    }
+    , add_unit: function (unit_data) {
         //Add a new unit into box
         //新增加的在底下
         var box = document.createElement('div')
         box.classList.add('boxunit-slice')
         box.style.position = 'absolute'
         this.ele.insertBefore(box, this.ele.firstChild)
-        var unit = new CardUnit(this.widget,box)
+        var unit = new CardUnit(this.widget, box)
         if (unit_data) unit.deserialize(unit_data)
-        box.setAttribute('unit',unit.id)
+        box.setAttribute('unit', unit.id)
 
         this.units.push(unit)
         var self = this
-        unit.on('content',function(src_unit){
+        unit.on('content', function (src_unit) {
             //如果此unit內容改變時（例如有了圖），必要時更新dashboard的unit清單
             if (WidgetGallery.singleton.dashboard_box.dataset.widget_id == self.widget.id &&
-                w2ui['boxunit-units']){
-                w2ui['boxunit-units'].records.some(function(record){
-                    if (record.recid == src_unit.id){
+                w2ui['boxunit-units']) {
+                w2ui['boxunit-units'].records.some(function (record) {
+                    if (record.recid == src_unit.id) {
                         record.type = src_unit.unit ? src_unit.unit.constructor.name : ''
                     }
                 })
                 w2ui['boxunit-units'].refresh()
-            } 
+            }
         })
         this.fire('unit-added')
         return unit
     }
-    ,remove_unit:function(idx){
+    , remove_unit: function (idx) {
         //var unit = this.units[idx]
-        var units = this.units.splice(idx,1)
+        var units = this.units.splice(idx, 1)
         units[0].destroy()
         this.fire('unit-removed')
     }
-    , reverse_units:function(){
+    , reverse_units: function () {
         //reverse DOM nodes
         this.units.reverse()
         var count = this.units.length
-        for (var i=count-1;i>=0;i--){
+        for (var i = count - 1; i >= 0; i--) {
             var box = this.units[i].box
-            box.remove()
+            box.parentNode.removeChild(box)
             this.ele.appendChild(box)
         }
     }
-    ,on_sync:function(data){
-        switch(data.topic){
+    , on_sync: function (data) {
+        switch (data.topic) {
             case 'add':
+                this.hide_all_units()
                 var unit = this.add_unit(data.data)
                 //必要時在dashboard的unit清單中增加一列
                 if (WidgetGallery.singleton.dashboard_box.dataset.widget_id == this.widget.id &&
-                    w2ui['boxunit-units']){
+                    w2ui['boxunit-units']) {
                     var info = unit.unit ? unit.get_info() : {}
                     info.recid = unit.id
                     w2ui['boxunit-units'].records.push(info)
@@ -6031,7 +6748,7 @@ BoxUnit.prototype = _.create(GenericUnit.prototype, {
                 break
             case 'remove':
                 var target_idx = -1;
-                this.units.some(function(unit,idx){
+                this.units.some(function (unit, idx) {
                     if (unit.id == data.uid) {
                         target_idx = idx;
                         return true
@@ -6039,15 +6756,15 @@ BoxUnit.prototype = _.create(GenericUnit.prototype, {
                 })
                 if (target_idx >= 0) this.remove_unit(target_idx)
                 if (WidgetGallery.singleton.dashboard_box.dataset.widget_id == this.widget.id &&
-                    w2ui['boxunit-units']){
+                    w2ui['boxunit-units']) {
                     // w2ui.grid有bug, 刪除時他會根據recid重新sort，以至於只能再重新產生一次
                     // 注意：至少有3個地方在產生這份清單
                     var records = []
-                    this.units.forEach(function(unit,idx){
+                    this.units.forEach(function (unit, idx) {
                         var info = unit.unit ? unit.get_info() : {}
                         info.recid = unit.id
                         records.push(info)
-                    })                        
+                    })
                     w2ui['boxunit-units'].records = records
                     w2ui['boxunit-units'].refresh()
                 }
@@ -6057,29 +6774,29 @@ BoxUnit.prototype = _.create(GenericUnit.prototype, {
                 else if (data.do == 'next') this.slideshow.next()
                 else if (data.do == 'stop') this.slideshow.stop()
                 else if (data.do == 'prev') this.slideshow.prev()
-                else if (data.do == 'set') _.assign(this.slideshow.metadata,data.data)
+                else if (data.do == 'set') _.assign(this.slideshow.metadata, data.data)
                 //更動幅度太大，應只要部分更新；暫時先這樣
                 WidgetGallery.singleton.update_dashboard(this.widget)
                 break
             case 'reorder':
 
                 var src_unit = this.units[data.from]
-                this.units.splice(data.from,1)
-                this.units.splice(data.to,0,src_unit)
-                
-                var src_box = this.ele.querySelector('div[unit="'+src_unit.id+'"]')
-                src_box.remove()
-                var prev_box = data.to == 0 ? null : this.ele.querySelector('div[unit="'+this.units[data.to-1].id+'"]')
+                this.units.splice(data.from, 1)
+                this.units.splice(data.to, 0, src_unit)
+
+                var src_box = this.ele.querySelector('div[unit="' + src_unit.id + '"]')
+                src_box.parentNode.removeChild(src_box)
+                var prev_box = data.to == 0 ? null : this.ele.querySelector('div[unit="' + this.units[data.to - 1].id + '"]')
                 if (prev_box) this.ele.insertBefore(src_box, prev_box)
                 else this.ele.appendChild(src_box)
 
                 if (WidgetGallery.singleton.dashboard_box.dataset.widget_id == this.widget.id &&
-                    w2ui['boxunit-units']){
+                    w2ui['boxunit-units']) {
                     var records = w2ui['boxunit-units'].records
                     var record = records[data.from]
-                    records.splice(data.from,1)
+                    records.splice(data.from, 1)
                     //這裡的data.to直接使用，不需要像在reorder那裡作 -= 1 的調整
-                    records.splice(data.to,0,record)
+                    records.splice(data.to, 0, record)
                     w2ui['boxunit-units'].refresh()
                 }
                 break
@@ -6089,40 +6806,32 @@ BoxUnit.prototype = _.create(GenericUnit.prototype, {
                 WidgetGallery.singleton.update_dashboard(this.widget)
                 break
             case 'hideall':
-                this.units.forEach(function(unit){
-                    unit.box.style.display = 'none'
-                })
+                this.hide_all_units(data.solo_id)
                 break
             case 'showall':
-                this.units.forEach(function(unit){
-                    unit.box.style.display = ''
-                })
-                break
-            case 'show':
-                this.units.some(function(unit){
-                    if (unit.id == data.uid){
-                        unit.box.style.display = ''
-                        return true
-                    }
-                })
+                this.show_all_units()
                 break
         }
     }
-    
+
 })
 
-var BoxWidget = function(ele) {
+var BoxWidget = function (ele) {
     var self = this
     Widget.call(this, ele)
     this.unit = new BoxUnit(this, this.box)
-    
-    // 預設一個容易辨識的顏色 
+
+
+    // 預設一個容易辨識的顏色
     this.ele.classList.add('empty')
-    this.unit.on('unit-added',function(){
+    this.unit.on('unit-added', function () {
         self.ele.classList.remove('empty')
     })
-    this.unit.on('unit-removed',function(){
+    this.unit.on('unit-removed', function () {
         if (self.unit.units.length == 0) self.ele.classList.add('empty')
+    })
+    this.unit.on('resize', function (data) {
+        console.elog('box unit resize', data)
     })
 }
 
@@ -6132,19 +6841,19 @@ BoxWidget.prototype = _.create(Widget.prototype, {
         //這個一定要有，如果直接呼叫widget.clone會造成clone出來的物件是Widget，而不是CardWidget
         return Widget.prototype.clone.call(this, parent_ele, this.constructor.factory)
     }
-    ,serialize: function (for_clone) {
-        var data = Widget.prototype.serialize.call(this,for_clone)
-        data.unit = this.unit.serialize(for_clone)
+    , serialize: function (for_clone) {
+        var data = Widget.prototype.serialize.call(this, for_clone)
+        data.units = [this.unit.serialize(for_clone)]
         return data
     }
-    ,deserialize: function (data,is_clone) {
-        Widget.prototype.deserialize.call(this,data,is_clone)
-        this.unit.deserialize(data.unit, is_clone)
+    , deserialize: function (data, is_clone) {
+        Widget.prototype.deserialize.call(this, data, is_clone)
+        this.unit.deserialize(data.units[0], is_clone)
     }
-    ,get_actions:function(){
+    , get_actions: function () {
         return this.unit.get_actions()
     }
-    ,get_dashboard:function(dashboard){
+    , get_dashboard: function (dashboard) {
         this.unit.get_dashboard(dashboard)
     }
     , on_paste: function (data) {
@@ -6164,7 +6873,7 @@ BoxWidget.metadata = {
     category: 'general',
     caption: 'Card Box', //display name for i18n
     description: 'a box to holding many Cards',
-    video:'15NL8LqH-qc',
+    video: '15NL8LqH-qc',
     icon: 'fa fa-box'
 }
 BoxWidget.factory = function (ele, features) {
@@ -6219,7 +6928,7 @@ ImageBox.prototype = {
             var urlCreator = window.URL || window.webkitURL;
             var img_ele = document.createElement('img')
             img_ele.src = urlCreator.createObjectURL(data.file);
-            this.push_image(img_ele)            
+            this.push_image(img_ele)
         }
         else{
             window.message('failed to load image')
@@ -6241,9 +6950,9 @@ ImageBox.prototype = {
     ,activate:function(yes){
         this.active = yes
         this.top_image_draggable(yes)
-    }    
+    }
     ,top_image_draggable:function(yes){
-        if (this.images.length == 0) return 
+        if (this.images.length == 0) return
         var self = this
         var img_ele = this.images[this.images.length-1]
         if (yes){
@@ -6296,11 +7005,11 @@ ImageBox.prototype = {
 
         //手動解除目前的上圖可拖動；disable draggable of the current top image
         if (this.active) this.top_image_draggable(false)
-        
+
         this.ele.appendChild(img_ele)
         this.images.push(img_ele)
         this.images_src.push(img_ele.src)
-        
+
         if (this.images.length > 2){
             //只留兩張圖，把前張的前張刪掉，以節省記憶體
             this.images[this.images.length - 3].src = this.fake_blank_image
@@ -6321,7 +7030,7 @@ ImageBox.prototype = {
                 self.widget.update_handles()
             })
         }
-        
+
     }
     ,pop_image:function(){
         //把最上面的圖踢掉
@@ -6361,9 +7070,9 @@ ImageBox.prototype = {
         image.src = url
     }
 }
- 
+
 function CardWidget(ele){
-    Widget.call(this,ele)    
+    Widget.call(this,ele)
     var self = this
     this.image_box = new ImageBox(this)
     this.on('selected',function(){
@@ -6428,11 +7137,11 @@ CardWidget.metadata = {
     description:'a box of images',
     icon:'fa fa-card',
     //information to render items on action-menu for user to take
-    actions:[ 
+    actions:[
         {
             id:'roll',
             type: 'button',
-            text:'Start',            
+            text:'Start',
             icon:'fa fa-trash',
             onClick:function(widget,toolbar){
                 toolbar.get('roll').text = roll ? 'Stop' : 'Start'
@@ -6497,49 +7206,67 @@ CardWidget.factory = function(ele,features){
         widget.resize(100,50)
         widget.set_text('card')
         widget.ele.style.bottom = 0
-    })   * /  
+    })   * /
     return new CardWidget(ele)
 }
 WidgetGallery.register(CardWidget)
 */
 
-function YoutubeUnit(widget, box) {
-    var func_name = arguments.callee.name //YoutubeUnit
+
+function VideoUnit(widget, box, func_name) {
+    //作為YoutubeUnit跟FBVideoUnit的base class,故使用傳入的func_name
     GenericUnit.call(this, widget, box, func_name)
-    //box is a HTMLElement within widget.ele 
+    //box is a HTMLElement within widget.ele
     //box is the container of this unit
     //a widget might have many YoutubeUnit, so container might not be widget.ele
-    var vid = ''
+    //var vid = ''
     if (this.ele) {
         //this is celled by clone() call
-        vid = this.ele.querySelector('.YoutubeUnit-player').getAttribute('vid')
+        //vid = this.ele.querySelector('.VideoUnit-player').getAttribute('vid')
     }
     else {
         this.create_ele({
             classname: func_name,
             style: {
-                height: '200px'
-                , width: '200px'
+                height: '100%'// Constant.scale(200)+'px'
+                , width: '100%' //Constant.scale(200)+'px'
             }
         })
     }
     /* (require youtube.js)*/
-    var ret = (YoutubePlayer.singleton || new YoutubePlayer()).pre_render({ class: 'YoutubeUnit-player' })
+    
+    if (func_name == 'YoutubeUnit'){
+        this.player_api = (YoutubePlayer.singleton || new YoutubePlayer())
+    }
+    else if (func_name == 'FBVideoUnit'){
+        this.player_api = (FacebookPlayer.singleton || new FacebookPlayer())
+    }
+
+    //2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
+    //this.draggable()
+
+    this.metadata.video_time = 0
+    this.metadata.video_state = 2 //paused
+    this.metadata.state_time = 0
+
+    /*
+    var ret = this.player_api.pre_render({ class: 'VideoUnit-player', video_id: vid })
     this.ele.innerHTML = ret.content
     this.metadata.player_id = ret.player_id //DOM element's id
     this.metadata.video_id = vid
-    this.metadata.video_time = 0
-    this.metadata.video_state = 0
-    this.metadata.state_time = 0
-    this.draggable()
+
+
     this.player = null
     if (vid) {
         setTimeout(function () {
-            //enforce load_video() to load 
-            self.ele.querySelector('.YoutubeUnit-player').setAttribute('vid', '')
+            
+            //enforce load_video() to reload
+            self.ele.querySelector('.VideoUnit-player').setAttribute('vid', '')
+
             self.load_video(vid)
         })
     }
+    */
 
     var self = this
     this.widget.on('collapsed', function (data) {
@@ -6549,7 +7276,7 @@ function YoutubeUnit(widget, box) {
 
     //在flip前後恢復播放狀態
     var is_playing_when_hide = false
-    this.widget.on('hide', function () {
+    this.on('hide', function () {
         if (!self.player) return
         if (self.get_state() == 1) {
             is_playing_when_hide = true
@@ -6557,23 +7284,25 @@ function YoutubeUnit(widget, box) {
         }
         self.ele.style.display = 'none' //這樣比較省記憶體
         //display the thumbnail
-        self._ele = self.ele
-        self.ele = document.createElement('img')
-        self._ele.parentNode.insertBefore(self.ele,self._ele)
-        self.ele.src = 'https://img.youtube.com/vi/'+self.metadata.video_id+'/default.jpg'
-        /*
-        self.ele.onerror = function(){
-            delete self.ele.onerror
-            self.ele.src = 'https://img.youtube.com/vi/'+self.metadata.video_id+'/0.jpg'
+        if (func_name == 'YoutubeUnit'){
+            // 正常應該沒有thumbnail，除非有bug,但為了保險起見還是先查詢試試看，免得產生太多
+            self.thumbnail = self.ele.parentNode.querySelector('.yt-thumbnail') || document.createElement('img')
+            self.thumbnail.classList.add('yt-thumbnail')
+            self.thumbnail.src = 'https://img.youtube.com/vi/' + self.metadata.video_id + '/default.jpg'
+            if (self.ele.nextSibling) self.ele.parentNode.insertBefore(self.thumbnail, self.ele.nextSibling)
+            else self.ele.parentNode.appendChild(self.thumbnail)
         }
-        */
+        else if (func_name == 'FBVideoUnit'){
+            // no thumbnail
+        }
     })
-    this.widget.on('show', function () {
+    this.on('show', function () {
         if (!self.player) return
         //remove thumbnail from DOM and restore original self.ele
-        self.ele.remove() 
-        self.ele = self._ele
-        delete self._ele
+        if (self.thumbnail) {
+            self.thumbnail.parentNode.removeChild(self.thumbnail)
+            delete self.thumbnail
+        }
         self.ele.style.display = ''
         if (is_playing_when_hide) {
             is_playing_when_hide = false//reset this value
@@ -6594,12 +7323,12 @@ function YoutubeUnit(widget, box) {
         //widget.destroy() or unit.destroy() been called
         if (!self.player) return
         self.player.destroy()
+        self.player = null
     })
     //使用者直接從影片操作時，更新dashboard的按鈕狀態
     this.on('state', function (state) {
-
-        //分辨此改變是使用者直接操作影片，或是透過dashboard的toolbar做的
-        if (self._changed_from_toolbar) return
+        //分辨此改變是使用者直接操作影片，或是透過dashboard的toolbar做的，避免無限循環
+        if (self._changed_by_js) return
 
         // 因為youtubeplayer會自己先play又pause以克服api不能直接seek的bug,
         // 所以self.player不會馬上就有值
@@ -6611,8 +7340,8 @@ function YoutubeUnit(widget, box) {
         //console.log('you tube resize')
     })
 }
-YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
-    constructor: YoutubeUnit
+VideoUnit.prototype = _.create(GenericUnit.prototype, {
+    constructor: VideoUnit
     , serialize: function (for_clone) {
         var data = GenericUnit.prototype.serialize.call(this)
         if (this.player) data.video_time = this.player.getCurrentTime()
@@ -6630,9 +7359,12 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
                     self.player.seekTo((self.metadata.video_time || 0))
                     //YoutubeUnit的特性是要等影片載入之後才能resize跟scale
                     if (self.metadata.resize) {
+
+                        /*  2019-03-14T12:53:06+00:00 ;#4
                         var resize = _.clone(self.metadata.resize)
                         WidgetGallery.singleton.denormalize(resize)
                         self.resize(resize.w, resize.h)
+                        */
                     }
                     if (self.metadata.scale) {
                         self.resizable_options.scale_target.dataset.scale = self.metadata.scale
@@ -6648,35 +7380,35 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
 
         return this
     }
-    , state_save:function(){
+    , state_save: function () {
         if (!this.player) return null
         return {
-            p: (this.get_state()==1) //playing
-            ,t: this.player.getCurrentTime()
-            ,v: this.metadata.video_id
+            p: (this.get_state() == 1) //playing
+            , t: this.player.getCurrentTime()
+            , v: this.metadata.video_id
         }
     }
-    ,state_restore:function(data){
+    , state_restore: function (data) {
         if (!this.player) return
         var self = this
-        var seek_ts_and_state = function(){
+        var seek_ts_and_state = function () {
             self.player.seekTo(data.t)
             if (data.p) self.play()
-            else self.pause()    
+            else self.pause()
         }
-        if ( this.metadata.video_id != data.v){
-            this.load_video(data.v).done(function(){
+        if (this.metadata.video_id != data.v) {
+            this.load_video(data.v).done(function () {
                 seek_ts_and_state()
             })
         }
-        else{
+        else {
             seek_ts_and_state()
         }
     }
     , get_actions: function () {
         // player產生的速度需要好幾秒，剛產生的youtube unit會在player生成之前呼叫get_actions()
         // 所以改用 metadata.video_id 判斷
-        if (!this.metadata.video_id) return [];        
+        if (!this.metadata.video_id) return [];
         var self = this
         var state = this.get_state() || 2 //default to be stop
         return [
@@ -6684,7 +7416,7 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
                 id: 'video',
                 type: 'button',
                 text: state == 1 ? 'Pause' : 'Play',
-                icon: 'fa '+(state == 1 ? 'fa-pause' : 'fa-play'),
+                icon: 'fa ' + (state == 1 ? 'fa-pause' : 'fa-play'),
                 onClick: function (widget, toolbar) {
                     var do_play = self.get_state() == 1 ? false : true
                     do_play ? self.play() : self.pause()
@@ -6701,30 +7433,40 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
                     toolbar.refresh('video')
                     // 讓state-change listener知道state是因為toolbar做的改變
                     // 不需要重新render dashboard
-                    self._changed_from_toolbar = true
-                    _.delay(function(){
-                        delete self._changed_from_toolbar
-                    },1000)
+                    self._changed_by_js = true
+                    _.delay(function () {
+                        delete self._changed_by_js
+                    }, 1000)
                 }
             }
         ]
     }
-    , get_info:function(){
-        return {
-            type:'Video',
-            content:'<a href="https://www.youtube.com/watch?v='+this.metadata.video_id+'" target="blank"><img style="width:auto;max-height:50px" src="https://img.youtube.com/vi/'+this.metadata.video_id+'/default.jpg"></a>'
-        }
+    , get_info: function () {
+        //override me
     }
     , on_sync: function (data) {
         if (GenericUnit.prototype.on_sync.call(this, data)) return
+        console.log('on video sync', data)
         switch (data.topic) {
             case 'play':
-                //1.5 is the estimate of message overhead
-                this.player.seekTo(data.seek + 1.5)
+                //0 is the estimate of message overhead
+                this.player.seekTo(data.seek + 0)
+                // 讓state-change listener知道state是因為js做的改變,避免無限循環
+                this._changed_by_js = true
+                var self = this
+                _.delay(function () {
+                    delete self._changed_by_js
+                }, 1000)
                 this.play()
                 break
             case 'pause':
                 this.player.seekTo(data.seek)
+                // 讓state-change listener知道state是因為js做的改變,避免無限循環
+                this._changed_by_js = true
+                var self = this
+                _.delay(function () {
+                    delete self._changed_by_js
+                }, 1000)
                 this.pause()
                 break
             case 'seek':
@@ -6735,11 +7477,19 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
     , load_video: function (video_id) {
         //before player creation handling
 
-        var current_vid = this.ele.querySelector('.YoutubeUnit-player').getAttribute('vid')
-        if (current_vid == video_id) return //do nothing
-
+        var player_ele = this.ele.querySelector('.VideoUnit-player')
+        if (player_ele){
+            if (player_ele.getAttribute('vid') == video_id) return //do nothing
+        }
+        else{
+            var ret = this.player_api.pre_render({ class: 'VideoUnit-player', video_id: video_id })
+            this.ele.innerHTML = ret.content
+            this.metadata.player_id = ret.player_id //DOM element's id   
+            player_ele = this.ele.querySelector('.VideoUnit-player') 
+        }
+    
         this.metadata.video_id = video_id
-        this.ele.querySelector('.YoutubeUnit-player').setAttribute('vid', video_id)
+        player_ele.setAttribute('vid', video_id)
 
         var self = this
         var on_state_changed = function (video_state) {
@@ -6756,40 +7506,52 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
             , on_state_changed: on_state_changed
 
         }
-        if (self.player) {
+
+        if (self.player && (self.player_api instanceof YoutubePlayer)) {
+            //paste a new video as the source (youtube or facebook)  of existing video
             self.player.pauseVideo()
             self.player.loadVideoById(video_id);
-            YoutubePlayer.post_loaded(self.player, options, function () {
+            self.player_api.post_loaded(self.player, options, function () {
                 promise.resolve(true)
+                self.restore_scroll_xy_nosync()
                 self.fire('content')
             })
             return promise
         }
         else {
-            var youtube_player = YoutubePlayer.singleton || new YoutubePlayer()
-            youtube_player.start(options, function (success, player) {
+            self.player_api.start(options, function (success, player) {
                 //此youtube player有一特性是當他被放到slot時，此函式會被呼叫一次，導致
                 //resize成錯誤的size。因此要跳過此情況。
                 if (self.widget.ele.classList.contains('inslot')) return
+                
                 if (success) {
                     self.player = player
                     var player_ele = self.ele.querySelector('#' + self.metadata.player_id)
                     var player_rect = player_ele.getBoundingClientRect()
                     var ele_rect = self.ele.getBoundingClientRect()
+
+                    /* 2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
                     //keep ele's width, adjust its heigh to be same aspect ratio as the video
                     var h = ele_rect.width * (player_rect.height / player_rect.width)
                     self.ele.style.height = h + 'px'
                     self.fire('resize', { width: ele_rect.width, height: h })
-                    player_ele.style.width = '100%'
-                    player_ele.style.height = '100%'
+                    */
 
+                    //讓widget被選定時，不要出現捲動條
+                    player_ele.style.width = '97%'
+                    player_ele.style.height = '97%' 
+
+                    /* 2019-03-14T12:40:25+00:00 ;#4; size一律改為與widget相同，比較方便操作
                     self.resizable({
                         resize_target: self.ele,
                         scale_target: player_ele,
                         //YoutubeUnit 的特性是scale時保持一致，不必管widget.rel_scale
                         static_scale: true
                     })
+                    */
                     promise.resolve(self.player)
+                    //再調整scrolltop一次，因為影片載入之後size會改變
+                    self.restore_scroll_xy_nosync()
                     self.fire('content')
                 }
                 else {
@@ -6815,123 +7577,42 @@ YoutubeUnit.prototype = _.create(GenericUnit.prototype, {
         if (this.player) return this.player.getPlayerState()
     }
 })
-/* Youtube Video (require youtube.js)
-function YoutubeWidget(ele) {
-    ele.classList.add('resizable', 'rotatable', 'zoomable', 'draggable')
-    //ele.setAttribute('preserveAspectRatio',1)
-    Widget.call(this, ele)
 
-    //this.ele.classList.add('center-items')
-    this.unit = new YoutubeUnit(this, this.ele)
-
-    var self = this
-    this.unit.on('resize', function (data) {
-        //self.resize(data.width, data.height)
-    })
-    _.delay(function () {
-        self.unit.load_video('d6fhPgoukZw').done(function () {
-            self.unit.play()
-        })
-    }, 500)
-
+function YoutubeUnit(widget, box) {
+    var func_name = arguments.callee.name //YoutubeUnit
+    VideoUnit.call(this, widget, box, func_name)
 }
-YoutubeWidget.prototype = _.create(Widget.prototype, {
-    constructor: YoutubeWidget
-    , clone: function (parent_ele) {
-        //這個一定要有，如果直接呼叫widget.clone會造成clone出來的物件是Widget，而不是BlockWidget
-        return Widget.prototype.clone.call(this, parent_ele, this.constructor.factory)
-    }
-    , serialize: function () {
-        var data = Widget.prototype.serialize.call(this)
-        data.unit = this.unit.serialize()
-        return data
-    }
-    , deserialize: function (data) {
-        Widget.prototype.deserialize.call(this, data)
-        this.unit.deserialize(data.unit)
-        return this
-    }
-    , on_paste_string: function (text) {
-        // ex: https://www.youtube.com/watch?v=2ckqOukGKK8&t=1501s
-        var self = this
-        window.slide_resource_factory.from_string(text).done(function (slide_resource) {
-            if (slide_resource.type == 'VIDEO' && slide_resource.kind == 'YT') {
-                self.unit.load_video(slide_resource.vid)
-            }
-            else {
-                window.message('not Youtube URL')
-            }
-        })
-    }
-    , on_dnd_string: function (text) {
-        this.on_paste_string(text)
-    }
-
+YoutubeUnit.prototype = _.create(VideoUnit.prototype, {
+    constructor: YoutubeUnit
+    , get_info: function () {
+        return {
+            type: 'Video',
+            content: '<a href="https://www.youtube.com/watch?v=' + this.metadata.video_id + '" target="blank"><img style="width:auto;max-height:50px" src="https://img.youtube.com/vi/' + this.metadata.video_id + '/default.jpg"></a>'
+        }    
+    }    
 })
-YoutubeWidget.create_sample = function (box) {
-    //Gallery呼叫此程式產生樣本物件展示給使用者看
-    var div = document.createElement('div')
-    div.setAttribute('kind', 'YoutubeWidget')
-    div.className = 'widget'
-    if (box) box.appendChild(div)
-    return YoutubeWidget.factory(div)
+function FBVideoUnit(widget, box) {
+    var func_name = arguments.callee.name //FBVideoUnit
+    VideoUnit.call(this, widget, box, func_name)
 }
-YoutubeWidget.metadata = {
-    category: 'general',
-    caption: 'Youtube', //display name for i18n
-    description: 'a panel to block something',
-    icon: 'fa fa-card',
-    //information to render items on action-menu for user to take
-    actions: [
-        {
-            id: 'play',
-            type: 'button',
-            text: 'Play',
-            icon: 'fa fa-trash',
-            tooltip: 'hide and show',
-            onClick: function (widget, toolbar) {
-                widget.unit.play()
-            }
-        }
-    ],
-    dashboard: [
-        {
-            id: 'Video',
-            text: 'Video',
-            items: [
-                {
-                    type: 'range',
-                    min: 0.1,
-                    max: 1,
-                    step: 0.05,
-                    label: 'Opacity',
-                    get: function (widget) {
-                        return widget.ele.style.opacity || 1
-                    },
-                    set: function (widget, input_ele) {
-                        var value = input_ele.value
-                        widget.ele.style.opacity = value
-                    }
-                }
-            ]
-        }
-    ]
-}
-YoutubeWidget.factory = function (ele) {
-    return new YoutubeWidget(ele)
-}
-WidgetGallery.register(YoutubeWidget);
-*/
+FBVideoUnit.prototype = _.create(VideoUnit.prototype, {
+    constructor: FBVideoUnit
+    , get_info: function () {
+        return {
+            type: 'Video',
+            content: '<a href="https://www.facebook.com/facebook/videos/' + this.metadata.video_id + '" target="blank"><img style="width:auto;max-height:50px" src="https://graph.facebook.com/' + this.metadata.video_id + '/picture"></a>'
+        }    
+    }    
+})
+
 
 /* WebcamWidget (requires youtube.js)*/
 function WebcamUnit(widget, box) {
     var func_name = arguments.callee.name //WebcamUnit
     GenericUnit.call(this, widget, box, func_name)
-    //box is a HTMLElement within widget.ele 
+    //box is a HTMLElement within widget.ele
     //box is the container of this unit
     //a widget might have many YoutubeUnit, so container might not be widget.ele
-
-    //;this.ele = box.querySelector('.webcam-unit')
     if (this.ele) {
         //this is celled by clone() call
     }
@@ -6971,11 +7652,11 @@ function WebcamUnit(widget, box) {
     })
 
     this.resizable({
-        resize_target: this.ele,
+        resize_target: null,//this.ele,
         scale_target: this.player.ele
     })
-    //make this unit resizable    
-    this.draggable()
+    //make this unit resizable
+    //this.draggable()
 }
 WebcamUnit.prototype = _.create(GenericUnit.prototype, {
     constructor: WebcamUnit
@@ -6986,6 +7667,7 @@ WebcamUnit.prototype = _.create(GenericUnit.prototype, {
     , get_actions: function () {
         var self = this
         var is_playing = this.get_state() == 1
+
         return [
             {
                 id: 'webcam',
@@ -6994,6 +7676,11 @@ WebcamUnit.prototype = _.create(GenericUnit.prototype, {
                 icon: 'fa fa-' + (is_playing ? 'pause' : 'play'),
                 tooltip: 'start the webcam',
                 onClick: function (widget, toolbar) {
+                    //如果有安全限制，瀏覽器不提供此物件
+                    if (!navigator.mediaDevices) {
+                        w2alert('No webcam available')
+                        return
+                    }
                     var do_play = self.get_state() == 1 ? false : true
                     do_play ? self.play() : self.pause()
                     toolbar.get('webcam').icon = 'fa fa-' + (do_play ? 'pause' : 'play')
@@ -7008,6 +7695,11 @@ WebcamUnit.prototype = _.create(GenericUnit.prototype, {
                 icon: 'fa fa-camera',
                 tooltip: 'take a snapshot',
                 onClick: function (widget, toolbar) {
+                    //如果有安全限制，瀏覽器不提供此物件
+                    if (!self.player.available) {
+                        w2alert('No webcam available')
+                        return
+                    }
                     self.player.take_snapshot().done(function (data) {
                         var widget = WidgetGallery.all['FlipCardWidget'].create_sample(WidgetGallery.singleton.widget_layer)
                         WidgetGallery.singleton.presentation.current_slide.widget_manager.add_widget(widget, true)
@@ -7029,6 +7721,11 @@ WebcamUnit.prototype = _.create(GenericUnit.prototype, {
                 icon: 'fa fa-file',
                 tooltip: 'download a snapshot',
                 onClick: function (widget, toolbar) {
+                    //如果有安全限制，瀏覽器不提供此物件
+                    if (!self.player.available) {
+                        w2alert('No webcam available')
+                        return
+                    }
                     self.player.take_snapshot().done(function (data) {
                         var link = document.createElement('a')
                         link.href = URL.createObjectURL(data.file)
@@ -7041,13 +7738,15 @@ WebcamUnit.prototype = _.create(GenericUnit.prototype, {
     }
     , play: function () {
         var self = this
-        return this.player.playVideo().done(function () {
-            var h = (1 / self.player.video_settings.aspectRatio) * (self.ele.clientWidth)
-            self.ele.style.height = h + 'px'
+        var promise = this.player.playVideo()
+        promise.done(function () {
+            //var h = (1 / self.player.video_settings.aspectRatio) * (self.ele.clientWidth)
+            //self.ele.style.height = h + 'px'
             self.fire('content')
         }).fail(function (err_message) {
             window.message(err_message)
         })
+        return promise
     }
     , pause: function () {
         this.player.pauseVideo()
@@ -7057,7 +7756,7 @@ WebcamUnit.prototype = _.create(GenericUnit.prototype, {
     }
 })
 
-var WebcamWidget = function(ele) {
+var WebcamWidget = function (ele) {
     ele.classList.add('resizable', 'rotatable', 'zoomable', 'draggable')
     //ele.setAttribute('preserveAspectRatio',1)
     Widget.call(this, ele)
@@ -7079,7 +7778,13 @@ WebcamWidget.prototype = _.create(Widget.prototype, {
     }
     , deserialize: function (data, is_clone) {
         Widget.prototype.deserialize.call(this, data, is_clone)
-        this.unit.deserialize(data.unit, is_clone)
+        var self = this
+        var call_with_context = function () {
+            self.unit.deserialize(data.unit, is_clone)
+        }
+        if (WidgetGallery.singleton.context_ready) call_with_context()
+        else WidgetGallery.singleton.on('context-ready', call_with_context)
+
         return this
     }
     , on_dnd_string: function (text) {
@@ -7108,37 +7813,23 @@ WebcamWidget.prototype = _.create(Widget.prototype, {
     , on_paste_string: function (text, evt) {
         var self = this
         window.slide_resource_factory.from_string(text).done(function (slide_resource) {
-            if (slide_resource.type == 'FILE'){
+            if (slide_resource.type == 'FILE') {
                 self.on_paste({
-                    is_file:true,
-                    file:slide_resource.file,
-                    mimetype:slide_resource.kind
+                    is_file: true,
+                    file: slide_resource.file,
+                    mimetype: slide_resource.kind
                 })
             }
-            else if (slide_resource.type == 'URL'){
+            else if (slide_resource.type == 'URL') {
                 //only image url make sense
                 self.set_background(slide_resource.url)
             }
             else {
+                this.textbox.metadata.text = text
                 this.textbox.set_text(text)
             }
         })
     }
-    /* 2019-03-13T04:14:21+00:00 obsoleted implmentation
-    , on_paste_string: function (text) {
-        var self = this
-        window.slide_resource_factory.from_string(text).done(function (slide_resource) {
-            // 2019-03-13T03:10:25+00:00 pending: 需接受 type == FILE
-            if (slide_resource.type == 'URL' && slide_resource.kind.indexOf('image') == 0) {
-                self.set_background(slide_resource.url)
-            }
-            else {
-                window.message('should be URL')
-            }
-        })
-    }
-    */
-
 })
 WebcamWidget.create_sample = function (box) {
     //Gallery呼叫此程式產生樣本物件展示給使用者看
@@ -7213,7 +7904,7 @@ function IframeUnit(widget, box) {
     var func_name = arguments.callee.name //YoutubeUnit
     GenericUnit.call(this, widget, box, func_name)
 
-    //box is a HTMLElement within widget.ele 
+    //box is a HTMLElement within widget.ele
     //box is the container of this unit
     //a widget might have many IframeUnit, so container might not be widget.ele
     if (this.ele) {
@@ -7234,12 +7925,13 @@ function IframeUnit(widget, box) {
         this.iframe.style.transformOrigin = 'top left' //zoom時保持在左上角
         this.ele.appendChild(this.iframe)
     }
+    //2019-03-14T13:15:21+00:00 #4
     this.resizable({
-        resize_target: this.ele,
+        resize_target: null,//this.ele,
         scale_target: this.iframe,
         scale_keep_size: true
     })
-    this.draggable()
+    //this.draggable()
 
     var self = this
     this.widget.on('collapsed', function (data) {
@@ -7251,6 +7943,10 @@ function IframeUnit(widget, box) {
     })
     this.widget.on('show', function () {
         self.iframe.style.display = ''
+    })
+    // 2019-03-14T13:07:15+00:00 改為與widget同步resize
+    this.widget.on('resize', function (data) {
+        console.log(data)
     })
 
 }
@@ -7268,16 +7964,16 @@ IframeUnit.prototype = _.create(GenericUnit.prototype, {
 
         return this
     }
-    , get_info:function(){
+    , get_info: function () {
         return {
-            type:'URL',
-            content:'<a href="'+this.metadata.src+'" target="blank">'+this.metadata.src.replace(/^.+\:\/\//,'')+'</a>'
+            type: 'URL',
+            content: '<a href="' + this.metadata.src + '" target="blank">' + this.metadata.src.replace(/^.+\:\/\//, '') + '</a>'
         }
-    }    
-    , state_save:function(){
-        return {url:this.metadata.src || ''}
     }
-    , state_restore:function(data){
+    , state_save: function () {
+        return { url: this.metadata.src || '' }
+    }
+    , state_restore: function (data) {
         this.load_url(data.url || 'about:blank')
     }
     , on_paste_string: function (text) {
@@ -7339,7 +8035,7 @@ IFrameWidget.prototype = _.create(Widget.prototype, {
         data.unit = this.unit.serialize(for_clone)
         return data
     }
-    , deserialize: function (data) { 
+    , deserialize: function (data) {
         Widget.prototype.deserialize.call(this, data)
         this.unit.deserialize(data.unit)
 
@@ -7398,7 +8094,7 @@ WidgetGallery.register(IFrameWidget);
  */
 
 
-var BookImageBox = function(widget) {
+var BookImageBox = function (widget) {
     // Helper of BookWidget
     this.widget = widget
     //在active情況下才會翻頁的功能
@@ -7503,7 +8199,7 @@ BookImageBox.prototype = {
         var front_ele = document.createElement('div')
         front_ele.classList.add('front')
         page_ele.appendChild(front_ele)
-        //front_ele.innerHTML = 'front of page #'+page_no  
+        //front_ele.innerHTML = 'front of page #'+page_no
 
         this.pages.push({
             no: page_no,
@@ -7619,7 +8315,7 @@ BookImageBox.prototype = {
 
         var img_ele = this.images.pop()
         //this.ele.removeChild(img_ele)
-        img_ele.remove()
+        img_ele.parentNode.removeChild(img_ele)
         this.images_src.pop()
 
         if (this.images.length == 0) {
@@ -7664,7 +8360,7 @@ BookImageBox.prototype = {
                 page.ele.classList.remove('flipped', 'left-open', 'right-open', 'down-open', 'up-open')
                 self.make_draggable(page.front, true)
                 self.make_draggable(page.back, false)
-            }, 150)//停一下的翻頁視覺效果比較好 
+            }, 150)//停一下的翻頁視覺效果比較好
         }
         this.widget.fire('flip', yes)
     }
@@ -7687,7 +8383,7 @@ BookImageBox.prototype = {
                 page.ele.classList.remove('flipped', 'left-open', 'right-open', 'down-open', 'up-open')
                 self.make_draggable(page.front, true)
                 self.make_draggable(page.back, false)
-            }, 150)//停一下的翻頁視覺效果比較好            
+            }, 150)//停一下的翻頁視覺效果比較好
         }
         this.widget.fire('flip', yes)
     }
@@ -7710,7 +8406,7 @@ BookImageBox.prototype = {
                 page.ele.classList.remove('flipped', 'left-open', 'right-open', 'down-open', 'up-open')
                 self.make_draggable(page.front, true)
                 self.make_draggable(page.back, false)
-            }, 150)//停一下的翻頁視覺效果比較好          
+            }, 150)//停一下的翻頁視覺效果比較好
         }
         this.widget.fire('flip', yes)
     }
@@ -7733,12 +8429,12 @@ BookImageBox.prototype = {
                 page.ele.classList.remove('flipped', 'left-open', 'right-open', 'down-open', 'up-open')
                 self.make_draggable(page.front, true)
                 self.make_draggable(page.back, false)
-            }, 150)//停一下的翻頁視覺效果比較好           
+            }, 150)//停一下的翻頁視覺效果比較好
         }
         this.widget.fire('flip', yes)
     }
 }
-var BookWidget = function(ele) {
+var BookWidget = function (ele) {
     Widget.call(this, ele)
     var self = this
     this.image_box = new BookImageBox(this)
@@ -7813,7 +8509,7 @@ BookWidget.create_sample = function (box) {
 
 /*
  * 有圖跟文
- 
+
 var TextBubbleWidget = function(ele) {
     Widget.call(this, ele)
     this.ele.classList.add('image_background')

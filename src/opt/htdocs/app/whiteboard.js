@@ -151,7 +151,7 @@ ResourceFactory.prototype = {
         */
         var self = this
         //ask helper functions who can handle this text
-        var filters = [this.imgdata, this.yt, this.op, this.url]
+        var filters = [this.imgdata, this.yt, this.fb, this.op, this.url]
         var promise = new $.Deferred()
         var check_flow = function (index) {
             if (index == filters.length) {
@@ -227,8 +227,10 @@ ResourceFactory.prototype = {
                     else {
                         //Ask server
                         var cmd = ObjshSDK.metadata.runner_name + '.root.sidebyside.get_content_type'
-                        var command = new Command(cmd, [url])
+                        var cookie = ''
+                        var command = new Command(cmd, [url,cookie])
                         window.sdk.send_command(command).done(function (response) {
+                            console.log('response=',response)
                             if (response.retcode) {
                                 url_promise.resolve(response.stderr)
                             }
@@ -253,6 +255,7 @@ ResourceFactory.prototype = {
             get_conent_type(url).done(function (content_type) {
                 var slide_resource = {}
                 slide_resource.type = 'URL'
+                console.log('content-type',content_type)
                 if (content_type) slide_resource.kind = content_type
                 slide_resource.url = url
                 promise2.resolve(slide_resource)
@@ -268,7 +271,7 @@ ResourceFactory.prototype = {
         //https://docs.google.com/presentation/d/e/2PACX-1vRDf1GKNjh6J6xcZF_Cqb3SiHdh2eL0wGbYkhKxEp97cLspWmPlnp5qKQhOYKa_t8P27I3qjiie0Wxh/embed
         // https://docs.google.com/presentation/d/e/2PACX-1vRDf1GKNjh6J6xcZF_Cqb3SiHdh2eL0wGbYkhKxEp97cLspWmPlnp5qKQhOYKa_t8P27I3qjiie0Wxh/pub?start=false&loop=false&delayms=3000
 
-        //<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vRbneuUjEcUVfYagbUFrw4Q-6Xkmgkan3hulIYqhU6oJ_dOKiVaFy2KEiCg7r3tD7_rkT7-0Trcp1z_/embed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>       
+        //<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vRbneuUjEcUVfYagbUFrw4Q-6Xkmgkan3hulIYqhU6oJ_dOKiVaFy2KEiCg7r3tD7_rkT7-0Trcp1z_/embed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
         //             https://docs.google.com/presentation/d/e/2PACX-1vRbneuUjEcUVfYagbUFrw4Q-6Xkmgkan3hulIYqhU6oJ_dOKiVaFy2KEiCg7r3tD7_rkT7-0Trcp1z_/pub?start=false&loop=false&delayms=3000
         var gs_pat = /(src=")?(https:\/\/docs\.google\.com\/presentation\/.+)\/(embed|pub).*?"?/
         var m = text.match(gs_pat)
@@ -289,7 +292,7 @@ ResourceFactory.prototype = {
             1. https://www.youtube.com/watch?v=MKWWhf8RAV8
             2. https://youtu.be/U0cJLHF3g8g?t=24s
             3. <iframe width="560" height="315" src="https://www.youtube.com/embed/DJsGqx0LykY?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-            4. <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/DJsGqx0LykY?start=600" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>        
+            4. <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/DJsGqx0LykY?start=600" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         */
 
         var slide_resource = {}
@@ -327,6 +330,35 @@ ResourceFactory.prototype = {
         })
         return slide_resource
     }
+    , fb: function (text) {
+        /*
+            the returned data will be accessed by slide.resource
+            1. https://www.facebook.com/FunnyVideosdailyupload/videos/835177126838640/
+            2. https://www.facebook.com/suntory.wellness/videos/788890374803551/?t=0
+        */
+
+        var slide_resource = {}
+
+        if (!(/^http/.test(text))) return slide_resource
+
+        //length limit for cheep security
+        var pat_fbt = /^https:\/\/www\.facebook\.com\/.+\/videos\/(\d{11,})\/\?t=(\d+)/
+        var pat_fb = /^https:\/\/www\.facebook\.com\/.+\/videos\/(\d{11,})\/?/
+        var pats = [pat_fbt,pat_fb]
+
+        _.some(pats, function (pat) {
+            var m = text.match(pat)
+            if (!m) return
+            slide_resource.type = 'VIDEO'
+            var v_id = m[1]
+            slide_resource.kind = 'FB' //facebook
+            slide_resource.vid = v_id
+            var player_time = m[2] || 0
+            slide_resource.extra = [0, player_time , 0] //[state, player_time (mutable part), current_time]
+            return true
+        })
+        return slide_resource
+    }
 }
 window.slide_resource_factory = new ResourceFactory()
 
@@ -357,10 +389,10 @@ DisplayArea.prototype = {
                 promise.resolve()
             }
             else {
-                /* 
+                /*
                 注意：目前的實作是放到background去，所以不會有<img> ，這段程式不會被執行
                 */
-                // do content_fitting(adjust height and width) after all images have loaded 
+                // do content_fitting(adjust height and width) after all images have loaded
                 var _counter = 0
                 var plus_counter = function () {
                     _counter += 1
@@ -415,8 +447,9 @@ DisplayArea.prototype = {
             return $.when()
         }
 
+        //先reset一番
         $('#toolbar')[0].style.display = ''
-
+        w2ui['toolbar'].hide('background-play')
 
         var content = '<img src="/404.png" style="width:250px"/>';
         //var html
@@ -427,7 +460,7 @@ DisplayArea.prototype = {
         var preload_promise;
         //will be resolved after html of resource has rendered into DOM
         var content_completion_promise
-        //should be resolevd when this routine has completed rendering 
+        //should be resolevd when this routine has completed rendering
         var final_completion_promise;
         //update toolbar items' disabled property
         var disabled_toolbar_items = {
@@ -442,10 +475,23 @@ DisplayArea.prototype = {
                 self.presentation_screen.overlay.draw.size(self.presentation_screen.overlay.width, self.presentation_screen.overlay.height)
                 if (resource.bg) {
                     disabled_toolbar_items['zoomout'] = false
-                    var url = this.slide.url
-                    content = '<div class="slide-bg studio-fit-box" style="background-image:url(' + url + ')"></div>'
+                    var url = effective_url = this.slide.url
+
+                    //enforce background image to reload by adding timestamp to url if necessary
+                    var current_slide_bg = self.presentation_screen.screen_frame_ele.querySelector('.slide-bg')
+                    if (current_slide_bg){
+                        var bg_url = current_slide_bg.style.backgroundImage
+                        var m = bg_url ? bg_url.match(/^url\("?(.+?)"?\)/) : null
+                        if (m && m[1].replace(/[\?&]____=\d+$/,'') == url){
+                            var ts = Math.round(new Date().getTime())
+                            if (url.indexOf('?') >= 0) effective_url += '&____=' + ts
+                            else effective_url += '?____=' + ts
+                        }
+                    }
+
+                    content = '<div class="slide-bg studio-fit-box" style="background-image:url(' + effective_url + ')"></div>'
                     //content = '<div class="slide-bg studio-full-box" style="background-image:url(' + url + ')"></div>'
-                    preload_promise = this._preload('IMG', url)
+                    preload_promise = this._preload('IMG', effective_url)
                     var image_size;
                     preload_promise.done(function (size) {
                         image_size = size
@@ -483,6 +529,9 @@ DisplayArea.prototype = {
                 var screen_height = self.presentation_screen.content_rect.height
                 var screen_width = self.presentation_screen.content_rect.width
                 var text_height = Math.floor((self.presentation_screen.content_rect.height - window.scrollbarWidth) / lines_per_screen)
+                // 在widget_layer上開洞讓text過長或過寬時的scrollbar可以操作
+                self.presentation_screen.widget_layer.style.height = parseInt(self.presentation_screen.widget_layer.style.height) - window.scrollbarWidth + 'px'
+                self.presentation_screen.widget_layer.style.width = parseInt(self.presentation_screen.widget_layer.style.width) - window.scrollbarWidth + 'px'
 
                 var text_div_height = text_height * lines_per_screen
                 var html = ['<div class="text-viewer" text_height="' + text_height + '" style="margin:0;padding:0;height:' + text_div_height + 'px;">']
@@ -491,7 +540,7 @@ DisplayArea.prototype = {
                     html.push('<li style="height:' + text_height + 'px;line-height:' + text_height + 'px"></li>')
                 }
                 html.push('</ol></td><td style="vertical-align:top;padding-left:15px;">')
-                html.push('<div class="text-resource-content" style="font-size:' + (Math.round(text_height * (ckj_style ? 0.7 : 0.8) * 10) / 10) + 'px;line-height:' + text_height + 'px">')
+                html.push('<div class="text-resource-content" style="font-size:' + (Math.round(text_height * (ckj_style ? 0.6 : 0.7) * 10) / 10) + 'px;line-height:' + text_height + 'px">')
                 html.push('</div></td></tr></table>')
                 html.push('</div>')//text-viewer
                 content = '<div class="studio-full-box text-resource">' + html.join('') + '</div>'
@@ -610,7 +659,9 @@ DisplayArea.prototype = {
                     broadcast_scroll.cancel()
                     broadcast_scroll(normalized_scroll_left, normalized_scroll_top)
                 }
-                document.getElementById('overlay_surface').addEventListener('mousewheel', mousewheel_handler)
+                // 2019-03-17T04:38:24+00:00 因overlay_surface已經設定為pointer-events:none,故改為widget-layer接收mousewheel事件
+                //document.getElementById('overlay_surface').addEventListener('mousewheel', mousewheel_handler)
+                document.getElementById('widget-layer').addEventListener('mousewheel', mousewheel_handler)
 
                 var scroll_handler = function (evt) {
                     //regard remote scroll or mousewheel
@@ -644,8 +695,9 @@ DisplayArea.prototype = {
                     broadcast_scroll(normalize_scroll_left,normalize_scroll_top)
                     */
                 }
-                //self.presentation_screen.presentation.on('SWIPE',swipe_handler)
+                self.presentation_screen.presentation.on('SWIPE',swipe_handler)
 
+                self.presentation_screen.page_ele_tap_handler_disable = true
                 var click_handler = function (evt) {
                     if (evt.offsetX < line_number_width) {
                         //因為overlay_surface已經不跟著下捲動，所以要把scrollTop加上去
@@ -671,7 +723,7 @@ DisplayArea.prototype = {
                         self.presentation_screen.presentation.send_to_bus('refresh', ['text-hilight', t_id, s_idx, line_no, hilight])
                     }
                 }
-                document.querySelector('#overlay_surface').addEventListener('click', click_handler)
+                document.getElementById('widget-layer').addEventListener('click', click_handler, true)
                 var clear_hilights_handler = function () {
                     text_resource_div.querySelectorAll('.line-number ol li.hilight').forEach(function (li) {
                         $(li).removeClass('hilight')
@@ -683,7 +735,7 @@ DisplayArea.prototype = {
                 self.presentation_screen.presentation.on('CLEAR-HILIGHTS', clear_hilights_handler)
 
                 var update_hilights_handler = function (data) {
-                    //hilight been updated by remote 
+                    //hilight been updated by remote
                     if (data.line_no == -1) {
                         //remove all hilights
                         text_resource_div.querySelectorAll('.line-number ol li.hilight').forEach(function (li) {
@@ -813,8 +865,15 @@ DisplayArea.prototype = {
                     self.presentation_screen.presentation.off('GO-LINE', go_line_handler)
                     self.presentation_screen.presentation.off('CLEAR-HILIGHTS', clear_hilights_handler)
                     self.presentation_screen.presentation.off('UPDATE-HILIGHTS', update_hilights_handler)
-                    document.getElementById('overlay_surface').removeEventListener('mousewheel', mousewheel_handler)
+                    document.getElementById('widget-layer').removeEventListener('mousewheel', mousewheel_handler)
                     document.getElementById('overlay_surface').removeEventListener('click', click_handler)
+
+                    //關閉在widget_layer上開的洞
+                    self.presentation_screen.widget_layer.style.height = parseInt(self.presentation_screen.widget_layer.style.height) + window.scrollbarWidth + 'px'
+                    self.presentation_screen.widget_layer.style.width = parseInt(self.presentation_screen.widget_layer.style.width) + window.scrollbarWidth + 'px'
+
+                    delete self.presentation_screen.page_ele_tap_handler_disable
+
                     w2ui['toolbar'].disable('textmenu')
                 }
                 self.presentation_screen.presentation.on('PAGE-WILL-CHANGE', remove_handler)
@@ -822,7 +881,7 @@ DisplayArea.prototype = {
                 self.presentation_screen.presentation.on('PAGE-WILL-REFRESH', remove_handler)
                 break
             case 'URL':
-                //console.log('resource=',resource)
+
                 content_completion_promise = new $.Deferred()
                 final_completion_promise = new $.Deferred()
                 self.presentation_screen.overlay.image_mode = true
@@ -858,6 +917,9 @@ DisplayArea.prototype = {
                 break
 
             case 'VIDEO':
+
+                w2ui['toolbar'].show('background-play')
+
                 self.presentation_screen.overlay.image_mode = true
                 self.presentation_screen.overlay.draw.size(self.presentation_screen.overlay.width, self.presentation_screen.overlay.height)
 
@@ -872,14 +934,19 @@ DisplayArea.prototype = {
                     //do not listen on state change
                 } else {
                     on_state_changed = function (video_state, video_current_time, player_now) {
-                        if (video_state >= 0 && video_state <= 2) {
-                            var t_id = self.presentation_screen.presentation.current_thread.id
-                            var s_idx = self.presentation_screen.presentation.current_slide.idx
-                            var args = [t_id, s_idx, [video_state, video_current_time, player_now]]
-                            self.presentation_screen.presentation.send_to_bus('slide-sync', args)
+                       var item = w2ui['toolbar'].get('background-play')
+                       if (video_state == 1){
+                            item.icon = 'fa fa-pause active'
+                            item.text = 'Pause'
+                            w2ui['toolbar'].refresh('background-play')
+                        }
+                        else if (video_state == 2 || video_state == 0){
+                            item.icon = 'fa fa-play'
+                            item.text = 'Play'
+                            w2ui['toolbar'].refresh('background-play')
                         }
                     }
-                }
+                }                
                 // 不知何故，有時 self.slide.resource.extra 會消失？(why)
                 // self.slide.resource.extra = [state(play or pause),(video time),(timestamp when taking state)]
                 var video_state = self.slide.resource.extra ? self.slide.resource.extra[0] : 2
@@ -889,30 +956,39 @@ DisplayArea.prototype = {
                     var delta_seconds = (Math.round(new Date().getTime() / 1000) - self.slide.resource.extra[2])
                     player_time += delta_seconds
                 }
-                // 加上載入影片的overhead
-                player_time += 2
-                var youtube_player = YoutubePlayer.singleton || new YoutubePlayer()
-                var ret = youtube_player.pre_render({ class: 'studio-fit-box' })
-                content = ret.content
-                content_completion_promise.done(function () {
-                    youtube_player.start({
-                        player_id: ret.player_id
-                        , video_id: self.slide.resource.vid
-                        , video_state: video_state
-                        , player_time: player_time
-                        , on_state_changed: on_state_changed
-
-                    }, function (success, player) {
-                        if (success) {
-                            w2ui['toolbar'].player = player
-                        }
-                        else {
-                            var message = player
-                            w2alert(message)
-                        }
-                        final_completion_promise.resolve()
+                
+                player_time += 0 // 加上載入影片的overhead
+                var player_api;
+                if (resource.kind == 'YT'){ //youtube
+                    player_api = YoutubePlayer.singleton || new YoutubePlayer()
+                }
+                else if (resource.kind == 'FB'){
+                    player_api = FacebookPlayer.singleton || new FacebookPlayer()
+                    console.log('facebok')
+                }
+                if (player_api){
+                    var ret = player_api.pre_render({ class: 'studio-fit-box', video_id:self.slide.resource.vid })
+                    content = ret.content
+                    content_completion_promise.done(function () {
+                        player_api.start({
+                            player_id: ret.player_id
+                            , video_id: self.slide.resource.vid
+                            , video_state: video_state
+                            , player_time: Math.round(player_time)
+                            , on_state_changed: on_state_changed
+    
+                        }, function (success, player) {
+                            if (success) {
+                                w2ui['toolbar'].player = player
+                            }
+                            else {
+                                var message = player
+                                w2alert(message)
+                            }
+                            final_completion_promise.resolve()
+                        })
                     })
-                })
+                }
                 break
 
             case 'OP':
@@ -933,7 +1009,7 @@ DisplayArea.prototype = {
                     content_completion_promise = new $.Deferred()
                     final_completion_promise = new $.Deferred()
                     content_completion_promise.done(function () {
-                        //create pesudo toolbar                        
+                        //create pesudo toolbar
                         var gs_toolbar_div = document.createElement('div')
                         gs_toolbar_div.className = 'gs-toolbar origin-hide-me'
                         gs_toolbar_div.innerHTML = document.getElementById('gs-toolbar-tmpl').innerHTML
@@ -1015,13 +1091,13 @@ DisplayArea.prototype = {
                     })
                 }
                 break
-            /* not supported yet 
+            /* not supported yet
             case 'HTML':
                 //console.log('this.resource.url=',this.slide.url)
                 if (!this.slide.url) return
                 self.presentation_screen.overlay.image_mode = true
                 self.presentation_screen.overlay.draw.size(self.presentation_screen.overlay.width,self.presentation_screen.overlay.height)
-                
+
                 var fitting = function(){
                     setTimeout(function(){
                         //wait for the transition of w2ui to complete,
@@ -1029,13 +1105,13 @@ DisplayArea.prototype = {
                         self.content_fitting()
                         //also to var user aware the loading
                         w2ui['layout'].unlock(self.name)
-                    },1000)                    
+                    },1000)
                 }
-                
+
                 w2ui['layout'].lock(this.name,'loading',true)
-                w2ui['layout'].load(this.name, this.slide.url,'slide-left',function(){                
+                w2ui['layout'].load(this.name, this.slide.url,'slide-left',function(){
                     fitting()
-                })                
+                })
                 return
             */
 
@@ -1116,7 +1192,7 @@ DisplayArea.prototype = {
     },
 }
 /*
- * 
+ *
  */
 function Pointers(presentation_screen) {
     this.presentation_screen = presentation_screen
@@ -1175,7 +1251,7 @@ Pointers.prototype = {
             x1 = evt.pageX
             y1 = evt.pageY - 15
             self.counter += 1
-            //send color for every 10 times (5sec = 250*20) 
+            //send color for every 10 times (5sec = 250*20)
             var sync_color = self.counter % 20 == 19
             if (x0 == x1 && y0 == y1 && (!sync_color)) return
             var posX = (x1 - pointer_offset)
@@ -1208,7 +1284,7 @@ Pointers.prototype = {
         }
         $(this.presentation_screen.page_ele).off('mousemove touchmove')
         this.meta.enable = 0
-        //this.presentation_screen.presentation.send_to_bus('misc-sync',['pointer',this.meta])        
+        //this.presentation_screen.presentation.send_to_bus('misc-sync',['pointer',this.meta])
         this.presentation_screen.presentation.send_to_bus('pointer-meta', this.meta)
     },
     sync_meta: function (meta) {
@@ -1275,7 +1351,7 @@ Pointers.prototype = {
         this.co_pointers[pointer_id].xy = [x, y]
     },
     set_color: function (color) {
-        //call this change pointer's color, 
+        //call this change pointer's color,
         //this will change the counter to enforce color to be synced
         this.meta.color = color
         if (this.enabled) {
@@ -1424,11 +1500,11 @@ PresentationScreen.prototype = {
                 })
             })
         })
-    },    
+    },
     _init_touch_features: function () {
         // this is only used for swipe to next or previous slide in moblie device.
         var self = this
-        //detect swipe 
+        //detect swipe
         document.addEventListener('touchstart', handleTouchStart, false);
         document.addEventListener('touchmove', handleTouchMove, false);
         document.addEventListener('touchend', handleTouchEnd, false);
@@ -1464,7 +1540,7 @@ PresentationScreen.prototype = {
         }, trigger_dismiss_interval, { leading: false, trailing: true })
 
         function handleTouchStart(evt) {
-            //don't be effective when draw,zoomout,pointer enabled            
+            //don't be effective when draw,zoomout,pointer enabled
             if (self.presentation.current_slide.resource.type == 'TEXT') {
                 //讓長按一秒鐘能隱藏overlay_surface，用手指移動text-viewer的內容
                 if (self.content_rect.height < self.screen_ele.querySelector('.text-resource-content').getBoundingClientRect().height) {
@@ -1519,7 +1595,7 @@ PresentationScreen.prototype = {
             }
             else {
                 if (yDiff > 0) {
-                    // up swipe 
+                    // up swipe
                     self.presentation.fire('SWIPE', 'up')
                 } else {
                     // down swipe
@@ -1552,8 +1628,8 @@ PresentationScreen.prototype = {
             此問題有待處理
             */
             this.dnd_enabler = new DnDEnabler()
-            this.dnd_enabler.enable('presentation', '#page', this)
-            this.dnd_enabler.enable_paste('presentation', 'body', this) //must be body to work (why?)
+            this.dnd_enabler.enable('sbs', '#page', this)
+            this.dnd_enabler.enable_paste('sbs', 'body', this) //must be body to work (why?)
         }
 
         // navigation button on left and right side
@@ -1651,19 +1727,22 @@ PresentationScreen.prototype = {
             document.getElementById('page-head').style.display = display
             toggle_page_head_div.querySelector('a#toggle-syncing').style.display = display
             //self.page_head_height = (display == 'none' ? 0 : toggle_page_head_div.getBoundingClientRect().height)
-            //evt.currentTarget.innerHTML = '<span class="fa fa-'+(display=='none' ? 'compress' : 'expand')+'-arrows-alt icon-12"></span>'            
+            //evt.currentTarget.innerHTML = '<span class="fa fa-'+(display=='none' ? 'compress' : 'expand')+'-arrows-alt icon-12"></span>'
             //讓按鈕區在擴展的時候看起來順眼些
             if (display == 'none') {
                 $(toggle_page_head_div).addClass('expanded')
                 self.page_head_height = 0
                 evt.currentTarget.innerHTML = '<span class="fa fa-compress-arrows-alt icon-12" style="font-size:0.5em;display:inline-block;">↙</span>'
-                //自動把gallery收起來
-                //self.presentation.fire('ACTION',{name:'gallery-open',yes:false})                
+                //listen to escape event
+                self.presentation.on('ESCAPE', function show_page_head(){
+                    toggle_page_head_div.querySelector('a#toggle-page-head').click()
+                })
             }
             else {
                 $(toggle_page_head_div).removeClass('expanded')
                 self.page_head_height = 60 //toggle_page_head_div.getBoundingClientRect().height
                 evt.currentTarget.innerHTML = '<span class="fa fa-expand-arrows-alt icon-12"></span>'
+                self.presentation.off('ESCAPE', 'show_page_head')
             }
             window.dispatchEvent(new Event('resize'));
         }
@@ -1685,13 +1764,14 @@ PresentationScreen.prototype = {
                 evt.currentTarget.innerHTML = '<span class="fa fa-teeth-open red-font icon-12"></span>'
             }
         }
-        
+
         if (self.screen_frame_ele.classList.contains('readonly')){
             //readonly
         }
         else{
             /* 當使用者按在背景上的時候; 決定「貼上」的對象；在cue時會被解掉，cue完後恢復 */
             self.page_ele_tap_handler = function(evt){
+                if (self.page_ele_tap_handler_disable) return
                 if (evt.srcElement === self.widget_layer){
                     if (Widget.selected.length) {
                         //unselect all selected widget
@@ -1704,7 +1784,7 @@ PresentationScreen.prototype = {
                         self.screen_frame_ele.classList.remove('selected')
                     }
                     else{
-                        self.screen_frame_ele.classList.add('selected')        
+                        self.screen_frame_ele.classList.add('selected')
                     }
                 }
                 else if (evt.srcElement === self.page_ele){
@@ -1751,7 +1831,7 @@ PresentationScreen.prototype = {
             }
             // 依照比例決定呈現內容的矩型的尺寸與位置
             var ratio = self.presentation.settings.ratio
-            
+
             // 在resize的情況下，保持reference
             if (!self.content_rect) { //內容可用區（不含工具列）
                 self.content_rect = {
@@ -1759,7 +1839,7 @@ PresentationScreen.prototype = {
                 }
             }
             var content_rect = self.content_rect
-            // 使用page全寬時按比例所需的高度為 h 
+            // 使用page全寬時按比例所需的高度為 h
             var h = Math.round(page_rect.width / ratio[0] * ratio[1])
             if (h + self.page_head_height <= page_rect.height) {
                 //使用全寬（高度有餘）
@@ -1802,8 +1882,8 @@ PresentationScreen.prototype = {
             self.screen_ele.style.width = content_rect.width + 'px'
             self.screen_ele.style.height = content_rect.height + 'px'
             toggle_page_head_div.style.left = (content_rect.left + content_rect.width - toggle_page_head_div.getBoundingClientRect().width) + 'px'
-            $('#top').css('padding-left', content_rect.left + 'px')
-            $('#top').css('padding-right', content_rect.left + 'px')
+            //$('#top').css('padding-left', content_rect.left + 'px')
+            //$('#top').css('padding-right', content_rect.left + 'px')
             _.defer(function () {
                 self.overlay.set_size({
                     width: content_rect.width,
@@ -1828,7 +1908,7 @@ PresentationScreen.prototype = {
             //2019-03-12T06:43:32+00:00 基本上已經不打算使用w2layout，暫時維持共存的方式
             //this is especially required when enter fullscreen mode
             if (w2ui['layout']) w2ui['layout'].resize()
-            
+
             self.presentation.fire('RESIZE',self.content_rect)
             return true
         }
@@ -1845,7 +1925,7 @@ PresentationScreen.prototype = {
 
         //listen to remote sync of translate
         //var target_ele0 = self.screen_ele
-        //var target_ele1 = document.getElementById('overlay_surface') 
+        //var target_ele1 = document.getElementById('overlay_surface')
         var control_ele = self.page_ele
         var control_rect = null
         self.presentation.on('OFFSET', function (data) {
@@ -1896,6 +1976,7 @@ PresentationScreen.prototype = {
                 self.recreate_tabsbar()
             }
         })
+
         //implement event-based interactions (action event)
         self.presentation.on('ACTION', function (data) {
             switch (data.name) {
@@ -2004,7 +2085,7 @@ PresentationScreen.prototype = {
                         $popup.find('div.quickshortcut button.quickshortcut-change').on('click', function () {
                             set_code(code_flag)
                         })
-                        $popup.find('span.code-type').html(code_flag == 2 ? '<span style="color:red">Writable</span>' : 'Read only')
+                        $popup.find('span.code-type').html(code_flag == 2 ? '<span style="color:red">Changable</span>' : 'Read only')
                     }, 100)
                     break
                 case 'set-passcode':
@@ -2157,7 +2238,7 @@ PresentationScreen.prototype = {
                         $('#new_presentation_name').focus()
                     }, 500)
                     self.presentation.keyboard_shortcut.suspend = true
-                    break                    
+                    break
                 case 'enter-fullscreen':
                     self._requesting_fullscreen = true
                     if (!screenfull.enabled) {
@@ -2307,7 +2388,7 @@ PresentationScreen.prototype = {
                                 }
                             }
                             else if (role_flag == 2) { //binder；
-                                if (is_me){                                        
+                                if (is_me){
                                     html.push('<td><a href="#" class="to_unbind">unbind</a></td>')
                                 }
                                 else if(userhash){ //i am owner
@@ -2456,114 +2537,167 @@ PresentationScreen.prototype = {
                     }
                     break
                 */
-                case 'cue':
+                case 'cue-enable':
                     //這裡的code是enable_cue, disable_cue的意義
                     var yes = data.yes
+
+                    //remove selected widget or background
                     if (Widget.selected.length) Widget.selected[0].select(false)
+                    self.screen_frame_ele.classList.remove('selected')
+
                     var rect = self.content_rect
-                    var screen_frame = self.page_ele.querySelector('#screen-frame')
                     var tap_handler_timer = 0
-                    if (yes) {
-                        var focus_widget = null
-                        var emit_cue_sync = _.throttle(function (point) {
-                            point.x = Math.round(1000 * point.x / self.page_rect.width)
-                            point.y = Math.round(1000 * point.y / self.page_rect.height)
-                            var t_id = self.presentation.current_thread.id
-                            var s_idx = self.presentation.current_slide.idx
-                            self.presentation.send_to_bus('cue-sync', [t_id, s_idx, point])
-                        }, 100, { leading: false })
-                         
+                    var emit_cue_sync = _.throttle(function (point) {                        
+                        if (point){
+                            point.cw = self.content_rect.width
+                            point.ch = self.content_rect.height
+                        }
+                        self.presentation.send_to_bus('cue-sync', ['cue', point])
+                    }, 100, { leading: false })
+
+                    var enable_cue = function(){
+
+                        if (self.zoomout_enabled) {
+                            self.disable_zoomout()
+                        }
+                        if (self.draw_enabled) {
+                            self.disable_draw()
+                        }
+                        if (self.presentation._scale > 1) {
+                            self.reset_zooming()
+                        }
+                        //在螢幕中間顯示一個大長方形
+                        self.cue_center_square = document.createElement('div')
+                        //self.cue_center_square.style = 'border:solid 1px red;'
+                        self.cue_center_square.innerHTML = '<img src="cue.svg" style="width:100%;height:100%"/>'
+                        var c200 =  64 //Constant.scale(2 * 32);
+                        $(self.cue_center_square).css({
+                            position:'absolute',
+                            width:  c200+'px',
+                            height:  c200+'px',
+                            pointerEvents:'none',
+                            left:self.content_rect.left + Math.round((self.content_rect.width-c200)/2) + 'px',
+                            top:self.content_rect.top + Math.round((self.content_rect.height-c200)/2) + 'px',
+                            display:'none'
+                        })
+                        document.querySelector('#page').appendChild(self.cue_center_square)
+
+                        // 讓cursor變成一個小長方形
+                        self.screen_frame_ele.classList.add('cue-enabled')
+
+                        self.cuing_info = null //被cue中的widget
+
+                        /*
                         var selected_handler = function (widget) {
                             //cue的時候可以被選定會比較好用，例如iframe被選定時可以跟內部的網頁互動
                             //widget.select(false)
-                            var timeout = 0
-                            if (focus_widget && focus_widget.id == widget.id) {
-                                //允許使用在這個widget被cue的時候操作此widget 
+                            var delay = 0
+                            if (self.cuing_info && self.cuing_info.id == widget.id) {
+                                //允許使用在這個widget被cue的時候操作此widget
                                 return
                             }
-                            else if (focus_widget) {
+                            else if (self.cuing_info) {
                                 //another widget got cued
+                                //解掉目前的cue,等動畫結束後再cue新選的那個
+
+                                //hide big square
+                                //self.cue_center_square.style.display = 'none'
+                                //show little square
+                                //self.screen_frame_ele.classList.remove('zoomed-in')
+
                                 self.reset_zooming(true)
-                                timeout = 210 //.cuing的transition是0.2s 
+                                delay = 210 //.cuing的transition是0.2s
                             }
-                            var cue_to_widget = function () {
+
+                            var cue_to_widget = function (delay) {
+                                //show big square
+                                self.cue_center_square.style.display = ''
+                                //hide little square
+                                self.screen_frame_ele.classList.add('zoomed-in')
+
                                 if (tap_handler_timer) {
                                     clearTimeout(tap_handler_timer)
                                     tap_handler_timer = 0
                                 }
-                                focus_widget = widget
+                                self.cuing_info = {id:widget.id}
                                 var bbox = widget.state_manager.get_bbox()
                                 if (bbox.width > rect.width * 0.5) {
                                     var s = Math.round(rect.width/bbox.width* 100)/100
                                 }
                                 else {
-                                    var  s = 2
-                                }                               
+                                    var  s = 2 //zoomin scale
+                                }
                                 var point = {
                                     x: bbox.cx,
                                     y: bbox.cy,
                                     s: s
                                 }
-                                self.cue(point)
+                                self.cue(point,0)
                                 emit_cue_sync(point)
                             }
-                            if (timeout) setTimeout(function () { cue_to_widget() }, timeout)
+                            if (delay) setTimeout(function () { cue_to_widget() }, delay)
                             else cue_to_widget()
                         }
-                        
+                        */
+                        self.presentation.on('PAGE-WILL-CHANGE',function do_uncue(){
+                            disable_cue()
+                        })
                         var tap_handler = function (evt) {
                             // 防止screen-frame的tap(select/unselect)事件被驅動
+                            // 2019-03-21T13:26:22+00:00 在interact.js 新版中好像沒作用
                             evt.stopPropagation()
-                           
+
+                            // 2019-03-21T13:32:02+00:00 目前只要有選定的widget被cue，
+                            // 暫時只能點按該widget來解掉cue
+                            //if (Widget.selected.length) {
+                            //    return
+                            //}
+
                             /*
                              選擇道具時這一個事件會先發生為了避免這個情況的干擾所以用一個計時器來控制
                             */
-                            tap_handler_timer  = setTimeout(function(){
-                                tap_handler_timer = 0
-                                if (focus_widget) {
-                                    focus_widget = null
-                                    screen_frame.classList.add('cuing')
-                                    screen_frame.classList.remove('cued')
-                                    self.reset_zooming(true)
-                                    setTimeout(function () {
-                                        //cuing 是在cue時有動感，cued讓動感消失，拖動的感覺比較好
-                                        screen_frame.classList.remove('cuing')
-                                        screen_frame.classList.add('cued')
-                                    }, 210)//.cuing的transition是0.2s 
-                                    return
-                                }
-                                var cue_to_cursor = function () {
-                                    var point = {
-                                        x: evt.offsetX + rect.left,
-                                        y: evt.offsetY + rect.top,
-                                        s: 2 //scale
-                                    }
-                                    self.cue(point)
-                                    focus_widget = { id: 'cursor' }
-                                    emit_cue_sync(point)
-                                }
-                                cue_to_cursor()
-                            },200) // at least 200 (why?)
+                            var point = {
+                                x: evt.pageX - self.content_rect.left, //touch.js 直接提供pageX,不必判別是否為touch event 
+                                y: evt.pageY - self.content_rect.top,
+                                s: 2 //scale
+                            }
+                            if (self.cuing_info) {
+                                //解讀為解cue的動作；解掉目前被cue的widget或cursor
+                                self.cue(null,210) //.cuing的transition是0.2s
+                                emit_cue_sync(null)
+                                return
+                            }
+                            else{
+                                self.screen_frame_ele.classList.add('zoomed-in')
+                                self.cue(point,210)
+                                emit_cue_sync(point)
+                            }
                         }
 
                         //把螢幕translate到物件，請把zoomout screen讓物件成為主角
-                        self.reset_zooming(true)
-                        interact(self.page_ele.querySelector('#page-content')).on('tap', tap_handler)
-                        WidgetGallery.singleton.on('selected', selected_handler)
-                        self._handlers = { //save handlers for calling "off"
-                            tap: tap_handler,
-                            selected: selected_handler
+                        interact(self.screen_frame_ele).on('tap', tap_handler)
+                    }
+                    var disable_cue = function() {
+                        self.cue(null)
+                        if (self.cue_center_square){
+                            self.cue_center_square.parentNode.removeChild(self.cue_center_square)
+                            self.cue_center_square = undefined
                         }
-                    }
-                    else {
-                        screen_frame.classList.remove('cuing','cued')
+                        self.presentation.off('PAGE-WILL-CHANGE','do_uncue')
+                        //delete self.page_ele_tap_handler_disable
+                        self.screen_frame_ele.classList.remove('cuing','cued','cue-enabled','zoomed-in')
+                        // 拿掉螢幕中間的大長方形
+                        //document.querySelector('#page').removeChild(self.cue_center_square)
+                        //self.cue_center_square = undefined
                         //把螢幕translate到物件，請把zoomout screen讓物件成為主角
-                        interact(self.page_ele.querySelector('#page-content')).unset() 
-                        self.reset_zooming(true)
-                        WidgetGallery.singleton.off('selected', self._handlers.selected)
-                        delete self._handlers
-                        self.disable_dragging()
+                        interact(self.screen_frame_ele).unset()
+
+
+                        //WidgetGallery.singleton.off('selected', self._handlers.selected)
+                        //delete self._handlers
+
                     }
+                    yes ? enable_cue() : disable_cue()
                     break
                 case 'widget-drawer':
                     if (data.yes){
@@ -2584,7 +2718,6 @@ PresentationScreen.prototype = {
                     self.show_boards()
                     break
                 case 'page-align':
-                    console.log('====',data)
                     if (data.side == 'left'){
                         self.page_ele.classList.add('left')
                     }
@@ -2603,7 +2736,7 @@ PresentationScreen.prototype = {
             case 'pointer:enable':
                 var enabled = data
                 if (w2ui['toolbar'].get('pointer')) {
-                    //audience screen has no this item  
+                    //audience screen has no this item
                     if (enabled) {
                         w2ui['toolbar'].show('pointercolor')
                         w2ui['toolbar'].get('pointer').icon += ' active'
@@ -2670,7 +2803,7 @@ PresentationScreen.prototype = {
 
     on_presentation_did_init: function () {
         var self = this
-        
+
         // set_size requires "presentation ratio" to be available
         // so it is called here
         self.set_size()
@@ -2717,24 +2850,33 @@ PresentationScreen.prototype = {
         if (!self._escape_handler) {
             //add once only, don't add twice in case of re-connection
             self._escape_handler = function () {
-                _.defer(function () {
+                _.defer(function () { //why defer?
                     if (self.draw_enabled) {
                         self.disable_draw()
                     }
                     if (w2ui['toolbar'].get('cue').icon.indexOf('active') > 0) {
                         //disable cue
+                        console.log('call disable cue')
                         w2ui['toolbar'].click('cue')
                     }
+
                     if (self.zoomout_enabled) {
-                        self._disable_zoomout(true)
+                        console.log('call disable zooming')
+                        self.disable_zoomout(true)
                         self.reset_zooming(true)
                     }
-                    if (self.presentation._scale > 1) { //scale
+                    else if (self.presentation._scale > 1) { //scale
+                        console.log('call reset zooming')
                         self.reset_zooming(true)
+                    }
+                    else{
+                        console.log('do noting to zoom')
                     }
                     self.screen_frame_ele.classList.remove('selected')
-                    
+
                     self.presentation.fire('ACTION', { name: 'widget-drawer', yes:false})
+
+                    if (Widget.selected.length) Widget.selected[0].select(false)
 
                     _.defer(function () {
                         //delay to avoid sending sync be conflicted with reset_zooming()
@@ -2782,6 +2924,8 @@ PresentationScreen.prototype = {
             group1_items.push({ type: 'button', id: 'pointer', text: 'Pointer', icon: 'fa fa-meteor' })
             group1_items.push({ type: 'color', id: 'pointercolor', color: self.pointers.meta.color, hidden: true })
 
+            group1_items.push({ type: 'check', id: 'cue', text: 'Cue', icon: 'fa fa-eye', tooltip: 'cue to the clicked spot' })
+
             group1_items.push({ type: 'button', id: 'draw', text: 'Marker', tooltip: 'Draw something on the slide', icon: 'fa fa-marker' })
 
             var color = self.sbs_user.preferences.get('screen').draw.color
@@ -2810,7 +2954,7 @@ PresentationScreen.prototype = {
             group1_items.push({ id: 'textmenu', icon: 'fa fa-code', type: 'menu', text: 'Code', items: textmenu_items, disabled: true, tooltip: 'text-related actions', overlay: { width: 150 } })
 
             if (mobileAndTabletcheck()) {
-                // Android can not detect zooming by pinch, only iOS supports zooming               
+                // Android can not detect zooming by pinch, only iOS supports zooming
                 if (window.is_iOS()) {
                     //zoomout is auto-enabled, and not able to disable, so don't add button here
                     group1_items.push({ type: 'button', id: 'zoomoutreset', text: 'Reset', tooltip: 'reset zoom (escape)', hidden: true, icon: 'fa fa-search-plus' })
@@ -2821,13 +2965,41 @@ PresentationScreen.prototype = {
                 group1_items.push({ type: 'button', id: 'zoomout', text: 'Zoom', hidden: true, tooltip: 'zoom with mouse-wheel', icon: 'fa fa-search-plus', disabled: true })
                 group1_items.push({ type: 'button', id: 'zoomoutreset', text: 'Reset', tooltip: 'reset zoom (escape)', hidden: true, icon: 'fa fa-search-plus' })
             }
-            group1_items.push({ type: 'check', id: 'cue', text: 'Cue', icon: 'fa fa-eye', tooltip: 'cue to the clicked spot' })
 
             group1_items.push({ type: 'spacer' })
-            //group1_items.push({ type: 'button', id: 'widgets', text: 'Widgets', icon: 'fa fa-image', overlay: { width: 120 }, tooltip: 'widgets' })
-            group1_items.push({ type: 'button', id: 'widget-dashboard', text: 'Widget', icon: 'fa fa-puzzle-piece', overlay: { width: 120 }, tooltip: 'settings panel of widget' })
-            //group1_items.push({ type: 'button', id: 'widget-drawer', text: 'Drawer', icon: 'fa fa-boxes', overlay: { width: 120 }, tooltip: 'a place to store widgets' })
             group1_items.push({ type: 'break' })
+
+            //背景是影片時才出現
+            group1_items.push({ type: 'button', id: 'background-play', text: 'Play', icon: 'fa fa-play',hidden:false,
+                onClick:function(evt){
+                    var item = evt.item
+                    var yes = item.icon.indexOf('active') == -1 ? true : false
+                    if (yes){
+                        item.icon = 'fa fa-pause active'
+                        item.text = 'Pause'
+                    }
+                    else{
+                        item.icon = 'fa fa-play'
+                        item.text = 'Play'
+                    }
+                    w2ui['toolbar'].refresh(evt.target)
+
+                    // 背景的player有放一份在w2ui['toolbar']這裡，直接取來用（有點怪的實作）
+                    var player = w2ui['toolbar'].player
+                    var t_id = self.presentation.current_thread.id
+                    var s_idx = self.presentation.current_slide.idx
+                    var video_state = yes ? 1 : 2 //1 for play, 2 for pause
+                    var video_current_time = player.getCurrentTime()
+                    var player_now = new Date().getTime()/1000
+                    var args = [t_id, s_idx, [video_state, video_current_time, player_now]]
+                    self.presentation.send_to_bus('slide-sync', args)
+
+                    //開始播放或停止
+                    if (yes) player.playVideo()
+                    else player.pauseVideo()
+                }
+            })
+
             var background_items = []
             if (mobileAndTabletcheck()) {
                 background_items.push({ type: 'button', id: 'getfromcamera', text: 'Camera', icon: 'fa fa-camera' })
@@ -2835,8 +3007,8 @@ PresentationScreen.prototype = {
             }
             else {
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    background_items.push({ type: 'button', id: 'getfromwebcam', text: 'WebCam', icon: 'fa fa-camera' })
-                    //request webcam testing, if failed, remove webcam button                
+                    background_items.push({ type: 'button', id: 'getfromwebcam', text: 'WebCam Picture', icon: 'fa fa-camera' })
+                    //request webcam testing, if failed, remove webcam button
                     /* temporary disable because safari too noisy
                     _.defer(function(){
                         var constraints = {
@@ -2845,16 +3017,17 @@ PresentationScreen.prototype = {
                             frameRate : {min: 5, max: 8 },
                             facingMode: { exact: "environment" },
                             video: {width:{min:640},height:{min:480}}
-                        };  
+                        };
                         navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
                             stream.getVideoTracks()[0].stop()
                         }).catch(function(){
                             w2ui['toolbar'].remove('background:getfromwebcam')
-                        });    
+                        });
                     })*/
                 }
-
                 background_items.push({ type: 'button', id: 'getfromupload', text: 'Upload', icon: 'fa fa-file-image' })
+                background_items.push({type:'breaker'})
+                background_items.push({ type: 'button', id: 'remove', text: 'Remove', icon: 'fa fa-camera' })
                 var $upload_ele = $('#upload_ele')
                 $upload_ele.on('change', function (e) {
                     if ($upload_ele[0].files.length) {
@@ -2877,12 +3050,25 @@ PresentationScreen.prototype = {
                     }
                 })
             }
-            group1_items.push({ type: 'menu', id: 'background', text: 'Background', items: background_items, icon: 'fa fa-image', overlay: { width: 120 }, tooltip: 'image of background' })
+            group1_items.push({ type: 'menu', id: 'background', text: 'Background', items: background_items, icon: 'fa fa-image', overlay: { width: 180 }, tooltip: 'image of background' })
             group1_items.push({ type: 'color', id: 'slidebgcolor', color: 'ff0000', tooltip: 'color of background' })
             group1_items.push({ type: 'break' })
+            /*
             group1_items.push({ type: 'button', id: 'insert_slide', icon: 'fa fa-plus', tooltip: 'insert a new slide' })
             group1_items.push({ type: 'button', id: 'reset_slide', icon: 'fa fa-undo', tooltip: 'reset this slide' })
             group1_items.push({ type: 'button', id: 'remove_slide', icon: 'fa fa-trash', tooltip: 'remove this slide' })
+            */
+            group1_items.push({ type: 'menu', id: 'slide', text: 'Slide',icon: 'fa fa-image', overlay: { width: 180 },items:[
+                { type: 'button', id: 'toggle_widget_panel', text: 'Open widget panel', icon: 'fa fa-puzzle-piece' }
+                ,{ type: 'button', id: 'toggle_widget_drawer', text: 'Open widget drawer', icon: 'fa fa-boxes' }
+                ,{type:'break'}
+                ,{ type: 'button', id: 'save_widget_states', text: 'Save widget states', icon: 'fa fa-save' }
+                ,{ type: 'button', id: 'restore_widget_states', text: 'Restore widget states', icon: 'fa fa-share' }
+                ,{type:'break'}
+                ,{ type: 'button', id: 'insert_slide', text: 'Add new slide', icon: 'fa fa-plus' }
+                ,{ type: 'button', id: 'reset_slide', text: 'Reset this slide', icon: 'fa fa-undo' }
+                ,{ type: 'button', id: 'remove_slide', text: 'Delete this slide', icon: 'fa fa-trash' }
+            ]})
 
             //group 0 starts
             group0_items.push({ type: 'spacer' })
@@ -2908,7 +3094,7 @@ PresentationScreen.prototype = {
             group2_items.push({ type: 'menu', id: 'audience', text: 'Audience', items: audience_menu_items, icon: 'fa fa-globe', tooltip: 'read only access' })
 
             var speaker_menu_items = [
-                { text: '<span style="padding-bottom:5px;display:inline-block;width:100%;font-weight:bold;color:red;text-align:center">Caution: Writable Sharing</span>' },
+                { text: '<span style="padding-bottom:5px;display:inline-block;width:100%;font-weight:bold;color:red;text-align:center">Caution: Changable Sharing</span>' },
                 { text: '-' },
                 { id: 'copy-url', text: 'Copy URL', tooltip: 'copy the URL of this board', icon: 'fa fa-globe' },
                 { id: 'show-qrcode', text: 'Show QRCode', tooltip: 'show the QRcode URL of this board', icon: 'fa fa-qrcode' },
@@ -2941,7 +3127,12 @@ PresentationScreen.prototype = {
             group2_items.push({ type: 'spacer' })
             group2_items.push({ type: 'button', id: 'boards', text: 'Boards', tooltip: '', icon: 'fa fa-info-circle' })
             group2_items.push({ type: 'break' })
-            group2_items.push({ type: 'button', id: 'help', text: 'Help', tooltip: '', icon: 'fa fa-info-circle' })
+            group2_items.push({ type: 'menu', id: 'help', text: 'Help', tooltip: '', icon: 'fa fa-info-circle',items:[
+                {id:'github',text:'Issues',icon:'fa fa-info'},
+                {id:'break1',text:'-'},
+                {id:'ccsearch',text:'CC Search',icon:'fa fa-global'}
+
+            ]})
 
             _.each(group1_items, function (item) {
                 item.group = 1
@@ -2969,7 +3160,7 @@ PresentationScreen.prototype = {
         if (w2ui['toolbar']) w2ui['toolbar'].destroy()
 
         // scale of toolbar in iOS devices
-        // if window.scale2 is changed, should also change whiteboard.css #scale2 
+        // if window.scale2 is changed, should also change whiteboard.css #scale2
         window.scale2 = 1.0
         var toolbar_width = window.is_iOS() ? Math.round(self.content_rect.width / window.scale2) : self.content_rect.width
         $('#toolbar').w2toolbar({
@@ -3007,26 +3198,6 @@ PresentationScreen.prototype = {
                         //self.presentation.fire('ACTION', { name: 'open-widgets', yes: yes })
                         break
                     */
-                    case 'widget-dashboard':
-                        //顯示或不顯示dashboard
-                        var yes = WidgetGallery.singleton.dashboard_box.classList.contains('active') ? false : true
-                        if (yes) {
-                            WidgetGallery.singleton.dashboard_box.classList.add('active')
-                            w2ui['toolbar'].get(evt.target).icon += ' active'
-                            if (Widget.selected.length) {
-                                //show #widget-dashboard
-                                WidgetGallery.singleton.render_dashboard(Widget.selected[0])
-                            }
-                            self.presentation.fire('ACTION',{name:'page-align',side:'left'})
-                        }
-                        else {
-                            //hide #widget-dashboard
-                            WidgetGallery.singleton.dashboard_box.classList.remove('active')
-                            w2ui['toolbar'].get(evt.target).icon = w2ui['toolbar'].get(evt.target).icon.replace(' active', '')
-                            self.presentation.fire('ACTION',{name:'page-align',side:'center'})
-                        }
-                        w2ui['toolbar'].refresh(evt.target)
-                        break
                     case 'background':
                         self.set_toolbar_item_scale('.w2ui-overlay')
                         break
@@ -3043,30 +3214,29 @@ PresentationScreen.prototype = {
                     case 'cue':
                         //evt.item.checked is state before click
                         var yes = evt.item.checked ? false : true
-                        var timeout = 0
+                        var delay = 0
                         if (yes) {
-                            if (self.zoomout_enabled) {
-                                self.disable_zoomout()
-                                self.disable_dragging()
-                            }
-                            if (self.draw_enabled) {
-                                self.disable_draw()
-                            }
-                            if (self.presentation._scale > 1) {
-                                self.reset_zooming(true)
-                            }
-                            timeout = 200
+                            self.presentation.on('PAGE-WILL-CHANGE',function toolbar_uncue(){
+                                self.presentation.off('PAGE-WILL-CHANGE','toolbar_uncue')
+                                w2ui['toolbar'].get('cue').icon = 'fa fa-eye'
+                                w2ui['toolbar'].uncheck('cue')
+                                //遠端沒有此listener，所以要通知遠端un-cue
+                                self.presentation.send_to_bus('cue-sync', ['enable', false])
+                            })
+                            delay = 200
                             w2ui['toolbar'].get('cue').icon = 'fa fa-eye active'
                         }
                         else {
+                            self.presentation.off('PAGE-WILL-CHANGE','toolbar_uncue')
                             w2ui['toolbar'].get('cue').icon = 'fa fa-eye'
                         }
                         w2ui['toolbar'].refresh('cue')
 
                         _.delay(function () {
                             //等 self.presentation.fire('ESCAPE') 完成後再動作
-                            self.presentation.fire('ACTION', { name: 'cue', yes: yes })
-                        }, timeout)
+                            self.presentation.fire('ACTION', { name: 'cue-enable', yes: yes })
+                            self.presentation.send_to_bus('cue-sync', ['enable', yes])
+                        }, delay)
 
                         break
                     case 'zoomoutreset':
@@ -3290,7 +3460,15 @@ PresentationScreen.prototype = {
                     case 'background:getfromphoto':
                         self.upload_from_photo()
                         break
-                    case 'insert_slide':
+                    case 'background:remove':
+                        self.presentation.reset_slide_background(self.presentation.current_thread.id, [self.presentation.current_slide.idx])
+                        .done(function(changed_slides){
+                            console.log(changed_slides)
+                        }).fail(function (retcode, errmsg) {
+                            w2alert(errmsg)
+                        })
+                        break
+                    case 'slide:insert_slide':
                         var color = w2ui['toolbar'].get('slidebgcolor').color
                         window.loading(true, 'Add slide', true)
                         if (!self.presentation.syncing) {
@@ -3312,7 +3490,7 @@ PresentationScreen.prototype = {
                             w2alert(message)
                         })
                         break
-                    case 'reset_slide':
+                    case 'slide:reset_slide':
                         var idx = self.presentation.current_slide.idx
                         w2confirm({
                             msg: '<span style="vertical-align:middle;color:red;font-size:50px" class="fa fa-exclamation-triangle">&nbsp;</span> Are you sure to reset this slide?',
@@ -3325,7 +3503,7 @@ PresentationScreen.prototype = {
                                 var t_id = self.presentation.current_thread.id
                                 var s_idxes = [idx]
 
-                                // delete this slide 
+                                // delete this slide
                                 //self.presentation.remove_slides_of_idx(t_id,s_idxes).fail(function(retcode,errmsg){
 
                                 //remove widgets
@@ -3337,7 +3515,7 @@ PresentationScreen.prototype = {
                             }
                         })
                         break
-                    case 'remove_slide':
+                    case 'slide:remove_slide':
                         var idx = self.presentation.current_slide.idx
                         w2confirm({
                             msg: '<span style="vertical-align:middle;color:red;font-size:50px" class="fa fa-exclamation-triangle">&nbsp;</span> Are you sure to remove this slide?',
@@ -3349,12 +3527,55 @@ PresentationScreen.prototype = {
                                 if (ans != 'Yes') return
                                 var t_id = self.presentation.current_thread.id
                                 var s_idxes = [idx]
-                                // delete this slide 
+                                // delete this slide
                                 self.presentation.remove_slides_of_idx(t_id, s_idxes).fail(function (retcode, errmsg) {
                                     w2alert(errmsg)
                                 })
                             }
                         })
+                        break
+                    case 'slide:save_widget_states':
+                        WidgetGallery.singleton.presentation.current_slide.widget_manager.state_save(true)
+                        window.message('all state saved')
+                        break
+                    case 'slide:restore_widget_states':
+                        WidgetGallery.singleton.presentation.current_slide.widget_manager.state_restore(true)
+                        window.message('all state restored')
+                        break
+                    case 'slide:toggle_widget_drawer':
+                        var yes =  (!document.querySelector('#widget-drawer').classList.contains('open'))
+                        WidgetGallery.singleton.presentation.fire('ACTION', { name: 'widget-drawer', yes: yes })
+                        if (yes){
+                            w2ui['toolbar'].get(evt.target).text = 'Close widget drawer'
+                            w2ui['toolbar'].get(evt.target).icon = w2ui['toolbar'].get(evt.target).icon + ' active'
+                        }
+                        else {
+                            w2ui['toolbar'].get(evt.target).text = 'Open widget drawer'
+                            w2ui['toolbar'].get(evt.target).icon = w2ui['toolbar'].get(evt.target).icon.replace(/ active/,'')
+                        }
+                        w2ui['toolbar'].refresh('slide')
+                        break
+                    case 'slide:toggle_widget_panel':
+                        //顯示或不顯示dashboard
+                        var yes = WidgetGallery.singleton.dashboard_box.classList.contains('active') ? false : true
+                        if (yes) {
+                            WidgetGallery.singleton.dashboard_box.classList.add('active')
+                            w2ui['toolbar'].get('slide:toggle_widget_panel').text = 'Close widget panel'
+                            w2ui['toolbar'].get('slide:toggle_widget_panel').icon = w2ui['toolbar'].get(evt.target).icon + ' active'
+                            if (Widget.selected.length) {
+                                //show #widget-dashboard
+                                WidgetGallery.singleton.render_dashboard(Widget.selected[0])
+                            }
+                            self.presentation.fire('ACTION',{name:'page-align',side:'left'})
+                        }
+                        else {
+                            //hide #widget-dashboard
+                            WidgetGallery.singleton.dashboard_box.classList.remove('active')
+                            w2ui['toolbar'].get('slide:toggle_widget_panel').text = 'Open widget panel'
+                            w2ui['toolbar'].get('slide:toggle_widget_panel').icon = w2ui['toolbar'].get(evt.target).icon.replace(/ active/,'')
+                            self.presentation.fire('ACTION',{name:'page-align',side:'center'})
+                        }
+                        w2ui['toolbar'].refresh('slide')
                         break
                     case 'syncing':
                         self.presentation.fire('ACTION', { name: 'syncing', yes: (!self.presentation.syncing) })
@@ -3449,7 +3670,11 @@ PresentationScreen.prototype = {
                     case 'boards':
                         self.presentation.fire('ACTION', { name: 'show-boards' })
                         break
-                    case 'help':
+                    case 'help:github':
+                        open('https://github.com/iapyeh/sidebyside/issues')                        
+                        break
+                    case 'help:ccsearch':
+                        open('https://search.creativecommons.org')
                         break
                     default:
                     //do nothing
@@ -3516,7 +3741,7 @@ PresentationScreen.prototype = {
             if ($('#toolbar').hasClass('scale2')) {
                 _.delay(function () {
                     var $selector = $(selector)
-                    if ($selector.length == 0) return //w2uitoolbar is toggle off 
+                    if ($selector.length == 0) return //w2uitoolbar is toggle off
                     $selector.addClass('scale2')
                     var menu_scale2 = 1.5
                     var effective_scale = Math.round(100 * menu_scale2 / self.presentation._scale) / 100
@@ -3542,13 +3767,13 @@ PresentationScreen.prototype = {
 
             if (mobileAndTabletcheck()) {
                 if (window.is_iOS()) {
-                    //auto enable zoomout in iOS 
+                    //auto enable zoomout in iOS
                     w2ui['toolbar'].box.classList.add('scale2')
                     w2ui['toolbar'].box.style.transform = 'scale(' + window.scale2 + ')'
                     _.delay(function () {
                         self.enable_zoomout()
                         _.delay(function () {
-                            //this is a workaround for problem of w2toolbar refresh 
+                            //this is a workaround for problem of w2toolbar refresh
                             //it loses width after resize
                             var toolbar_width = w2ui['toolbar'].box.style.width
                             w2ui['toolbar'].on('resize', function (evt) {
@@ -3705,7 +3930,7 @@ PresentationScreen.prototype = {
                 }
                 break
             case 'thread':
-                // do nothing here, because prensention will call on_thread_changed() 
+                // do nothing here, because prensention will call on_thread_changed()
                 // to render new focus slide
                 break
             case 'slides':
@@ -3873,7 +4098,7 @@ PresentationScreen.prototype = {
     get_video_player: function () {
         return w2ui['toolbar'].player
     },
-    /* experimental 
+    /* experimental
     stop_recorder: function(){
         this.recorder_started = false
         this.recorder.stop();
@@ -3891,7 +4116,7 @@ PresentationScreen.prototype = {
         // we ask for permission to record the audio and video from the camera
         const getStreamForCamera = () => navigator.mediaDevices.getUserMedia({
             audio: true
-        });        
+        });
         const video = document.createElement('video');
 
         const appendCamera = (stream) => {
@@ -3908,7 +4133,7 @@ PresentationScreen.prototype = {
             // we know have access to the camera, let's append it to the DOM
             appendCamera(streamCamera);
             getStreamForWindow().then(streamWindow => {
-        
+
               // we now have access to the screen too
               // we generate a combined stream with the video from the
               // screen and the audio from the camera
@@ -3918,7 +4143,7 @@ PresentationScreen.prototype = {
               const audioTrack = streamCamera.getAudioTracks()[0];
               finalStream.addTrack(audioTrack);
               self.recorder = new MediaRecorder(finalStream);
-        
+
               // we subscribe to 'ondataavailable'.
               // this gets called when the recording is stopped.
               self.recorder.ondataavailable = function(e) {
@@ -3931,21 +4156,20 @@ PresentationScreen.prototype = {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-              }        
+              }
               // start recording
               self.recorder.start();
             });
-        });                
+        });
     },*/
     set_zooming: function (scale, transform_origin, translate, is_relative) {
-        //called by mousewheel, but pinch does not call this 
+        //called by mousewheel, but pinch does not call this
         var self = this
         var presentation = this.presentation
         var origin_x = transform_origin ? transform_origin[0] : 0
         var origin_y = transform_origin ? transform_origin[1] : 0
         presentation._scale = scale
         this.widget_layer.dataset.scale = scale
-
         //write back to local data(這是需要的嗎，為何只有scale，不更新translate?)
         presentation.current_slide.zoom[0] = scale
 
@@ -3956,7 +4180,7 @@ PresentationScreen.prototype = {
             translate[1] = Math.round(translate[1] * self.content_rect.height)
         }
         if (transform_origin) {
-            document.getElementById('screen-frame').style.transformOrigin = origin_x + 'px ' + origin_y + 'px 0px'
+            self.screen_frame_ele.style.transformOrigin = origin_x + 'px ' + origin_y + 'px 0px'
         }
         self.move(translate[0], translate[1])
         // update scale on if draw_enabled, important!
@@ -4115,7 +4339,7 @@ PresentationScreen.prototype = {
                     presentation.fire('PINCH:END')
                     if (scale !== start_scale) {
                         //DONT do this, this will crash mobile safari's scale (don't know why)
-                        //presentation._scale = scale 
+                        //presentation._scale = scale
 
                         if (scale > 1) {
 
@@ -4175,6 +4399,7 @@ PresentationScreen.prototype = {
             if (reset_data) {
                 presentation.current_slide.zoom = [1, [0, 0], [0, 0]]
                 presentation.current_slide.translate = [0, 0]
+                console.log('reset data of slide:',presentation.current_slide)
             }
 
             //dont' disaable zoom out in iOS
@@ -4208,6 +4433,7 @@ PresentationScreen.prototype = {
         var presentation = this.presentation
         presentation._scale = 1
         this.widget_layer.dataset.scale = 1
+
         /*
         _.delay(function(){
             忘記這在寫什麼，一時也測不出問題；暫時取消
@@ -4216,10 +4442,10 @@ PresentationScreen.prototype = {
             //this listener will override reset value of scale and transform
             //as a workaround, we delay this reset
             presentation._translate[0] = 0
-            presentation._translate[1] = 0    
+            presentation._translate[1] = 0
         },1000)
         */
-        this.page_ele.querySelector('#screen-frame').transformOrigin = '0px 0px'
+        this.screen_frame_ele.transformOrigin = '0px 0px'
         this.move(0, 0)
         _.defer(function () {
             self.overlay.set_scale(1)
@@ -4289,7 +4515,7 @@ PresentationScreen.prototype = {
         var self = this
         if (this.dragging_enabled) return
         this.dragging_enabled = true
-        //make slide draggable if not drawing 
+        //make slide draggable if not drawing
         var control_ele = self.page_ele
         var control_rect = control_ele.getBoundingClientRect()
         var translate = self.presentation._translate
@@ -4312,7 +4538,7 @@ PresentationScreen.prototype = {
         },100,{leading:false})
         var mousemove = function(evt){
             if (!(is_mouse || evt.touches.length==1)) return
-            // calculate the new cursor position: 
+            // calculate the new cursor position:
             var clientX = is_mouse ? evt.clientX : evt.touches[0].clientX
             var clientY = is_mouse ? evt.clientY : evt.touches[0].clientY
             var delta_x = Math.floor((clientX - pos3)/scale)
@@ -4321,7 +4547,7 @@ PresentationScreen.prototype = {
             pos2 =  delta_y + translate[1]
             self.move(pos1,pos2)
             emit_offset_sync()
-        }//end of mousemove listener   
+        }//end of mousemove listener
         var mouseup = function(evt){
             if (is_mouse || (evt.touches.length==0)){
                 control_ele.removeEventListener('mousemove',mousemove)
@@ -4331,16 +4557,16 @@ PresentationScreen.prototype = {
                 translate[0] = pos1
                 translate[1] = pos2
             }
-        }//end of mouseup listener             
+        }//end of mouseup listener
         var mousedown = function(evt){
 
             // response to drawing, not dragging
             if (self.draw_enabled) return
-            
+
             // if (!self.zoomout_enabled) return
 
             is_mouse = evt.type=='mousedown'
-            //works only for mouse left button and one-finger touch 
+            //works only for mouse left button and one-finger touch
             if (is_mouse && evt.which !== 1) return
             else if (!is_mouse && evt.touches.length > 1){
                 control_ele.removeEventListener('touchmove',mousemove)
@@ -4367,7 +4593,7 @@ PresentationScreen.prototype = {
             else{
                 control_ele.addEventListener('touchmove',mousemove)
                 control_ele.addEventListener('touchend',mouseup)
-            } 
+            }
 
         }//end of mousedown event listner
         if (mobileAndTabletcheck()){
@@ -4382,16 +4608,21 @@ PresentationScreen.prototype = {
             //console.log('disable dragging')
             self.dragging_enabled = false
             var listeners;
-            if (mobileAndTabletcheck()) listeners = [['touchstart',mousedown],['touchmove',mousemove],['touchend',mouseup]]             
+            if (mobileAndTabletcheck()) listeners = [['touchstart',mousedown],['touchmove',mousemove],['touchend',mouseup]]
             else listeners = [['mousedown',mousedown],['mousemove',mousemove],['mouseup',mouseup]]
             _.each(listeners, function(listener){
                 control_ele.removeEventListener(listener[0],listener[1])
-            }) 
+            })
         }
         //fire event (disabled, no listener)
         //self.presentation.fire('DNZ:START')
     },*/
     enable_draw: function () {
+
+        $('#page').on('touchmove.freeze_page',function (evt){
+            evt.preventDefault()
+        })
+
         var self = this
         this.draw_enabled = true
         var visible = true
@@ -4411,6 +4642,9 @@ PresentationScreen.prototype = {
         self.overlay.overlay_surface.style.pointerEvents = 'all'
     },
     disable_draw: function () {
+
+        $('#page').off('.freeze_page')
+
         var self = this
         this.draw_enabled = false
         var visible = false
@@ -4429,7 +4663,7 @@ PresentationScreen.prototype = {
         this.origin_enabled = true
         // delay a while to make restoring "draw" button's red class taking effective
         // when it was disabled by enabling pointer
-        //_.delay(function(){self.update_toolbar('origin:enable',true)},50)        
+        //_.delay(function(){self.update_toolbar('origin:enable',true)},50)
 
         _.each($('.origin-hide-me'), function (ele) {
             ele.style.display = 'none'
@@ -4463,7 +4697,7 @@ PresentationScreen.prototype = {
             self.origin_enabled = false
             // delay a while to make restoring "draw" button's red class taking effective
             // when it was disabled by enabling pointer
-            //_.delay(function(){self.update_toolbar('origin:enable',false)},50)        
+            //_.delay(function(){self.update_toolbar('origin:enable',false)},50)
             _.each($('.origin-hide-me'), function (ele) {
                 ele.style.display = ''
             })
@@ -4542,7 +4776,7 @@ PresentationScreen.prototype = {
             { width: { min: 1024 }, height: { min: 768 } },
             { width: { min: 640 }, height: { min: 480 } }
         ]
-        // figure out the max available resolution 
+        // figure out the max available resolution
         var resolution_idx = 0
         var constraints = {
             audio: false,
@@ -4568,7 +4802,7 @@ PresentationScreen.prototype = {
             else if (last_scale != scale) {
                 var box_width = $popup.width()
                 var scale = Math.round(100 * box_width / width) / 100
-                //$popup.find('.w2ui-popup-body').height(Math.ceil( box_width * (height/width)) )    
+                //$popup.find('.w2ui-popup-body').height(Math.ceil( box_width * (height/width)) )
             }
             if (scale != last_scale) {
                 video.style.transform = 'scale(' + scale + ')'
@@ -4824,7 +5058,7 @@ PresentationScreen.prototype = {
             { width: { min: 1024 }, height: { min: 768 } },
             { width: { min: 640 }, height: { min: 480 } }
         ]
-        // figure out the max available resolution 
+        // figure out the max available resolution
         var resolution_idx = 0
         var constraints = {
             audio: false,
@@ -4876,7 +5110,7 @@ PresentationScreen.prototype = {
             dlLink.download = 'test.jpeg';
             dlLink.href = data;
             dlLink.dataset.downloadurl = ['image/jpeg', dlLink.download, dlLink.href].join(':');
-        
+
             document.body.appendChild(dlLink);
             dlLink.click();
             document.body.removeChild(dlLink);
@@ -4916,7 +5150,7 @@ PresentationScreen.prototype = {
         }
         else if (this.screen_frame_ele.classList.contains('selected')){
             var dst_index = this.presentation.current_slide.idx
-            return this._handle_dnd_paste(data, dst_index)    
+            return this._handle_dnd_paste(data, dst_index)
         }
     },
     on_paste_string: function (text, evt) {
@@ -4929,7 +5163,7 @@ PresentationScreen.prototype = {
         }
         else if (this.screen_frame_ele.classList.contains('selected')){
             //貼在slide底層
-            return this._handle_dnd_paste(text, this.presentation.current_slide.idx)    
+            return this._handle_dnd_paste(text, this.presentation.current_slide.idx)
         }
         else{
             //貼在最底層，暫時不同步
@@ -5006,7 +5240,7 @@ PresentationScreen.prototype = {
     },
     _handle_dnd_paste: function (data, dst_index) {
         /*
-         * Arguments: 
+         * Arguments:
          *  data: (string or object)
         */
         var self = this
@@ -5086,18 +5320,28 @@ PresentationScreen.prototype = {
         }
         if (_.isString(data)) {
             window.slide_resource_factory.from_string(data).done(function (slide_resource) {
-                // 2019-03-13T03:07:18+00:00 還沒處理 type == FILE的情況
-                if (slide_resource && slide_resource.type) {
-                    //把metadata壓成json，以檔案的方式傳回server
-                    var blob = new Blob([JSON.stringify(slide_resource)], { type: "octet/stream" })
-                    var filename = 't' + Math.round(new Date().getTime() / 1000) + '.json'
-                    var file = new File([blob], filename, { type: "application/json" })
-                    var options = {
-                        action: 'set_slide_resource',
-                        file: file,
-                        dst: (typeof (dst_index) == 'undefined' || dst_index === null) ? -1 : parseInt(dst_index)
+                if (slide_resource) {
+                    if (slide_resource.type == 'FILE'){
+                        _.defer(function(){
+                            self._handle_dnd_paste({
+                                is_file:true,
+                                file:slide_resource.file,
+                                mimetype: slide_resource.kind
+                            }, dst_index)
+                        })
                     }
-                    do_action(options, promise)
+                    else{
+                        //把metadata壓成json，以檔案的方式傳回server
+                        var blob = new Blob([JSON.stringify(slide_resource)], { type: "octet/stream" })
+                        var filename = 't' + Math.round(new Date().getTime() / 1000) + '.json'
+                        var file = new File([blob], filename, { type: "application/json" })
+                        var options = {
+                            action: 'set_slide_resource',
+                            file: file,
+                            dst: (typeof (dst_index) == 'undefined' || dst_index === null) ? -1 : parseInt(dst_index)
+                        }
+                        do_action(options, promise)
+                    }
                 }
             })
         }
@@ -5116,7 +5360,7 @@ PresentationScreen.prototype = {
                         }
                         else {
                             //all files have been processed
-                            
+
                             //resort files
                             files.sort(function (a, b) {
                                 return a.name > b.name ? 1 : (a.name < b.name ? -1 : 0)
@@ -5260,7 +5504,7 @@ PresentationScreen.prototype = {
             })
         return promise
     },
-    /*   
+    /*
     to_be_bind:function(binder_code){
         var self = this
         var promise = new $.Deferred()
@@ -5268,9 +5512,9 @@ PresentationScreen.prototype = {
         var command = new Command(cmd,[binder_code])
         window.sdk.send_command(command).done(function(response){
             if (response.retcode != 0) {
-                return promise.reject(response.retcode,response.stderr.message,response.stderr) 
+                return promise.reject(response.retcode,response.stderr.message,response.stderr)
             }
-            
+
             //update local copy of binder count
             var binded_count = response.stdout
             self.presentation.is_binded = binded_count
@@ -5446,28 +5690,66 @@ PresentationScreen.prototype = {
         })
         return promise
     }
-    ,cue:function(point){
+    ,cue:function(point,delay){
         var self = this
-        var screen_frame = this.page_ele.querySelector('#screen-frame')
-        var rect = this.content_rect
-        var scale = point.s //Math.round(100 * rect.width * 0.4 / point.w) / 100
-        screen_frame.classList.remove('cued')
-        screen_frame.classList.add('cuing')
-        var dx = Math.round((rect.left + rect.width / 2 - point.x) * scale)
-        var dy = Math.round((rect.top + rect.height / 2 - point.y) * scale)
-        //set_zooming: function (scale, transform_origin, translate, is_relative) {
-        this.set_zooming(scale, [rect.width / 2, rect.height / 2], [dx,dy])
-        var rel_pos0 = Math.round(dx / this.page_rect.width * 1000)
-        var rel_pos1 = Math.round(dy / this.page_rect.height * 1000)        
-        this.presentation.current_slide.translate[0] = rel_pos0
-        this.presentation.current_slide.translate[1] = rel_pos1
+        var screen_frame = this.screen_frame_ele
+        var promise = new $.Deferred()
+        if (point){
+            self.cuing_info = { id: 'cursor' }
+            self.cue_center_square.style.display = ''
+            var rect = this.content_rect
+            var scale = point.s
+            if (point.cw) {
+                //called by remote sync
+                point.x = (point.x * this.content_rect.width  / point.cw) 
+                point.y = (point.y * this.content_rect.height / point.ch)
+            }
+            screen_frame.classList.remove('cued')
+            screen_frame.classList.add('cuing')
+            var dx = point.dx || Math.round((self.content_rect.width / 2) - point.x) * scale 
+            var dy = point.dy || Math.round((self.content_rect.height / 2) - point.y) * scale
+            this.set_zooming(scale, [Math.round(rect.width / 2), Math.round(rect.height / 2)], [dx,dy])
+            var rel_pos0 = Math.round(dx / this.page_rect.width * 1000)
+            var rel_pos1 = Math.round(dy / this.page_rect.height * 1000)
+            this.presentation.current_slide.translate[0] = rel_pos0
+            this.presentation.current_slide.translate[1] = rel_pos1
+            if (delay){
+                setTimeout(function () {
+                    //cuing 是在cue時有動感，cued讓動感消失，拖動的感覺比較好
+                    screen_frame.classList.remove('cuing')
+                    screen_frame.classList.add('cued')
+                    self.enable_dragging()
+                    promise.resolve()
+                }, 210)//.cuing的transition是0.2s
+                return promise
+            }
+            else return $.when()
+        }
+        else{
+            //disable cue時，self.cue_center_square可能已經被刪掉
+            if (self.cue_center_square) self.cue_center_square.style.display = 'none'
+            self.screen_frame_ele.classList.remove('zoomed-in')
+            self.cuing_info = null
+            //reset_zooming()不會寫資料，所以要在這裡寫（因為cue()有寫，在此要寫回來）
+            self.presentation.current_slide.zoom = [1, [0, 0], [0, 0]]
+            self.presentation.current_slide.translate = [0, 0]
+            self.reset_zooming()
+            if (delay){
+                self.screen_frame_ele.classList.add('cuing')
+                self.screen_frame_ele.classList.remove('cued')
+                setTimeout(function () {
+                    //cuing 是在cue時有動感，cued讓動感消失，拖動的感覺比較好
+                    self.screen_frame_ele.classList.remove('cuing')
+                    self.screen_frame_ele.classList.add('cued')
+                    promise.resolve()
+                }, delay)
+                return promise
+            }
+            else {
+                return $.when()
+            }
+        }
 
-        setTimeout(function () {
-            //cuing 是在cue時有動感，cued讓動感消失，拖動的感覺比較好
-            screen_frame.classList.remove('cuing')
-            screen_frame.classList.add('cued')
-            self.enable_dragging()
-        }, 210)//.cuing的transition是0.2s 
     }
     ,show_boards: function () {
         //使用者管理presentation的介面
@@ -5484,8 +5766,8 @@ PresentationScreen.prototype = {
                 the_grid.destroy()
                 // 恢復 keyboard shortcut
                 self.presentation.keyboard_shortcut.suspend = false
-            } 
-        })        
+            }
+        })
         _.defer(function () {
             var max_presentation_number = 10
             var $popup = $('#w2ui-popup')
@@ -5529,7 +5811,7 @@ PresentationScreen.prototype = {
                                     delete presentations_dict[p_id]
                                     the_grid.get(result.default_p_id).default = true
                                     the_grid.refreshCell(result.default_p_id,'default')
-                                    //show "add" button if necessary                                    
+                                    //show "add" button if necessary
                                     if (_.size(presentations_dict) < max_presentation_number && (!the_grid.toolbar.get(the_grid.buttons.add.id))){
                                         the_grid.toolbar.add(the_grid.buttons.add)
                                     }
@@ -5595,11 +5877,11 @@ PresentationScreen.prototype = {
                                         return
                                     }
                                     if (_.size(presentations_dict) <= 1) return
-                                    
+
                                     // w2ui 必須呼叫save，表示接受這個動作，
                                     // 否則內在的狀態沒改變，refresh不會有效果.
                                     // 此時 the_grid.get(p_id).default 仍為 false
-                                    // 需手動變更為 true 
+                                    // 需手動變更為 true
                                     the_grid.save()
 
                                     self.sbs_user.set_presentation_default(p_id).done(function(success){
@@ -5619,7 +5901,7 @@ PresentationScreen.prototype = {
                                         the_grid.get(p_id).default = true
                                         the_grid.refreshCell(p_id,'default')
                                     })
-                                    
+
                                 }
                                 else if (column == 2){ //change name
                                     //2019-03-09T05:01:46+00:00 : 更新 record 才會一直有onChange event
@@ -5709,7 +5991,7 @@ PresentationScreen.prototype = {
                     ])
                     the_grid.refresh()
                 })
-            }) 
+            })
         })
     }
 }
@@ -5729,7 +6011,7 @@ function call_when_ready(passcode) {
         //default to myown presentation
         flag_of_token = 2
         p_id = global_config.ss_token
-        // access my own board, but show URL as a co-author url 
+        // access my own board, but show URL as a co-author url
         // for user to copy and share to others
         window.location.hash = '2' + p_id
     }
@@ -5739,7 +6021,7 @@ function call_when_ready(passcode) {
         window.history.pushState('', document.title, window.location.pathname);
     }else{
         window.location.hash = ''
-    } 
+    }
     */
 
 
@@ -5766,7 +6048,7 @@ function call_when_ready(passcode) {
             document.getElementById('message').style.left = rect.left + 'px'
             document.getElementById('message').style.width = rect.width + 'px'
             var height_of_page_header = window.presentation_screen.page_head_height
-            var height_of_messge = 50
+            var height_of_messge = 20
             if (position == 'top') {
                 document.getElementById('message').style.top = height_of_page_header + 'px'
             }
@@ -5774,9 +6056,10 @@ function call_when_ready(passcode) {
                 document.getElementById('message').style.top = Math.round((rect.height - height_of_messge) / 2) + 'px'
             }
             else {
-                //default position
+                //default position (bottom)
                 document.getElementById('message').style.top = (rect.height - height_of_messge + height_of_page_header) + 'px'
             }
+
             document.getElementById('message').style.display = 'block'
             _mt = setTimeout(function () {
                 window.message('')
@@ -5821,7 +6104,7 @@ function call_when_ready(passcode) {
     //called also by dashboard when user adjust panel size
     //rotation in mobile iOS would trigger this event too
     var refresh_overlay = _.throttle(function () {
-        //draw drawings on overlay 
+        //draw drawings on overlay
         window.presentation_screen.overlay.draw.clear()
         window.presentation_screen.overlay.draw_restore(window.presentation_screen.presentation.current_slide.slide_overlay.layers[0])
     }, 1000, { trailing: true, leading: false })
@@ -5907,6 +6190,42 @@ function call_when_ready(passcode) {
         })
         return promise
     }
+
+    if (window.chrome){
+        // try to setup communication to chrome extension
+        var extension_id
+        if (window.screen.width == 2560){
+            extension_id = 'mffjpmpmpllfooonljiibcaigfaecndd' //mac mini
+        }
+        else if (window.screen.width == 1140 || window.screen.width == 1920){
+            extension_id = 'nbfpcfiehejkmpmejabablkffnfknpbj' //macbookpro
+        }
+        //console.log('extension_id=',extension_id,'screen-width =',window.screen.width)
+        if (extension_id){
+            // register to chrome extension
+            chrome.runtime.sendMessage(extension_id, {do:'hello'},function(response) {
+                if (response) {}//console.log('registry succeed')
+                else console.warn('registry failed')
+            });
+            window.addEventListener('whiteboard-extension', function (event) {
+                var detail = event.detail
+                console.log('>>detail')
+                switch(detail.do){
+                    case 'paste':
+                        if (detail.type == 'image'){
+                            if (detail.target == 'background'){
+                                //直接貼在slide background
+                                window.presentation_screen._handle_dnd_paste(detail.src, window.presentation_screen.presentation.current_slide.idx)
+                            }
+                            else if (detail.target == 'widget' && Widget.selected.length){
+                                Widget.selected[0].on_paste_string(detail.src)
+                            }
+                        }
+                        break
+                }
+            }, false);
+        }
+    }
 }
 
 window.request_passcode = function (callback) {
@@ -5919,7 +6238,7 @@ window.request_passcode = function (callback) {
             call_when_ready(value)
         }
     })
-    //catch cancel event, workaround for w2ui v1.5 
+    //catch cancel event, workaround for w2ui v1.5
     _.defer(function () {
         $('#w2ui-popup .w2ui-btn#Cancel').on('click.w2prompt', function (evt) {
             w2alert('Access denied, will direct to your own board').done(function () {
@@ -5947,7 +6266,7 @@ window.addEventListener('DOMContentLoaded', function () {
     document.body.appendChild(scrollDiv);
     // Get the scrollbar width(same height)
     window.scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
-    // Delete the DIV 
+    // Delete the DIV
     document.body.removeChild(scrollDiv);
 
     var re_check_interval = 10

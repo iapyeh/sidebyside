@@ -1,7 +1,9 @@
 /*
  * API: https://developers.google.com/youtube/iframe_api_reference
  */
+/*
 function YoutubePlayerController(){
+    throw "obsoleted, dont use"
     this.api_ready = false
     this.player = null
 }
@@ -64,6 +66,7 @@ YoutubePlayerController.prototype = {
         return promise
     }
 }
+*/
 /*
     //Usage example
     

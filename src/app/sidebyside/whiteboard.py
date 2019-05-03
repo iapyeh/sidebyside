@@ -995,7 +995,7 @@ class WhiteboardRootFolder(PresentationRootFolder):
             return None
         else:
             # remove background and thumbnail of this slide
-            self.remove_slide_bg(username, p_state,t_id,s_id)
+            self.remove_slide_bg(username, p_state,t_id,s_idx)
             _color = s_state_to_reset['resource']['color']
             s_state_to_reset['resource'] = BlankResource(None).state
             s_state_to_reset['resource']['color'] = _color          
@@ -1037,13 +1037,18 @@ class WhiteboardRootFolder(PresentationRootFolder):
             s_state['extra'] = None
 
             # remove background and thumbnail of this slide
-            s_id = s_state['id']
-            self.remove_slide_bg(p_state,t_id,s_id)
+            #s_id = s_state['id']
+            self.remove_slide_bg(p_state,t_id,s_idx)
 
             # also clean widgets up
             # collect widget's units files
             uuids = []
             for widget_obj in s_state['widgets']:
+                try:
+                    widget_obj['units']
+                except KeyError:
+                    print('!!!!no units: ',list(widget_obj.keys()))
+                    continue
                 search_unit_uuid(widget_obj['units'],uuids)
             for uuid in uuids:
                 paths_to_remove.extend(glob.glob(os.path.join(t_path,uuid+'.*')))
@@ -1065,6 +1070,38 @@ class WhiteboardRootFolder(PresentationRootFolder):
             except OSError:
                 print('warning:reset slide unlink path failed:',path)
                 pass
+        return changed_s_states
+
+    def reset_slide_background(self,p_state,t_id,s_idxes):
+        """
+        清除投影片底圖（本地檔案或者URL)
+        """
+
+        t_path = get_thread_path(p_state['owner'],p_state['id'],t_id) # thread's path
+
+        changed_s_states = []
+        for s_idx in s_idxes:
+            try:
+                s_state = p_state['threads'][t_id]['slides'][s_idx]
+            except IndexError:
+                continue
+
+            # remove background and thumbnail of this slide
+            #s_id = s_state['id']
+            self.remove_slide_bg(p_state,t_id,s_idx)
+
+            s_state['resource'] = {
+                'type':'BLANK',
+                'color': s_state['resource']['color'],
+                'bg':'',
+                #'extra':None
+            }
+            #print('>>>remove bg',s_state['resource'])
+            changed_s_states.append([s_idx,s_state])
+        
+        if len(changed_s_states):
+            self.on_presentation_changed(p_state)
+        
         return changed_s_states
 
     def on_refresh(self,u_id,room_id, data):
@@ -1162,17 +1199,24 @@ class WhiteboardRootFolder(PresentationRootFolder):
             os.unlink(file)
             print('>>> remove unit file',file)                
 
-    def remove_slide_bg(self,p_state,t_id,s_id):
+    def remove_slide_bg(self,p_state,t_id,s_idx):
+        """
+        刪除slide背景圖（本地的檔案）
+        """
         owner = p_state['owner']
         t_path = get_thread_path(owner,p_state['id'],t_id)
-        s_state = None
-        for _s_state in p_state['threads'][t_id]['slides']:
-            if _s_state['id'] == s_id:
-                s_state = _s_state
-                break
         
-        if not s_state: return False
-        # remove current backbround
+        #s_state = None
+        #for _s_state in p_state['threads'][t_id]['slides']:
+        #    if _s_state['id'] == s_id:
+        #        s_state = _s_state
+        #        break
+        try:
+            s_state =  p_state['threads'][t_id]['slides'][s_idx]
+        except IndexError:
+            return False
+        
+        # remove file of current backbround
         existing_filename = s_state['resource']['bg']
         if existing_filename:
             try:
@@ -1181,15 +1225,16 @@ class WhiteboardRootFolder(PresentationRootFolder):
                 log.warn('slide bg not found:%s' % os.path.join(t_path,existing_filename))
                 # not existed
                 pass
-        # remove current thumbnails
-        thumbnail_path = os.path.join(t_path,s_id+'.t.jpg') 
+        # remove current file of thumbnail
+        thumbnail_path = os.path.join(t_path,s_state['id']+'.t.jpg') 
         try:
             os.unlink(thumbnail_path)
         except OSError:
             log.warn('slide thumbnail not found:%s' % thumbnail_path)
             pass
+
         s_state['resource']['bg'] = ''
-        #self.db.update_presentation_state_cache(p_state['id'],p_state)
+
         self.on_presentation_changed(p_state)
         return True
 

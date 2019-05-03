@@ -34,6 +34,7 @@ stores_config = {
 }
 def get_connection(server_url):
     print('server = ',server_url)
+    print('Elasticsearch=',Elasticsearch)
     try:
         es = Elasticsearch(server_url,use_ssl=False)
     except:
@@ -141,7 +142,9 @@ if __name__ == '__main__':
     server_url = 'http://%(credential)s%(host)s:%(port)s/' % object_store
     es = get_connection(server_url)
     if 0:
-        #set_cluster_config(es, id,stores_config)
+        # 一個空白的elasticsearch backend從此開始
+        set_cluster_config(es, id,stores_config)
+    elif 1:
         print('settings=',get_cluster_config(es,id))
     elif 0:
         name = 'sbs_name_dict'
@@ -166,7 +169,7 @@ if __name__ == '__main__':
             print('cleanup objects of',name)
             #cleanup(es,name)
             delete(es,name)
-    elif 1:
+    elif 0:
         for key in keys(es,'sbs_name_dict'):
             print('user in sbs_name=',key)
         for key in keys(es,'user_presentation_dict'):

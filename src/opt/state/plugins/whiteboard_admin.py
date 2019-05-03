@@ -41,7 +41,8 @@ class WhiteboardAdmin(SimpleStateValue):
             self.presentation_root_folder = statetree.root.sidebyside.presentation_root_folder
             self.server_dispatcher = self.presentation_root_folder.server_dispatcher
             d.callback(True)
-        reactor.callLater(0,init)
+        # 晚1秒，等statetree.root.sidebyside 已經產生後再呼叫
+        reactor.callLater(1,init)
         return d
     
     def acl(self,task):

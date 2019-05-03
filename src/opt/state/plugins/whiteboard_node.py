@@ -1202,6 +1202,34 @@ class Whiteboard(Sidebyside):
     reset_slides_of_idx.require_task = True
 
     @exportable
+    def reset_slide_background(self,task,p_id,flag,t_id,s_idxes):
+        """
+        only flag==2 is allowed at whiteboard
+        清除 slide
+        Args:
+            s_idxes:(list) [slides的idx] or None, if None then reset all slides
+        """
+        #whiteboard client send 1 slide to delete only
+        assert (s_idxes is None) or len(s_idxes) == 1 ,'can only remove 1 slide at a call'
+        assert flag == 2, 'expect flag 2, got %s' % flag
+
+        token = p_id
+        p_state = self.presentation_root_folder.get_presentation_state_token(token,flag)
+        
+        if not p_state:
+            self.throw('presentation-not-found')
+            return False
+    
+        t_state = p_state['threads'][t_id]
+        if s_idxes is None:
+            s_idxes = list(range(0,len(t_state['slides'])))
+        changed_s_states = self.presentation_root_folder.reset_slide_background(p_state,t_id,s_idxes)
+        self.broadcast_to_bus(p_state['bus'],{'topic':'refresh','data':['slides',t_id,changed_s_states]})
+        # focus slide 不變
+        return changed_s_states
+    reset_slide_background.require_task = True
+
+    @exportable
     def remove_all_slides(self,task,p_id,flag,t_id):
         return self.remove_slides_of_idx(task,p_id,flag,t_id,None)
     remove_all_slides.require_task = True
@@ -2112,17 +2140,60 @@ class Whiteboard(Sidebyside):
     '''
     
     @exportable
-    def get_content_type(self,url):
+    def get_content_type(self,url,cookie):
         """
         幫助browser知道某一url的content type(克服 Access-Control-Allow-Origin 問題)
         """
-        req = urllib.request.Request(url, method="HEAD")
+        headers = {
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+            'cookie':cookie
+        }
+        req = urllib.request.Request(url, method="HEAD",headers=headers)
         try:
             with urllib.request.urlopen(req) as response:
                 info = response.info()
                 return info.get_content_type()
         except urllib.error.HTTPError:
+            #print('get content type error',traceback.format_exc())
             return None
 
+    
+    @exportable
+    def get_content_type(self,url,cookie):
+        """
+        幫助browser知道某一url的content type(克服 Access-Control-Allow-Origin 問題)
+        """
+        headers = {
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+            'cookie':cookie
+        }
+        req = urllib.request.Request(url, method="HEAD",headers=headers)
+        try:
+            with urllib.request.urlopen(req) as response:
+                info = response.info()
+                return info.get_content_type()
+        except urllib.error.HTTPError:
+            #print('get content type error',traceback.format_exc())
+            return None
+
+    @exportable
+    def get_content(self,url,cookie):
+        """
+        只用於存取google script api
+        https://script.google.com/macros/s/AKfycbwIWYKiSCE5L4NgDEiabVKInH70Ovjw9z2682EdvVBblLoz9s8/exec
+        """
+        if (not url.startswith('https://script.google.com/macros/')): return ''
+        headers = {
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+            'cookie':cookie
+        }
+        req = urllib.request.Request(url, method="GET",headers=headers)
+        try:
+            with urllib.request.urlopen(req) as response:
+                html = response.read()
+                return html.decode()
+        except urllib.error.HTTPError:
+            #print('get content type error',traceback.format_exc())
+            return ''
 
 statetree.root.add_node('sidebyside',Whiteboard())

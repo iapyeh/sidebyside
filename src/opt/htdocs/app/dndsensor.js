@@ -1,4 +1,7 @@
-/* depends on JQuery */
+/* 
+Handles drag-and-drop and paste.
+Depends on JQuery 
+*/
 function DnDEnabler(){
     /*
      * delegate protocol:
@@ -170,8 +173,9 @@ DnDEnabler.prototype = {
     },
     enable_paste:function(namespace,selector,delegate){
         var self = this
-        namespace = '.' + namespace
-        $(selector).on('paste'+namespace,function(evt){
+        $(selector).on('paste.'+namespace,function(evt){
+            //如果是<input> or <textarea> 不要做任何動作（讓default運作）
+            if (evt.target.tagName == 'INPUT' || evt.target.tagName == 'TEXTAREA') return
             self.on_paste(evt,delegate)
         })
     },
@@ -266,6 +270,10 @@ function DnDSensor(delegate,box,rect){
      * on_dnd_message()
      */
 
+     /* 2019-03-21T03:53:39+00:00 disabled, because iindex.js seems not call this anymore */
+    console.warn('DnDSensor is deprecated')
+    return
+
     this.delegate = delegate
     this._div_id = '_dnd_sensor'
     // this box is the outer (first) sensor area, usually is document.body
@@ -302,6 +310,7 @@ DnDSensor.prototype = {
             }
             document.body.appendChild(this.drop_responser)    
 
+            /* 2019-03-21T03:44:43+00:00  use winddow.message 
             //create myown message element, because original message board might be covered below 
             this.message_div = document.createElement('div')
             this.message_div.setAttribute('id',this._div_id+'_message')
@@ -309,6 +318,7 @@ DnDSensor.prototype = {
             this.message_div.style.left = rect.left+'px'
             this.message_div.style.top = Math.round(rect.top+rect.height/2)+'px'
             document.body.appendChild(this.message_div)
+            */
 
             //a box to detect dragging and show the drop-area to user
             var on_dragenter = function(evt){
@@ -329,7 +339,9 @@ DnDSensor.prototype = {
             this.box.ondragleave =  function(e){on_dragleave(e)}
         }
     },
-    message:function(html){
+    message:function(text){
+        return window.message(text)
+        /*
         if (this.rect){
             if (this._message_timer) clearTimeout(this._message_timer)
             this.message_div.style.display = ''
@@ -345,6 +357,7 @@ DnDSensor.prototype = {
         else{
             this.delegate.on_dnd_image(html)
         }
+        */
     },
     on_drop:function(evt){
         var self = this
